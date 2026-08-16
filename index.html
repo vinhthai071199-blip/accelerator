@@ -36,13 +36,15 @@ body{background:#0a0c10;color:#e8e4da;font-family:'Poppins',sans-serif;overflow-
 .liquid-sheen{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;mix-blend-mode:screen;background:radial-gradient(1200px 600px at 20% 0%,rgba(200,168,100,.10),transparent 55%),radial-gradient(900px 500px at 85% 20%,rgba(80,110,180,.08),transparent 55%),radial-gradient(700px 700px at 50% 100%,rgba(200,168,100,.06),transparent 60%);animation:liquidMove 22s ease-in-out infinite alternate}
 @keyframes liquidMove{0%{transform:translate3d(0,0,0) rotate(0deg)}100%{transform:translate3d(30px,-40px,0) rotate(4deg)}}
 
-/* ===== MOBILE: nhẹ bớt để không giật ===== */
+/* ===== MOBILE: bản nhẹ nhưng vẫn có animation ===== */
 @media (max-width:640px), (pointer:coarse){
   .glass{-webkit-backdrop-filter:blur(8px) saturate(120%);backdrop-filter:blur(8px) saturate(120%)}
-  .glass::before,.glass::after{display:none}
-  .bg .glow{filter:blur(60px);opacity:.25}
-  .liquid-sheen{animation:none;opacity:.15}
-  .glow.g1,.glow.g2{animation:none}
+  .glass::before{animation:sheen 9s ease-in-out infinite;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.14) 45%,transparent 60%)}
+  .glass::after{animation:none}
+  .bg .glow{filter:blur(60px);opacity:.3}
+  .liquid-sheen{animation:liquidMove 26s ease-in-out infinite alternate;opacity:.2}
+  .glow.g1{animation:blob1 20s ease-in-out infinite alternate}
+  .glow.g2{animation:blob2 24s ease-in-out infinite alternate}
   nav.scrolled,.shop-card,.search-bar,.video-card,.request-wrap,.fb-wrap,.player-modal{-webkit-backdrop-filter:blur(8px) saturate(120%);backdrop-filter:blur(8px) saturate(120%)}
 }
 
