@@ -29,8 +29,28 @@ nav.scrolled{background:rgba(10,12,16,.75);-webkit-backdrop-filter:blur(20px);ba
 .logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;letter-spacing:3px}
 .logo em{font-style:normal;color:#c8a864}
 .nav-links{display:flex;gap:10px}
-#userChip{display:none;align-items:center;gap:9px;padding:9px 18px;border-radius:40px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:13px;font-weight:600}
+#userChip{display:none;align-items:center;gap:9px;padding:9px 18px;border-radius:40px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:13px;font-weight:600;cursor:pointer;transition:.3s}
+#userChip:hover{border-color:rgba(200,168,100,.5);background:rgba(200,168,100,.08)}
 #userChip .avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#c8a864,#8a6d3b);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#0a0c10}
+/* ===== PROFILE MODAL ===== */
+.profile-modal{width:min(440px,94vw);padding:0;overflow:visible;text-align:left}
+.profile-hero{background:linear-gradient(160deg,rgba(200,168,100,.18),transparent 60%);padding:34px 32px 24px;text-align:center;border-bottom:1px solid rgba(255,255,255,.07)}
+.profile-hero .big-avatar{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#c8a864,#8a6d3b);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#0a0c10;margin:0 auto 14px;box-shadow:0 10px 34px rgba(200,168,100,.35)}
+.profile-hero h3{font-family:'Playfair Display',serif;font-size:20px}
+.profile-hero p{color:#8d8678;font-size:12.5px;margin-top:4px;font-weight:300;word-break:break-all}
+.profile-stats{display:flex;gap:10px;padding:18px 32px;border-bottom:1px solid rgba(255,255,255,.07)}
+.profile-stats .stat{flex:1;text-align:center;padding:12px 6px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+.profile-stats .stat b{display:block;font-size:19px;color:#c8a864;font-family:'Playfair Display',serif}
+.profile-stats .stat small{color:#8d8678;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.profile-body{padding:10px 32px 30px}
+.pf-field{margin-top:16px}
+.pf-field label{display:block;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#8d8678;margin-bottom:7px;font-weight:600}
+.pf-field .pf-row{display:flex;gap:8px}
+.pf-field input{flex:1;padding:11px 14px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#e8e4da;font-size:13px;outline:none;transition:border-color .3s;font-family:'Poppins',sans-serif}
+.pf-field input:focus{border-color:#c8a864}
+.pf-field .pf-row button{padding:10px 18px;border-radius:6px;border:none;background:linear-gradient(135deg,#c8a864,#8a6d3b);color:#0a0c10;font-weight:700;font-size:12px;cursor:pointer;transition:.3s;white-space:nowrap}
+.pf-field .pf-row button:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(200,168,100,.3)}
+.pf-logout{width:100%;margin-top:22px;justify-content:center}
 .btn{padding:10px 22px;border-radius:4px;border:1px solid rgba(200,168,100,.5);background:transparent;color:#c8a864;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:.35s cubic-bezier(.34,1.56,.64,1);display:inline-flex;align-items:center;gap:7px;position:relative;overflow:hidden}
 .btn:active{transform:scale(.93)}
 .btn:hover{background:rgba(200,168,100,.1);transform:translateY(-2px);box-shadow:0 0 24px rgba(200,168,100,.15)}
@@ -280,6 +300,40 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
   </div>
 </div>
 
+<!-- PROFILE MODAL -->
+<div class="overlay" id="profileOverlay">
+  <div class="modal profile-modal">
+    <button class="close" onclick="closeProfile()">✕</button>
+    <div class="profile-hero">
+      <div class="big-avatar" id="pfAvatar">K</div>
+      <h3 id="pfName">Khách</h3>
+      <p id="pfEmail">—</p>
+    </div>
+    <div class="profile-stats">
+      <div class="stat"><b id="pfStatCmt">0</b><small>Bình luận</small></div>
+      <div class="stat"><b id="pfStatReq">0</b><small>Yêu cầu</small></div>
+      <div class="stat"><b id="pfStatMem">—</b><small>Thành viên</small></div>
+    </div>
+    <div class="profile-body">
+      <div class="pf-field">
+        <label>Tên hiển thị</label>
+        <div class="pf-row">
+          <input type="text" id="pfNameInput" placeholder="Tên mới">
+          <button onclick="pfSaveName()">Lưu tên</button>
+        </div>
+      </div>
+      <div class="pf-field">
+        <label>Đổi mật khẩu</label>
+        <div class="pf-row">
+          <input type="password" id="pfPwInput" placeholder="Mật khẩu mới (6+ ký tự)">
+          <button onclick="pfSavePw()">Đổi</button>
+        </div>
+      </div>
+      <button class="btn danger pf-logout" onclick="pfLogout()">🚪 Đăng xuất</button>
+    </div>
+  </div>
+</div>
+
 <!-- AUTH MODAL -->
 <div class="overlay" id="authOverlay">
   <div class="modal">
@@ -524,13 +578,69 @@ function googleDone(cred){
   closeAuth();
 }
 function setUser(email,name){
-  localStorage.setItem('vh_session', JSON.stringify({email,name}));
+  const prev = getSession();
+  localStorage.setItem('vh_session', JSON.stringify({email,name, joined: (prev&&prev.email===email)?prev.joined:Date.now()}));
   updateUI();
 }
 function logout(){
   localStorage.removeItem('vh_session');
   updateUI();
   showToast('Đã đăng xuất. Hẹn gặp lại!');
+}
+
+/* ============ PROFILE ============ */
+function countUserComments(email){
+  const all = JSON.parse(localStorage.getItem('cv_comments') || '{}');
+  let n = 0;
+  Object.values(all).forEach(list=>{
+    list.forEach(c=>{ if(c.email===email) n++; });
+  });
+  return n;
+}
+function countUserRequests(email){
+  const reqs = JSON.parse(localStorage.getItem('vh_requests') || '[]');
+  return reqs.filter(r=>r.by===email).length;
+}
+function openProfile(){
+  const s = getSession();
+  if(!s){ openAuth(); return; }
+  document.getElementById('pfAvatar').textContent = s.name.charAt(0).toUpperCase();
+  document.getElementById('pfName').textContent = s.name;
+  document.getElementById('pfEmail').textContent = s.email;
+  document.getElementById('pfStatCmt').textContent = countUserComments(s.email);
+  document.getElementById('pfStatReq').textContent = countUserRequests(s.email);
+  document.getElementById('pfStatMem').textContent = new Date(s.joined||Date.now()).toLocaleDateString('vi-VN');
+  document.getElementById('pfNameInput').value = '';
+  document.getElementById('pfPwInput').value = '';
+  document.getElementById('profileOverlay').classList.add('show');
+}
+function closeProfile(){ document.getElementById('profileOverlay').classList.remove('show'); }
+function pfSaveName(){
+  const s = getSession();
+  if(!s) return;
+  const name = document.getElementById('pfNameInput').value.trim();
+  if(!name){ showToast('Vui lòng nhập tên mới!'); return; }
+  const acc = JSON.parse(localStorage.getItem('vh_'+s.email) || 'null');
+  if(acc){ acc.name = name; localStorage.setItem('vh_'+s.email, JSON.stringify(acc)); }
+  s.name = name;
+  localStorage.setItem('vh_session', JSON.stringify(s));
+  updateUI();
+  openProfile();
+  showToast('Đã lưu tên mới: '+name+' ✨');
+}
+function pfSavePw(){
+  const s = getSession();
+  if(!s) return;
+  const pw = document.getElementById('pfPwInput').value;
+  if(pw.length < 6){ showToast('Mật khẩu tối thiểu 6 ký tự!'); return; }
+  const acc = JSON.parse(localStorage.getItem('vh_'+s.email) || 'null');
+  if(acc){ acc.pw = pw; localStorage.setItem('vh_'+s.email, JSON.stringify(acc)); showToast('Đã đổi mật khẩu thành công! 🔒'); }
+  else { showToast('Tài khoản Google không đổi mật khẩu được'); }
+  document.getElementById('pfPwInput').value = '';
+}
+function pfLogout(){
+  closeProfile();
+  logout();
 }
 function updateUI(){
   const s = getSession();
@@ -570,7 +680,8 @@ function sendRequest(e){
   const content = document.getElementById('reqContent').value.trim();
   if(!content){ return; }
   const reqs = JSON.parse(localStorage.getItem('vh_requests') || '[]');
-  reqs.push({name, type, content, time: Date.now()});
+  const s = getSession();
+  reqs.push({name, type, content, by: s?s.email:null, time: Date.now()});
   localStorage.setItem('vh_requests', JSON.stringify(reqs));
   showToast('Yêu cầu đã được gửi! Mình sẽ xem xét sớm nhé. 📨');
   e.target.reset();
@@ -615,8 +726,10 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 /* ============ INIT ============ */
 renderVideos(VIDEOS);
 updateUI();
+document.getElementById('userChip').addEventListener('click', openProfile);
 document.getElementById('authOverlay').addEventListener('click', e=>{ if(e.target.id==='authOverlay') closeAuth(); });
 document.getElementById('playerOverlay').addEventListener('click', e=>{ if(e.target.id==='playerOverlay') closePlayer(); });
+document.getElementById('profileOverlay').addEventListener('click', e=>{ if(e.target.id==='profileOverlay') closeProfile(); });
 </script>
 </body>
 </html>
