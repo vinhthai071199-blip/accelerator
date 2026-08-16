@@ -92,12 +92,32 @@ section{padding:60px 5% 90px}
 .cmt-panel{display:none;border-top:1px solid rgba(255,255,255,.07);padding:16px 18px;background:rgba(10,12,16,.5);animation:cmtIn .45s cubic-bezier(.22,1,.36,1)}
 .cmt-panel.open{display:block}
 @keyframes cmtIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== MODAL ===== */
+.overlay{position:fixed;inset:0;z-index:200;background:rgba(5,6,9,.85);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s ease}
+.overlay.show{opacity:1;pointer-events:auto}
+.modal{width:min(420px,92vw);background:#13161d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:36px 32px;transform:translateY(40px) scale(.96);transition:transform .5s cubic-bezier(.34,1.56,.64,1);box-shadow:0 50px 120px rgba(0,0,0,.7)}
+.overlay.show .modal{transform:translateY(0) scale(1)}
+/* ===== MODAL PLAYER ===== */
+.player-modal{width:min(860px,94vw);padding:0;overflow:hidden;background:#0d0f14}
+.player-modal .pm-head{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.07)}
+.player-modal .pm-head h3{font-family:'Playfair Display',serif;font-size:19px;letter-spacing:.5px}
+.player-wrap{background:#000;position:relative}
+.player-wrap video{width:100%;display:block;max-height:58vh;background:#000}
+.pm-tools{display:flex;gap:12px;padding:16px 24px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.pm-tools .dl{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:6px;background:linear-gradient(135deg,#c8a864,#8a6d3b);color:#0a0c10;font-size:13px;font-weight:700;text-decoration:none;transition:.3s}
+.pm-tools .dl:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,168,100,.35)}
+.pm-tools .cmt-count-tag{color:#8d8678;font-size:13px;display:flex;align-items:center;gap:7px}
+/* COMMENTS IN PLAYER */
+.pm-comments{padding:8px 24px 26px;border-top:1px solid rgba(255,255,255,.07)}
+.pm-comments h4{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:#c8a864;margin:18px 0 14px;display:flex;align-items:center;gap:10px}
+.pm-comments h4 span{background:rgba(200,168,100,.15);padding:2px 10px;border-radius:20px;font-size:11px}
 .cmt-input{display:flex;gap:8px;margin-bottom:14px}
-.cmt-input input{flex:1;padding:10px 14px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#e8e4da;font-size:13px;outline:none;transition:border-color .3s;font-family:'Poppins',sans-serif}
+.cmt-input input{flex:1;padding:11px 14px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#e8e4da;font-size:13px;outline:none;transition:border-color .3s;font-family:'Poppins',sans-serif}
 .cmt-input input:focus{border-color:#c8a864}
-.cmt-input button{padding:10px 18px;border-radius:6px;border:none;background:linear-gradient(135deg,#c8a864,#8a6d3b);color:#0a0c10;font-weight:700;font-size:12.5px;cursor:pointer;transition:.3s}
+.cmt-input button{padding:10px 20px;border-radius:6px;border:none;background:linear-gradient(135deg,#c8a864,#8a6d3b);color:#0a0c10;font-weight:700;font-size:12.5px;cursor:pointer;transition:.3s}
 .cmt-input button:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(200,168,100,.3)}
-.cmt-list{max-height:230px;overflow-y:auto}
+.cmt-list{max-height:240px;overflow-y:auto}
 .cmt-list::-webkit-scrollbar{width:5px}
 .cmt-list::-webkit-scrollbar-thumb{background:rgba(200,168,100,.3);border-radius:5px}
 .cmt-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);animation:comIn .45s cubic-bezier(.22,1,.36,1)}
@@ -111,12 +131,6 @@ section{padding:60px 5% 90px}
 .cmt-item .c-del{background:none;border:none;color:#5c574c;cursor:pointer;font-size:11px;align-self:flex-start;transition:color .3s}
 .cmt-item .c-del:hover{color:#c8756a}
 .cmt-empty{text-align:center;color:#5c574c;font-size:12.5px;padding:14px 0;font-weight:300}
-
-/* ===== MODAL ===== */
-.overlay{position:fixed;inset:0;z-index:200;background:rgba(5,6,9,.85);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s ease}
-.overlay.show{opacity:1;pointer-events:auto}
-.modal{width:min(420px,92vw);background:#13161d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:36px 32px;transform:translateY(40px) scale(.96);transition:transform .5s cubic-bezier(.34,1.56,.64,1);box-shadow:0 50px 120px rgba(0,0,0,.7)}
-.overlay.show .modal{transform:translateY(0) scale(1)}
 .modal .close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#a8a298;font-size:15px;cursor:pointer;transition:all .3s}
 .modal .close:hover{background:rgba(200,120,90,.2);color:#c8756a;transform:rotate(90deg)}
 .modal h2{font-family:'Playfair Display',serif;font-size:22px;text-align:center;letter-spacing:1px;margin-bottom:6px}
@@ -241,6 +255,31 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
 <!-- TOAST -->
 <div id="toast"><i>✦</i><span id="toastMsg">Thành công!</span></div>
 
+<!-- PLAYER MODAL -->
+<div class="overlay" id="playerOverlay">
+  <div class="modal player-modal">
+    <div class="pm-head">
+      <h3 id="pmTitle">Video</h3>
+      <button class="close" onclick="closePlayer()">✕</button>
+    </div>
+    <div class="player-wrap">
+      <video id="pmVideo" controls playsinline preload="metadata"></video>
+    </div>
+    <div class="pm-tools">
+      <span class="cmt-count-tag">💬 <span id="pmCmtCount">0</span> bình luận</span>
+      <a class="dl" id="pmDownload" href="#" download>⬇ Tải video</a>
+    </div>
+    <div class="pm-comments">
+      <h4>Bình luận <span id="pmCmtCount2">0</span></h4>
+      <div class="cmt-input">
+        <input type="text" id="pmCmtInput" placeholder="Viết bình luận của bạn...">
+        <button onclick="pmAddComment()">Gửi</button>
+      </div>
+      <div class="cmt-list" id="pmCmtList"></div>
+    </div>
+  </div>
+</div>
+
 <!-- AUTH MODAL -->
 <div class="overlay" id="authOverlay">
   <div class="modal">
@@ -298,27 +337,16 @@ function renderVideos(list){
       <div class="video-info">
         <h3>${v.title}</h3>
         <div class="meta">
-          <small>⬇ Bấm để tải về</small>
+          <small>👁 Bấm vào video để xem & bình luận</small>
           <a class="dl" href="${v.src}" download="${(v.title||'video').replace(/[^\w\p{L}]+/gu,'_')}.mp4">Tải về</a>
         </div>
         <div class="video-actions">
-          <button class="cmt-btn" onclick="toggleComments('${v.src}')">💬 Bình luận (<span class="cmt-count" data-src="${v.src}">${getComments(v.src).length}</span>)</button>
+          <button class="cmt-btn" onclick="openPlayer('${v.src}')">💬 Bình luận (<span class="cmt-count" data-src="${v.src}">${getComments(v.src).length}</span>)</button>
         </div>
-      </div>
-      <div class="cmt-panel" data-panel="${v.src}">
-        <div class="cmt-input">
-          <input type="text" data-cmt-input placeholder="Viết bình luận... (tên: ${esc(getName())})">
-          <button onclick="addComment('${v.src}', this)">Gửi</button>
-        </div>
-        <div class="cmt-list" data-cmt-list></div>
       </div>`;
     card.addEventListener('click', e=>{
-      if(e.target.closest('.dl') || e.target.closest('.cmt-btn') || e.target.closest('.cmt-panel')) return;
-      const vd = card.querySelector('video');
-      if(!vd) return;
-      vd.controls = true;
-      vd.muted = false;
-      vd.play();
+      if(e.target.closest('.dl')) return;
+      openPlayer(v.src);
     });
     card.addEventListener('mousemove', e=>{
       const r = card.getBoundingClientRect();
@@ -347,7 +375,9 @@ function clearSearch(){
   document.getElementById('searchInput').focus();
 }
 
-/* ============ BÌNH LUẬN ============ */
+/* ============ BÌNH LUẬN & PLAYER ============ */
+let currentSrc = null;
+
 function getComments(src){
   const all = JSON.parse(localStorage.getItem('cv_comments') || '{}');
   return all[src] || [];
@@ -364,20 +394,38 @@ function getName(){
 function esc(s){
   return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
-function toggleComments(src){
-  const panel = document.querySelector(`.cmt-panel[data-panel="${src}"]`);
-  if(!panel) return;
-  const isOpen = panel.classList.contains('open');
-  document.querySelectorAll('.cmt-panel.open').forEach(p=>{
-    if(p !== panel) p.classList.remove('open');
-  });
-  panel.classList.toggle('open', !isOpen);
-  renderComments(src);
+function findVideo(src){
+  return VIDEOS.find(v=>v.src===src);
 }
-function renderComments(src){
-  const list = document.querySelector(`.cmt-list[data-cmt-list="${src}"]`);
-  if(!list) return;
-  const coms = getComments(src).slice().reverse();
+function openPlayer(src){
+  const v = findVideo(src);
+  if(!v) return;
+  currentSrc = src;
+  document.getElementById('pmTitle').textContent = v.title;
+  const player = document.getElementById('pmVideo');
+  player.src = v.src;
+  document.getElementById('pmDownload').href = v.src;
+  document.getElementById('pmDownload').download = (v.title||'video').replace(/[^\w\p{L}]+/gu,'_')+'.mp4';
+  document.getElementById('playerOverlay').classList.add('show');
+  document.getElementById('pmCmtInput').value = '';
+  renderPmComments();
+  requestAnimationFrame(()=>player.play().catch(()=>{}));
+}
+function closePlayer(){
+  document.getElementById('playerOverlay').classList.remove('show');
+  const p = document.getElementById('pmVideo');
+  p.pause();
+  p.removeAttribute('src');
+  currentSrc = null;
+}
+function renderPmComments(){
+  if(!currentSrc) return;
+  const coms = getComments(currentSrc).slice().reverse();
+  document.getElementById('pmCmtCount').textContent = coms.length;
+  document.getElementById('pmCmtCount2').textContent = coms.length;
+  const count = document.querySelector(`.cmt-count[data-src="${currentSrc}"]`);
+  if(count) count.textContent = coms.length;
+  const list = document.getElementById('pmCmtList');
   if(!coms.length){
     list.innerHTML = '<div class="cmt-empty">Chưa có bình luận nào. Hãy là người đầu tiên!</div>';
     return;
@@ -392,12 +440,12 @@ function renderComments(src){
         <div class="c-name">${esc(c.name)} <small>${new Date(c.time).toLocaleDateString('vi-VN')}</small></div>
         <div class="c-text">${esc(c.text)}</div>
       </div>
-      ${(getSession() && c.email===getSession().email) ? `<button class="c-del" onclick="delComment('${src}','${c.id}')">✕</button>` : ''}`;
+      ${(getSession() && c.email===getSession().email) ? `<button class="c-del" onclick="pmDelComment('${c.id}')">✕</button>` : ''}`;
     list.appendChild(d);
   });
 }
-function addComment(src, btn){
-  const input = btn.parentElement.querySelector('[data-cmt-input]');
+function pmAddComment(){
+  const input = document.getElementById('pmCmtInput');
   const text = input.value.trim();
   if(!text) return;
   const s = getSession();
@@ -406,21 +454,17 @@ function addComment(src, btn){
     setTimeout(openAuth, 700);
     return;
   }
-  const list = getComments(src);
+  const list = getComments(currentSrc);
   list.push({id:'c'+Date.now()+Math.random().toString(36).slice(2,6), email:s.email, name:s.name, text, time:Date.now()});
-  saveComments(src, list);
+  saveComments(currentSrc, list);
   input.value = '';
-  renderComments(src);
-  const count = document.querySelector(`.cmt-count[data-src="${src}"]`);
-  if(count) count.textContent = list.length;
+  renderPmComments();
   showToast('Đã gửi bình luận! 💬');
 }
-function delComment(src, cid){
-  const list = getComments(src).filter(c=>c.id!==cid);
-  saveComments(src, list);
-  renderComments(src);
-  const count = document.querySelector(`.cmt-count[data-src="${src}"]`);
-  if(count) count.textContent = list.length;
+function pmDelComment(cid){
+  const list = getComments(currentSrc).filter(c=>c.id!==cid);
+  saveComments(currentSrc, list);
+  renderPmComments();
   showToast('Đã xóa bình luận.');
 }
 
@@ -572,6 +616,7 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 renderVideos(VIDEOS);
 updateUI();
 document.getElementById('authOverlay').addEventListener('click', e=>{ if(e.target.id==='authOverlay') closeAuth(); });
+document.getElementById('playerOverlay').addEventListener('click', e=>{ if(e.target.id==='playerOverlay') closePlayer(); });
 </script>
 </body>
 </html>
