@@ -57,13 +57,9 @@ nav.scrolled{background:rgba(18,21,28,.6);-webkit-backdrop-filter:blur(24px) sat
 .logo em{font-style:normal;color:#c8a864}
 .nav-links{display:flex;gap:10px}
 .btn{padding:10px 22px;border-radius:4px;border:1px solid rgba(200,168,100,.5);background:transparent;color:#c8a864;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:.35s cubic-bezier(.34,1.56,.64,1);display:inline-flex;align-items:center;gap:7px;position:relative;overflow:hidden}
-.btn:active{transform:scale(.93)}
 .btn:hover{background:rgba(200,168,100,.1);transform:translateY(-2px);box-shadow:0 0 24px rgba(200,168,100,.15)}
 .btn.solid{background:linear-gradient(135deg,#c8a864,#8a6d3b);border:none;color:#0a0c10}
 .btn.solid:hover{box-shadow:0 0 30px rgba(200,168,100,.35)}
-/* ===== RIPPLE ===== */
-.ripple{position:absolute;border-radius:50%;pointer-events:none;background:rgba(255,255,255,.5);transform:scale(0);animation:rippleAnim .7s cubic-bezier(.22,1,.36,1) forwards}
-@keyframes rippleAnim{to{transform:scale(3.5);opacity:0}}
 
 /* ===== HEADER NHỎ ===== */
 header{padding:110px 5% 40px;text-align:center;position:relative}
@@ -155,10 +151,6 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
 .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1)}
 .reveal.visible{opacity:1;transform:translateY(0)}
 .reveal.d1{transition-delay:.1s}.reveal.d2{transition-delay:.2s}.reveal.d3{transition-delay:.3s}
-
-/* ===== CLICK POP ===== */
-.pop{animation:pop .45s cubic-bezier(.34,1.56,.64,1)}
-@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
 
 #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(130px);z-index:300;padding:15px 28px;border-radius:8px;background:#171a21;border:1px solid rgba(200,168,100,.4);display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;box-shadow:0 24px 60px rgba(0,0,0,.6);transition:transform .6s cubic-bezier(.34,1.56,.64,1)}
 #toast.show{transform:translateX(-50%) translateY(0)}
@@ -503,26 +495,6 @@ async function sendFeedback(e){
     showToast('Gửi thất bại! Kiểm tra kết nối rồi thử lại.');
   }
 }
-
-/* ============ CLICK ANIMATION (RIPPLE + POP) ============ */
-document.addEventListener('click', e=>{
-  const target = e.target.closest('.btn, .dl, .nav-links a, .video-card, .shop-card a, .close');
-  if(!target) return;
-  const r = target.getBoundingClientRect();
-  const size = Math.max(r.width, r.height) * 2.2;
-  const span = document.createElement('span');
-  span.className = 'ripple';
-  span.style.width = span.style.height = size+'px';
-  span.style.left = (e.clientX - r.left - size/2)+'px';
-  span.style.top = (e.clientY - r.top - size/2)+'px';
-  target.style.position = target.style.position || 'relative';
-  target.appendChild(span);
-  setTimeout(()=>span.remove(), 700);
-  target.classList.remove('pop');
-  void target.offsetWidth;
-  target.classList.add('pop');
-  setTimeout(()=>target.classList.remove('pop'), 450);
-});
 
 /* ============ REVEAL ============ */
 const io = new IntersectionObserver(es=>{
