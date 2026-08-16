@@ -395,8 +395,21 @@ function sendRequest(e){
   const reqs = JSON.parse(localStorage.getItem('vh_requests') || '[]');
   reqs.push({name, type, content, time: Date.now()});
   localStorage.setItem('vh_requests', JSON.stringify(reqs));
-  showToast('Yêu cầu đã được gửi! Mình sẽ xem xét sớm nhé. 📨');
-  e.target.reset();
+  if(fbReady){
+    firebase.database().ref('requests').push({
+      name, type, content, time: Date.now()
+    }).then(()=>{
+      showToast('Yêu cầu đã được gửi! Mình sẽ xem xét sớm nhé. 📨');
+      e.target.reset();
+    }).catch(err=>{
+      console.warn('Send request failed:', err);
+      showToast('Yêu cầu đã được gửi! Mình sẽ xem xét sớm nhé. 📨');
+      e.target.reset();
+    });
+  } else {
+    showToast('Yêu cầu đã được gửi! Mình sẽ xem xét sớm nhé. 📨');
+    e.target.reset();
+  }
 }
 
 /* ============ TOAST ============ */
