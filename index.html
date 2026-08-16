@@ -36,16 +36,16 @@ body{background:#0a0c10;color:#e8e4da;font-family:'Poppins',sans-serif;overflow-
 .liquid-sheen{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;mix-blend-mode:screen;background:radial-gradient(1200px 600px at 20% 0%,rgba(200,168,100,.10),transparent 55%),radial-gradient(900px 500px at 85% 20%,rgba(80,110,180,.08),transparent 55%),radial-gradient(700px 700px at 50% 100%,rgba(200,168,100,.06),transparent 60%);animation:liquidMove 22s ease-in-out infinite alternate}
 @keyframes liquidMove{0%{transform:translate3d(0,0,0) rotate(0deg)}100%{transform:translate3d(30px,-40px,0) rotate(4deg)}}
 
-/* ===== MOBILE: bản nhẹ nhưng vẫn có animation ===== */
+/* ===== MOBILE: tối ưu, không giật/chớp ===== */
 @media (max-width:640px), (pointer:coarse){
-  .glass{-webkit-backdrop-filter:blur(8px) saturate(120%);backdrop-filter:blur(8px) saturate(120%)}
-  .glass::before{animation:sheen 9s ease-in-out infinite;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.14) 45%,transparent 60%)}
-  .glass::after{animation:none}
-  .bg .glow{filter:blur(60px);opacity:.3}
-  .liquid-sheen{animation:liquidMove 26s ease-in-out infinite alternate;opacity:.2}
-  .glow.g1{animation:blob1 20s ease-in-out infinite alternate}
-  .glow.g2{animation:blob2 24s ease-in-out infinite alternate}
-  nav.scrolled,.shop-card,.search-bar,.video-card,.request-wrap,.fb-wrap,.player-modal{-webkit-backdrop-filter:blur(8px) saturate(120%);backdrop-filter:blur(8px) saturate(120%)}
+  .glass{-webkit-backdrop-filter:blur(8px) saturate(120%);backdrop-filter:blur(8px) saturate(120%);-webkit-transform:translateZ(0);transform:translateZ(0)}
+  .glass::before{animation:sheenM 6s ease-in-out infinite;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.14) 45%,transparent 60%)}
+  .glass::after{display:none}
+  .bg .glow{filter:blur(50px);opacity:.28;border-radius:50%!important;animation:glowM 12s ease-in-out infinite alternate}
+  .liquid-sheen{animation:sheenM 9s ease-in-out infinite;opacity:.18;mix-blend-mode:normal}
+  @keyframes sheenM{0%,100%{opacity:.3}50%{opacity:.9}}
+  @keyframes glowM{0%{transform:translate3d(0,0,0) scale(1);opacity:.28}100%{transform:translate3d(30px,20px,0) scale(1.15);opacity:.4}}
+  nav.scrolled,.shop-card,.search-bar,.video-card,.request-wrap,.fb-wrap,.player-modal{-webkit-backdrop-filter:blur(8px) saturate(120%);backdrop-filter:blur(8px) saturate(120%);-webkit-transform:translateZ(0);transform:translateZ(0)}
 }
 
 /* ===== NAV ===== */
