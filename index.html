@@ -110,6 +110,18 @@ section{padding:60px 5% 90px;scroll-margin-top:90px}
 .request-wrap textarea{resize:vertical;min-height:110px}
 .request-wrap select option{background:#0a0c10;color:#e8e4da}
 
+/* ===== PHẢN HỒI ===== */
+.fb-wrap{max-width:620px;margin:0 auto;border-radius:14px;border:1px solid rgba(200,168,100,.3);background:rgba(200,168,100,.05);padding:36px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.fb-wrap label{display:block;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#a89f8e;margin-bottom:8px}
+.fb-wrap input,.fb-wrap textarea,.fb-wrap select{width:100%;padding:13px 16px;border-radius:8px;background:rgba(10,12,16,.6);border:1px solid rgba(255,255,255,.1);color:#e8e4da;font-size:14px;outline:none;font-family:'Poppins',sans-serif;transition:border-color .3s,box-shadow .3s;margin-bottom:18px}
+.fb-wrap input:focus,.fb-wrap textarea:focus,.fb-wrap select:focus{border-color:#c8a864;box-shadow:0 0 0 3px rgba(200,168,100,.12)}
+.fb-wrap textarea{resize:vertical;min-height:110px}
+.fb-wrap select option{background:#0a0c10;color:#e8e4da}
+.fb-stars{display:flex;gap:6px;justify-content:center;margin-bottom:18px}
+.fb-stars button{background:none;border:none;font-size:28px;cursor:pointer;filter:grayscale(1);opacity:.4;transition:.3s}
+.fb-stars button.on{filter:none;opacity:1;transform:scale(1.15)}
+.fb-stars button:hover{transform:scale(1.2)}
+
 /* ===== FOOTER ===== */
 footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:center;color:#5c574c;font-size:12.5px;letter-spacing:1px}
 
@@ -145,6 +157,8 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
   .sec-title h2{font-size:21px}
   .request-wrap{padding:22px 18px}
   .request-wrap input,.request-wrap textarea,.request-wrap select{width:100%;max-width:100%;box-sizing:border-box}
+  .fb-wrap{padding:22px 18px}
+  .fb-wrap input,.fb-wrap textarea,.fb-wrap select{width:100%;max-width:100%;box-sizing:border-box}
   .player-modal{width:100vw;max-height:100vh;border-radius:0;border:none}
   .player-modal .pm-head{padding:14px 16px}
   .player-modal .pm-head h3{font-size:15px;max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -182,6 +196,7 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
     <a class="btn" href="#shop">🛒 Shop</a>
     <a class="btn" href="#videos">🎬 Free video</a>
     <a class="btn" href="#request">✉️ Gửi yêu cầu</a>
+    <a class="btn" href="#feedback">💬 Phản hồi</a>
   </div>
 </nav>
 
@@ -236,6 +251,28 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
       <label>Nội dung yêu cầu</label>
       <textarea id="reqContent" placeholder="Mô tả chi tiết yêu cầu của bạn..." required></textarea>
       <button class="btn solid" type="submit" style="width:100%;justify-content:center">📨 Gửi yêu cầu</button>
+    </form>
+  </div>
+</section>
+
+<!-- ===== MỤC 4: PHẢN HỒI ===== -->
+<section id="feedback">
+  <div class="sec-title reveal"><div class="bar"></div><h2>💬 <em>Phản</em> Hồi</h2></div>
+  <div class="fb-wrap reveal d1">
+    <form onsubmit="sendFeedback(event)">
+      <label>Họ tên / Biệt danh</label>
+      <input type="text" id="fbName" placeholder="Tên của bạn" required>
+      <label>Đánh giá trải nghiệm</label>
+      <div class="fb-stars" id="fbStars">
+        <button type="button" data-v="1">⭐</button>
+        <button type="button" data-v="2">⭐</button>
+        <button type="button" data-v="3">⭐</button>
+        <button type="button" data-v="4">⭐</button>
+        <button type="button" data-v="5">⭐</button>
+      </div>
+      <label>Nội dung phản hồi</label>
+      <textarea id="fbContent" placeholder="Chia sẻ cảm nhận, góp ý hoặc báo lỗi của bạn..." required></textarea>
+      <button class="btn solid" type="submit" style="width:100%;justify-content:center">📨 Gửi phản hồi</button>
     </form>
   </div>
 </section>
@@ -372,6 +409,67 @@ function showToast(msg){
   toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
 }
 
+/* ============ FIREBASE (PHẢN HỒI) ============ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw",
+  authDomain: "cinevault-ec9d1.firebaseapp.com",
+  databaseURL: "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "cinevault-ec9d1",
+  storageBucket: "cinevault-ec9d1.firebasestorage.app",
+  messagingSenderId: "732539981440",
+  appId: "1:732539981440:web:84403c072905d8afcd6065",
+  measurementId: "G-HST3SLPEVH"
+};
+let fbReady = false;
+let fbRating = 0;
+function fbLoad(src){
+  return new Promise((res,rej)=>{
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = res;
+    s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+async function initFirebase(){
+  try{
+    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbReady = true;
+  }catch(e){ console.warn('Firebase init failed:', e); }
+}
+document.getElementById('fbStars').addEventListener('click', e=>{
+  const b = e.target.closest('button');
+  if(!b) return;
+  fbRating = parseInt(b.dataset.v, 10);
+  document.querySelectorAll('#fbStars button').forEach(btn=>{
+    btn.classList.toggle('on', parseInt(btn.dataset.v, 10) <= fbRating);
+  });
+});
+async function sendFeedback(e){
+  e.preventDefault();
+  const name = document.getElementById('fbName').value.trim();
+  const content = document.getElementById('fbContent').value.trim();
+  if(!content){ showToast('Vui lòng nhập nội dung phản hồi!'); return; }
+  if(!fbReady){
+    showToast('Đang kết nối máy chủ... Vui lòng thử lại sau giây lát.');
+    return;
+  }
+  try{
+    await firebase.database().ref('feedback').push({
+      name, rating: fbRating, content, time: Date.now()
+    });
+    showToast('Đã gửi phản hồi! Cảm ơn bạn 💛');
+    e.target.reset();
+    fbRating = 0;
+    document.querySelectorAll('#fbStars button').forEach(btn=>btn.classList.remove('on'));
+  }catch(err){
+    console.warn('Send feedback failed:', err);
+    showToast('Gửi thất bại! Kiểm tra kết nối rồi thử lại.');
+  }
+}
+
 /* ============ CLICK ANIMATION (RIPPLE + POP) ============ */
 document.addEventListener('click', e=>{
   const target = e.target.closest('.btn, .dl, .nav-links a, .video-card, .shop-card a, .close');
@@ -400,6 +498,7 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
 /* ============ INIT ============ */
 renderVideos(VIDEOS);
+initFirebase();
 document.getElementById('playerOverlay').addEventListener('click', e=>{ if(e.target.id==='playerOverlay') closePlayer(); });
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape' && document.getElementById('playerOverlay').classList.contains('show')) closePlayer();
