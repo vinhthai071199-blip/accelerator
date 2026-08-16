@@ -196,46 +196,72 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
 
 @media(max-width:760px){
   .nav-links .btn{display:none}
-  nav{padding:12px 4%}
-  .logo{font-size:17px;letter-spacing:2px}
-  #userChip{padding:7px 12px;font-size:12px;max-width:110px}
+  nav{padding:12px 4%;gap:8px}
+  nav>*{min-width:0}
+  .logo{font-size:17px;letter-spacing:2px;white-space:nowrap}
+  #userChip{padding:7px 12px;font-size:12px;max-width:110px;flex-shrink:1}
   #userChip .u-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .btn{padding:9px 14px;font-size:11px}
+  #userChip .avatar{flex-shrink:0}
+  #btnLogin,#btnLogout{padding:8px 12px;font-size:10.5px;white-space:nowrap;flex-shrink:0}
   header{padding:95px 5% 28px}
   header p{font-size:13px;line-height:1.6}
   .grid{grid-template-columns:1fr;gap:18px;padding:0 3%}
   .video-thumb video{height:auto}
+  .video-info{padding:14px 14px 18px}
+  .video-info h3{font-size:15px;word-break:break-word}
   .shop-card{padding:22px 18px;gap:18px}
-  .shop-card h3{font-size:16px}
-  .shop-card p{font-size:12.5px;line-height:1.6}
-  .shop-actions{flex-direction:column;width:100%}
-  .shop-actions .btn{width:100%;justify-content:center}
+  .shop-card h3{font-size:16px;word-break:break-word}
+  .shop-card p{font-size:12.5px;line-height:1.6;word-break:break-word}
+  .shop-actions{flex-direction:column;width:100%;max-width:100%}
+  .shop-actions .btn{width:100%;justify-content:center;white-space:normal}
   section{padding:60px 4%}
   .sec-title h2{font-size:21px}
   .request-wrap{padding:22px 18px}
+  .request-wrap input,.request-wrap textarea,.request-wrap select{width:100%;max-width:100%;box-sizing:border-box}
   .player-modal{width:100vw;max-height:100vh;border-radius:0;border:none}
   .player-modal .pm-head{padding:14px 16px}
   .player-modal .pm-head h3{font-size:15px;max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .player-wrap video{max-height:52vh}
-  .pm-tools{padding:14px 16px;gap:10px}
-  .pm-tools .dl{flex:1;justify-content:center;padding:13px 12px}
-  .pm-comments{padding:6px 16px 22px}
-  .cmt-input button{padding:10px 14px;font-size:12px}
-  .modal{width:min(92vw,420px);padding:30px 22px}
+  .player-wrap video{max-height:52vh;width:100%}
+  .pm-tools{padding:14px 16px;gap:10px;box-sizing:border-box}
+  .pm-tools .dl{flex:1;justify-content:center;padding:13px 12px;white-space:nowrap}
+  .pm-comments{padding:6px 16px 22px;box-sizing:border-box}
+  .cmt-input{flex-wrap:nowrap;min-width:0}
+  .cmt-input input{min-width:0;width:auto;flex:1}
+  .cmt-input button{padding:10px 14px;font-size:12px;flex-shrink:0}
+  .cmt-item{min-width:0}
+  .cmt-item .c-text{word-break:break-word}
+  .modal{width:min(92vw,420px);padding:30px 22px;box-sizing:border-box}
   .profile-modal{width:94vw}
   .profile-hero{padding:26px 20px 20px}
-  .profile-stats{padding:14px 16px}
+  .profile-hero p{word-break:break-all}
+  .profile-stats{padding:14px 16px;box-sizing:border-box}
+  .profile-stats .stat{min-width:0}
   .profile-body{padding:8px 20px 24px}
+  .pf-field .pf-row{flex-wrap:wrap}
+  .pf-field .pf-row input{min-width:0;width:100%;flex:1 1 100%;box-sizing:border-box}
+  .pf-field .pf-row button{flex-shrink:0}
   .overlay{padding:12px 0;align-items:flex-start}
-  #toast{width:88vw;justify-content:center;font-size:12.5px;padding:13px 16px;bottom:18px}
-  .search-bar{flex-wrap:nowrap}
-  .search-bar input{font-size:14px;padding:12px 10px}
+  #toast{width:88vw;justify-content:center;font-size:12.5px;padding:13px 16px;bottom:18px;box-sizing:border-box}
+  .search-bar{flex-wrap:nowrap;padding:10px 12px;box-sizing:border-box}
+  .search-bar input{font-size:14px;padding:12px 10px;min-width:0;width:auto;flex:1}
+  .search-bar .clear{flex-shrink:0}
+  .video-actions{flex-direction:row}
+  .video-actions .dl,.video-actions .cmt-btn{flex:1;min-width:0;white-space:nowrap}
 }
 @media(max-width:400px){
   .logo{font-size:15px}
   #userChip{max-width:96px;padding:6px 10px}
   .video-actions{flex-direction:column}
   .video-actions .cmt-btn{width:100%}
+  .video-actions .dl{width:100%}
+  .pm-tools{flex-direction:column;align-items:stretch}
+  .pm-tools .cmt-count-tag{justify-content:center}
+}
+@media(max-width:760px){
+  html,body{overflow-x:hidden}
+  body{width:100%;max-width:100vw}
+  img,video,iframe{max-width:100%}
+  input,select,textarea{max-width:100%}
 }
 </style>
 </head>
