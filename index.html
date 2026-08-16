@@ -29,54 +29,6 @@ nav.scrolled{background:rgba(10,12,16,.75);-webkit-backdrop-filter:blur(20px);ba
 .logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;letter-spacing:3px}
 .logo em{font-style:normal;color:#c8a864}
 .nav-links{display:flex;gap:10px}
-#userChip{display:none;align-items:center;gap:9px;padding:9px 18px;border-radius:40px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:13px;font-weight:600;cursor:pointer;transition:.3s}
-#userChip:hover{border-color:rgba(200,168,100,.5);background:rgba(200,168,100,.08)}
-#userChip .avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#c8a864,#8a6d3b);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#0a0c10}
-/* ===== PROFILE MODAL ===== */
-.profile-modal{width:min(440px,94vw);padding:0;overflow:visible;text-align:left}
-.profile-hero{background:linear-gradient(160deg,rgba(200,168,100,.18),transparent 60%);padding:34px 32px 24px;text-align:center;border-bottom:1px solid rgba(255,255,255,.07)}
-.profile-hero .big-avatar{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#c8a864,#8a6d3b);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#0a0c10;margin:0 auto 14px;box-shadow:0 10px 34px rgba(200,168,100,.35)}
-.profile-hero h3{font-family:'Playfair Display',serif;font-size:20px}
-.profile-hero p{color:#8d8678;font-size:12.5px;margin-top:4px;font-weight:300;word-break:break-all}
-.profile-stats{display:flex;gap:10px;padding:18px 32px;border-bottom:1px solid rgba(255,255,255,.07)}
-.profile-stats .stat{flex:1;text-align:center;padding:12px 6px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
-.profile-stats .stat b{display:block;font-size:19px;color:#c8a864;font-family:'Playfair Display',serif}
-.profile-stats .stat small{color:#8d8678;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;font-weight:600}
-.profile-body{padding:10px 32px 30px}
-.pf-field{margin-top:16px}
-.pf-field label{display:block;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#8d8678;margin-bottom:7px;font-weight:600}
-.pf-field .pf-row{display:flex;gap:8px}
-.pf-field input{flex:1;padding:11px 14px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#e8e4da;font-size:13px;outline:none;transition:border-color .3s;font-family:'Poppins',sans-serif}
-.pf-field input:focus{border-color:#c8a864}
-.pf-field .pf-row button{padding:10px 18px;border-radius:6px;border:none;background:linear-gradient(135deg,#c8a864,#8a6d3b);color:#0a0c10;font-weight:700;font-size:12px;cursor:pointer;transition:.3s;white-space:nowrap}
-.pf-field .pf-row button:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(200,168,100,.3)}
-.pf-logout{width:100%;margin-top:22px;justify-content:center}
-/* ===== AVATAR PICKER ===== */
-.pf-avatar-row{display:flex;gap:8px;margin-bottom:10px}
-.pf-avatar-row .btn{flex:1;justify-content:center;padding:8px 10px;font-size:10.5px}
-.pf-avatars{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;max-height:150px;overflow-y:auto;padding:4px}
-.pf-avatars button{aspect-ratio:1;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);font-size:20px;cursor:pointer;transition:.25s;display:flex;align-items:center;justify-content:center}
-.pf-avatars button:hover{transform:scale(1.15);border-color:#c8a864}
-.pf-avatars button.sel{border-color:#c8a864;background:rgba(200,168,100,.18);box-shadow:0 0 0 2px rgba(200,168,100,.4)}
-.avatar-img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
-.big-avatar img,.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-#userChip .crown{color:#c8a864;font-size:12px}
-/* ===== ADMIN REQUESTS ===== */
-.pf-reqs{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px}
-.pf-req{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px;font-size:12px}
-.pf-req .r-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
-.pf-req .r-head b{color:#c8a864;font-size:11.5px;word-break:break-word}
-.pf-req .r-head .r-del{background:none;border:none;color:#5c574c;cursor:pointer;font-size:11px;flex-shrink:0;transition:color .3s}
-.pf-req .r-head .r-del:hover{color:#c8756a}
-.pf-req .r-tag{display:inline-block;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(200,168,100,.15);color:#c8a864;font-weight:600}
-.pf-req .r-text{color:#c9c3b6;font-weight:300;line-height:1.5;margin-top:5px;word-break:break-word}
-.pf-req .r-time{color:#5c574c;font-size:10px;margin-top:5px}
-.btn{padding:10px 22px;border-radius:4px;border:1px solid rgba(200,168,100,.5);background:transparent;color:#c8a864;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:.35s cubic-bezier(.34,1.56,.64,1);display:inline-flex;align-items:center;gap:7px;position:relative;overflow:hidden}
-.btn:active{transform:scale(.93)}
-.btn:hover{background:rgba(200,168,100,.1);transform:translateY(-2px);box-shadow:0 0 24px rgba(200,168,100,.15)}
-.btn.solid{background:linear-gradient(135deg,#c8a864,#8a6d3b);border:none;color:#0a0c10}
-.btn.solid:hover{box-shadow:0 0 30px rgba(200,168,100,.35)}
-.btn.danger{border-color:rgba(200,120,90,.5);color:#c8756a}
 /* ===== RIPPLE ===== */
 .ripple{position:absolute;border-radius:50%;pointer-events:none;background:rgba(255,255,255,.5);transform:scale(0);animation:rippleAnim .7s cubic-bezier(.22,1,.36,1) forwards}
 @keyframes rippleAnim{to{transform:scale(3.5);opacity:0}}
@@ -125,14 +77,6 @@ section{padding:60px 5% 90px;scroll-margin-top:90px}
 .video-info .meta small{color:#7c7567;font-size:12px;display:flex;align-items:center;gap:5px}
 .video-info .meta .dl{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:4px;background:linear-gradient(135deg,#c8a864,#8a6d3b);color:#0a0c10;font-size:12px;font-weight:700;text-decoration:none;transition:.3s}
 .video-info .meta .dl:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(200,168,100,.35)}
-.video-actions{display:flex;gap:10px;margin-top:14px}
-.video-actions .cmt-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 14px;border-radius:4px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#a8a298;font-size:12px;font-weight:600;cursor:pointer;transition:.3s}
-.video-actions .cmt-btn:hover{border-color:rgba(200,168,100,.45);color:#c8a864;background:rgba(200,168,100,.08)}
-/* ===== BÌNH LUẬN ===== */
-.cmt-panel{display:none;border-top:1px solid rgba(255,255,255,.07);padding:16px 18px;background:rgba(10,12,16,.5);animation:cmtIn .45s cubic-bezier(.22,1,.36,1)}
-.cmt-panel.open{display:block}
-@keyframes cmtIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-
 /* ===== MODAL ===== */
 .overlay{position:fixed;inset:0;z-index:200;background:rgba(5,6,9,.85);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:flex;align-items:flex-start;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s ease;overflow-y:auto;padding:24px 0}
 .overlay.show{opacity:1;pointer-events:auto}
@@ -147,48 +91,9 @@ section{padding:60px 5% 90px;scroll-margin-top:90px}
 .pm-tools{display:flex;gap:12px;padding:16px 24px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .pm-tools .dl{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:6px;background:linear-gradient(135deg,#c8a864,#8a6d3b);color:#0a0c10;font-size:13px;font-weight:700;text-decoration:none;transition:.3s}
 .pm-tools .dl:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,168,100,.35)}
-.pm-tools .cmt-count-tag{color:#8d8678;font-size:13px;display:flex;align-items:center;gap:7px}
-/* COMMENTS IN PLAYER */
-.pm-comments{padding:8px 24px 26px;border-top:1px solid rgba(255,255,255,.07)}
-.pm-comments h4{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:#c8a864;margin:18px 0 14px;display:flex;align-items:center;gap:10px}
-.pm-comments h4 span{background:rgba(200,168,100,.15);padding:2px 10px;border-radius:20px;font-size:11px}
-.cmt-input{display:flex;gap:8px;margin-bottom:14px}
-.cmt-input input{flex:1;padding:11px 14px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#e8e4da;font-size:13px;outline:none;transition:border-color .3s;font-family:'Poppins',sans-serif}
-.cmt-input input:focus{border-color:#c8a864}
-.cmt-input button{padding:10px 20px;border-radius:6px;border:none;background:linear-gradient(135deg,#c8a864,#8a6d3b);color:#0a0c10;font-weight:700;font-size:12.5px;cursor:pointer;transition:.3s}
-.cmt-input button:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(200,168,100,.3)}
-.cmt-list{overflow:visible;max-height:none;padding-right:4px}
-.cmt-list::-webkit-scrollbar{width:5px}
-.cmt-list::-webkit-scrollbar-thumb{background:rgba(200,168,100,.3);border-radius:5px}
-.cmt-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);animation:comIn .45s cubic-bezier(.22,1,.36,1)}
-.cmt-item:last-child{border-bottom:none}
-@keyframes comIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.cmt-item .c-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#c8a864,#8a6d3b);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#0a0c10;flex-shrink:0}
-.cmt-item .c-body{flex:1;min-width:0}
-.cmt-item .c-name{font-size:12.5px;font-weight:700;color:#c8a864}
-.cmt-item .c-name small{color:#5c574c;font-weight:400;margin-left:8px;font-size:10.5px}
-.cmt-item .c-text{font-size:13px;color:#c9c3b6;margin-top:3px;font-weight:300;line-height:1.5;word-break:break-word}
-.cmt-item .c-del{background:none;border:none;color:#5c574c;cursor:pointer;font-size:11px;align-self:flex-start;transition:color .3s}
-.cmt-item .c-del:hover{color:#c8756a}
-.cmt-empty{text-align:center;color:#5c574c;font-size:12.5px;padding:14px 0;font-weight:300}
 .modal .close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#a8a298;font-size:15px;cursor:pointer;transition:all .3s}
 .modal .close:hover{background:rgba(200,120,90,.2);color:#c8756a;transform:rotate(90deg)}
 .modal h2{font-family:'Playfair Display',serif;font-size:22px;text-align:center;letter-spacing:1px;margin-bottom:6px}
-.modal .sub{text-align:center;color:#7c7567;font-size:13px;margin-bottom:24px;font-weight:300}
-.google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px;border-radius:8px;background:#fff;color:#333;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:all .3s;margin-bottom:14px}
-.google-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(255,255,255,.15)}
-.divider{display:flex;align-items:center;gap:14px;margin:16px 0;color:#5c574c;font-size:11px;letter-spacing:2px;text-transform:uppercase}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
-.input-group{margin-bottom:15px}
-.input-group label{display:block;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#8d8678;margin-bottom:7px}
-.input-group input{width:100%;padding:13px 15px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e8e4da;font-size:14px;outline:none;transition:border-color .3s,box-shadow .3s}
-.input-group input:focus{border-color:#c8a864;box-shadow:0 0 0 3px rgba(200,168,100,.12)}
-.input-group input::placeholder{color:#4c473d}
-.error-msg{color:#c8756a;font-size:12.5px;text-align:center;margin-top:10px;min-height:18px}
-.btn.full{width:100%;margin-top:6px;padding:14px;justify-content:center}
-.toggle-auth{text-align:center;margin-top:16px;font-size:13px;color:#7c7567}
-.toggle-auth button{background:none;border:none;color:#c8a864;font-weight:600;cursor:pointer;font-size:13px}
-.toggle-auth button:hover{text-decoration:underline}
 
 /* ===== FORM GỬI YÊU CẦU ===== */
 .request-wrap{max-width:620px;margin:0 auto;border-radius:14px;border:1px solid rgba(200,168,100,.3);background:rgba(200,168,100,.05);padding:36px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
@@ -219,10 +124,6 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
   nav{padding:12px 4%;gap:8px}
   nav>*{min-width:0}
   .logo{font-size:17px;letter-spacing:2px;white-space:nowrap}
-  #userChip{padding:7px 12px;font-size:12px;max-width:110px;flex-shrink:1}
-  #userChip .u-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #userChip .avatar{flex-shrink:0}
-  #btnLogin,#btnLogout{padding:8px 12px;font-size:10.5px;white-space:nowrap;flex-shrink:0}
   header{padding:95px 5% 28px}
   header p{font-size:13px;line-height:1.6}
   .grid{grid-template-columns:1fr;gap:18px;padding:0 3%}
@@ -243,38 +144,16 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
   .player-wrap video{max-height:52vh;width:100%}
   .pm-tools{padding:14px 16px;gap:10px;box-sizing:border-box}
   .pm-tools .dl{flex:1;justify-content:center;padding:13px 12px;white-space:nowrap}
-  .pm-comments{padding:6px 16px 22px;box-sizing:border-box}
-  .cmt-input{flex-wrap:nowrap;min-width:0}
-  .cmt-input input{min-width:0;width:auto;flex:1}
-  .cmt-input button{padding:10px 14px;font-size:12px;flex-shrink:0}
-  .cmt-item{min-width:0}
-  .cmt-item .c-text{word-break:break-word}
   .modal{width:min(92vw,420px);padding:30px 22px;box-sizing:border-box}
-  .profile-modal{width:94vw}
-  .profile-hero{padding:26px 20px 20px}
-  .profile-hero p{word-break:break-all}
-  .profile-stats{padding:14px 16px;box-sizing:border-box}
-  .profile-stats .stat{min-width:0}
-  .profile-body{padding:8px 20px 24px}
-  .pf-field .pf-row{flex-wrap:wrap}
-  .pf-field .pf-row input{min-width:0;width:100%;flex:1 1 100%;box-sizing:border-box}
-  .pf-field .pf-row button{flex-shrink:0}
   .overlay{padding:12px 0;align-items:flex-start}
   #toast{width:88vw;justify-content:center;font-size:12.5px;padding:13px 16px;bottom:18px;box-sizing:border-box}
   .search-bar{flex-wrap:nowrap;padding:10px 12px;box-sizing:border-box}
   .search-bar input{font-size:14px;padding:12px 10px;min-width:0;width:auto;flex:1}
   .search-bar .clear{flex-shrink:0}
-  .video-actions{flex-direction:row}
-  .video-actions .dl,.video-actions .cmt-btn{flex:1;min-width:0;white-space:nowrap}
 }
 @media(max-width:400px){
   .logo{font-size:15px}
-  #userChip{max-width:96px;padding:6px 10px}
-  .video-actions{flex-direction:column}
-  .video-actions .cmt-btn{width:100%}
-  .video-actions .dl{width:100%}
   .pm-tools{flex-direction:column;align-items:stretch}
-  .pm-tools .cmt-count-tag{justify-content:center}
 }
 @media(max-width:760px){
   html,body{overflow-x:hidden}
@@ -297,9 +176,6 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
     <a class="btn" href="#videos">🎬 Free video</a>
     <a class="btn" href="#request">✉️ Gửi yêu cầu</a>
   </div>
-  <div id="userChip"><div class="avatar" id="chipAvatar">K</div><span class="u-name" id="userName">Khách</span><span class="crown" id="chipCrown" style="display:none">👑</span></div>
-  <button class="btn" id="btnLogin" onclick="openAuth()">Đăng nhập</button>
-  <button class="btn danger" id="btnLogout" onclick="logout()" style="display:none">Đăng xuất</button>
 </nav>
 
 <!-- HEADER -->
@@ -373,160 +249,12 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
       <video id="pmVideo" controls playsinline preload="metadata"></video>
     </div>
     <div class="pm-tools">
-      <span class="cmt-count-tag">💬 <span id="pmCmtCount">0</span> bình luận</span>
-      <a class="dl" id="pmDownload" href="#" download>⬇ Tải video</a>
-    </div>
-    <div class="pm-comments">
-      <h4>Bình luận <span id="pmCmtCount2">0</span></h4>
-      <div class="cmt-input">
-        <input type="text" id="pmCmtInput" placeholder="Viết bình luận của bạn...">
-        <button onclick="pmAddComment()">Gửi</button>
-      </div>
-      <div class="cmt-list" id="pmCmtList"></div>
-    </div>
-  </div>
-</div>
-
-<!-- PROFILE MODAL -->
-<div class="overlay" id="profileOverlay">
-  <div class="modal profile-modal">
-    <button class="close" onclick="closeProfile()">✕</button>
-    <div class="profile-hero">
-      <div class="big-avatar" id="pfAvatar">K</div>
-      <h3 id="pfName">Khách</h3>
-      <p id="pfEmail">—</p>
-    </div>
-    <div class="profile-stats">
-      <div class="stat"><b id="pfStatCmt">0</b><small>Bình luận</small></div>
-      <div class="stat"><b id="pfStatReq">0</b><small>Yêu cầu</small></div>
-      <div class="stat"><b id="pfStatMem">—</b><small>Thành viên</small></div>
-    </div>
-    <div class="profile-body">
-      <div class="pf-field">
-        <label>Đổi avatar</label>
-        <div class="pf-avatar-row">
-          <button class="btn" onclick="document.getElementById('pfAvatarFile').click()">📷 Tải ảnh lên</button>
-          <button class="btn" onclick="resetAvatar()">↺ Mặc định</button>
-        </div>
-        <div class="pf-avatars" id="pfAvatarGrid"></div>
-        <input type="file" id="pfAvatarFile" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
-      </div>
-      <div class="pf-field">
-        <label>Tên hiển thị</label>
-        <div class="pf-row">
-          <input type="text" id="pfNameInput" placeholder="Tên mới">
-          <button onclick="pfSaveName()">Lưu tên</button>
-        </div>
-      </div>
-      <div class="pf-field">
-        <label>Đổi mật khẩu</label>
-        <div class="pf-row">
-          <input type="password" id="pfPwInput" placeholder="Mật khẩu mới (6+ ký tự)">
-          <button onclick="pfSavePw()">Đổi</button>
-        </div>
-      </div>
-      <div id="adminPanel" style="display:none">
-        <div class="pf-field">
-          <label>👑 Quản trị — Yêu cầu từ người dùng <span id="pfReqCount" style="color:#c8a864;text-transform:none;letter-spacing:0">(0)</span></label>
-          <div class="pf-reqs" id="pfReqList"></div>
-        </div>
-      </div>
-      <button class="btn danger pf-logout" onclick="pfLogout()">🚪 Đăng xuất</button>
-    </div>
-  </div>
-</div>
-
-<!-- AUTH MODAL -->
-<div class="overlay" id="authOverlay">
-  <div class="modal">
-    <button class="close" onclick="closeAuth()">✕</button>
-    <h2 id="authTitle">Chào mừng trở lại</h2>
-    <p class="sub" id="authSub">Đăng nhập để gửi yêu cầu nhanh hơn</p>
-    <div id="googleArea"></div>
-    <div class="divider">hoặc dùng email</div>
-    <div class="input-group" id="nameField" style="display:none">
-      <label>Họ và tên</label>
-      <input type="text" id="regName" placeholder="Tên của bạn" oninput="checkNameTaken()">
-    </div>
-    <div class="input-group">
-      <label>Email</label>
-      <input type="email" id="authEmail" placeholder="your@email.com">
-    </div>
-    <div class="input-group">
-      <label>Mật khẩu</label>
-      <input type="password" id="authPassword" placeholder="••••••••">
-    </div>
-    <div class="error-msg" id="authError"></div>
-    <button class="btn solid full" id="authBtn" onclick="submitAuth()">Đăng nhập</button>
-    <div class="toggle-auth">
-      <span id="toggleText">Chưa có tài khoản?</span>
-      <button id="toggleBtn" onclick="toggleAuthMode()">Đăng ký</button>
+      <a class="dl" id="pmDownload" href="#" download>⬇️ Tải video</a>
     </div>
   </div>
 </div>
 
 <script>
-/* ============ CẤU HÌNH GOOGLE ============ */
-const GOOGLE_CLIENT_ID = '';
-const ADMIN_EMAIL = 'duoc7919@gmail.com';
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw",
-  authDomain: "cinevault-ec9d1.firebaseapp.com",
-  databaseURL: "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "cinevault-ec9d1",
-  storageBucket: "cinevault-ec9d1.firebasestorage.app",
-  messagingSenderId: "732539981440",
-  appId: "1:732539981440:web:84403c072905d8afcd6065",
-  measurementId: "G-HST3SLPEVH"
-};
-function isAdmin(){
-  const s = getSession();
-  return s && s.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-}
-
-/* ============ FIREBASE (BÌNH LUẬN CHUNG) ============ */
-let fbReady = false;
-function vidKey(src){ return String(src).replace(/[^A-Za-z0-9_-]/g,'_'); }
-function fbLoad(src){
-  return new Promise((res,rej)=>{
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload = res;
-    s.onerror = rej;
-    document.head.appendChild(s);
-  });
-}
-async function initFirebase(){
-  if(!FIREBASE_CONFIG) return;
-  try{
-    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
-    firebase.initializeApp(FIREBASE_CONFIG);
-    fbReady = true;
-    VIDEOS.forEach(v=>syncComments(v.src));
-  }catch(e){ console.warn('Firebase init failed:', e); }
-}
-async function syncComments(src){
-  if(!fbReady) return;
-  try{
-    const snap = await firebase.database().ref('comments/'+vidKey(src)).once('value');
-    const data = snap.val() || {};
-    const list = Object.entries(data).map(([id,c])=>({id:id, email:c.email, name:c.name, text:c.text, time:c.time}));
-    saveComments(src, list);
-    if(currentSrc === src) renderPmComments();
-    const count = document.querySelector(`.cmt-count[data-src="${src}"]`);
-    if(count) count.textContent = list.length;
-  }catch(e){ console.warn('Sync comments failed:', e); }
-}
-function fbPushComment(src, c){
-  if(!fbReady) return Promise.resolve();
-  return firebase.database().ref('comments/'+vidKey(src)+'/'+c.id).set({email:c.email, name:c.name, text:c.text, time:c.time});
-}
-function fbRemoveComment(src, cid){
-  if(!fbReady) return;
-  firebase.database().ref('comments/'+vidKey(src)+'/'+cid).remove().catch(()=>{});
-}
-
 /* ============ DỮ LIỆU ============ */
 const VIDEOS = [
   {title:'Yue Qingxiao', src:'video-1.mp4', poster:'', dur:'—'},
@@ -551,11 +279,8 @@ function renderVideos(list){
       <div class="video-info">
         <h3>${v.title}</h3>
         <div class="meta">
-          <small>👁 Bấm vào video để xem & bình luận</small>
+          <small>👁 Bấm vào video để xem</small>
           <a class="dl" href="${v.src}" download="${(v.title||'video').replace(/[^\w\p{L}]+/gu,'_')}.mp4">Tải về</a>
-        </div>
-        <div class="video-actions">
-          <button class="cmt-btn" onclick="openPlayer('${v.src}')">💬 Bình luận (<span class="cmt-count" data-src="${v.src}">${getComments(v.src).length}</span>)</button>
         </div>
       </div>`;
     card.addEventListener('click', e=>{
@@ -589,40 +314,19 @@ function clearSearch(){
   document.getElementById('searchInput').focus();
 }
 
-/* ============ BÌNH LUẬN & PLAYER ============ */
-let currentSrc = null;
-
-function getComments(src){
-  const all = JSON.parse(localStorage.getItem('cv_comments') || '{}');
-  return all[src] || [];
-}
-function saveComments(src, list){
-  const all = JSON.parse(localStorage.getItem('cv_comments') || '{}');
-  all[src] = list;
-  localStorage.setItem('cv_comments', JSON.stringify(all));
-}
-function getName(){
-  const s = getSession();
-  return s ? s.name : 'Khách';
-}
-function esc(s){
-  return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
+/* ============ PLAYER ============ */
 function findVideo(src){
   return VIDEOS.find(v=>v.src===src);
 }
 function openPlayer(src){
   const v = findVideo(src);
   if(!v) return;
-  currentSrc = src;
   document.getElementById('pmTitle').textContent = v.title;
   const player = document.getElementById('pmVideo');
   player.src = v.src;
   document.getElementById('pmDownload').href = v.src;
   document.getElementById('pmDownload').download = (v.title||'video').replace(/[^\w\p{L}]+/gu,'_')+'.mp4';
   document.getElementById('playerOverlay').classList.add('show');
-  document.getElementById('pmCmtInput').value = '';
-  renderPmComments();
   requestAnimationFrame(()=>player.play().catch(()=>{}));
 }
 function closePlayer(){
@@ -630,68 +334,6 @@ function closePlayer(){
   const p = document.getElementById('pmVideo');
   p.pause();
   p.removeAttribute('src');
-  currentSrc = null;
-}
-function renderPmComments(){
-  if(!currentSrc) return;
-  const coms = getComments(currentSrc).slice().reverse();
-  document.getElementById('pmCmtCount').textContent = coms.length;
-  document.getElementById('pmCmtCount2').textContent = coms.length;
-  const count = document.querySelector(`.cmt-count[data-src="${currentSrc}"]`);
-  if(count) count.textContent = coms.length;
-  const list = document.getElementById('pmCmtList');
-  if(!coms.length){
-    list.innerHTML = '<div class="cmt-empty">Chưa có bình luận nào. Hãy là người đầu tiên!</div>';
-    return;
-  }
-  list.innerHTML = '';
-  coms.forEach(c=>{
-    const d = document.createElement('div');
-    d.className = 'cmt-item';
-    const dt = new Date(c.time);
-    const dateStr = isNaN(dt.getTime()) ? '' : `<small>${dt.toLocaleDateString('vi-VN')}</small>`;
-    d.innerHTML = `
-      <div class="c-avatar">${avatarContent({name:c.name, avatar:avatarFor(c.email)}, 34)}</div>
-      <div class="c-body">
-        <div class="c-name">${esc(c.name)} ${dateStr}</div>
-        <div class="c-text">${esc(c.text)}</div>
-      </div>
-      ${((getSession() && c.email===getSession().email) || isAdmin()) ? `<button class="c-del" onclick="pmDelComment('${c.id}')">✕</button>` : ''}`;
-    list.appendChild(d);
-  });
-}
-function pmAddComment(){
-  const input = document.getElementById('pmCmtInput');
-  const text = input.value.trim();
-  if(!text) return;
-  const s = getSession();
-  if(!s){
-    showToast('Vui lòng đăng nhập để bình luận!');
-    setTimeout(openAuth, 700);
-    return;
-  }
-  if(!currentSrc){ showToast('Lỗi: chưa chọn video!'); return; }
-  const list = getComments(currentSrc);
-  const c = {id:'c'+Date.now()+Math.random().toString(36).slice(2,6), email:s.email, name:s.name, text, time:Date.now()};
-  list.push(c);
-  saveComments(currentSrc, list);
-  fbPushComment(currentSrc, c);
-  input.value = '';
-  renderPmComments();
-  showToast('Đã gửi bình luận! 💬');
-}
-document.addEventListener('DOMContentLoaded', ()=>{
-  const ci = document.getElementById('pmCmtInput');
-  if(ci) ci.addEventListener('keydown', e=>{ if(e.key==='Enter') pmAddComment(); });
-});
-function pmDelComment(cid){
-  const list = getComments(currentSrc).filter(c=>c.id!==cid);
-  saveComments(currentSrc, list);
-  fbRemoveComment(currentSrc, cid);
-  renderPmComments();
-  const count = document.querySelector(`.cmt-count[data-src="${currentSrc}"]`);
-  if(count) count.textContent = list.length;
-  showToast('Đã xóa bình luận.');
 }
 
 /* ============ NAV SCROLL ============ */
@@ -699,326 +341,18 @@ window.addEventListener('scroll', ()=>{
   document.getElementById('navbar').classList.toggle('scrolled', window.scrollY>40);
 });
 
-/* ============ AUTH ============ */
-function getSession(){ return JSON.parse(localStorage.getItem('vh_session') || 'null'); }
-let isRegister = false;
-
-function nameExists(name){
-  const n = name.trim().toLowerCase();
-  if(!n) return false;
-  for(let i=0;i<localStorage.length;i++){
-    const k = localStorage.key(i);
-    if(k && k.startsWith('vh_') && !['vh_session','vh_requests','vh_avatar_tmp'].includes(k)){
-      try{
-        const u = JSON.parse(localStorage.getItem(k));
-        if(u && u.name && u.name.trim().toLowerCase() === n) return true;
-      }catch(e){}
-    }
-  }
-  return false;
-}
-
-function openAuth(){
-  document.getElementById('authError').textContent = '';
-  document.getElementById('authEmail').value = '';
-  document.getElementById('authPassword').value = '';
-  document.getElementById('regName').value = '';
-  document.getElementById('authOverlay').classList.add('show');
-}
-function closeAuth(){ document.getElementById('authOverlay').classList.remove('show'); }
-function checkNameTaken(){
-  const n = document.getElementById('regName').value.trim();
-  const err = document.getElementById('authError');
-  if(n && nameExists(n)){
-    err.textContent = '⚠ Tên "'+n+'" đã có người dùng, hãy chọn tên khác';
-  } else if(err.textContent.startsWith('⚠ Tên "')){
-    err.textContent = '';
-  }
-}
-function toggleAuthMode(){
-  isRegister = !isRegister;
-  document.getElementById('nameField').style.display = isRegister?'block':'none';
-  document.getElementById('authTitle').textContent = isRegister ? 'Tạo tài khoản mới' : 'Chào mừng trở lại';
-  document.getElementById('authSub').textContent = isRegister ? 'Join the CineVault community' : 'Đăng nhập để gửi yêu cầu nhanh hơn';
-  document.getElementById('authBtn').textContent = isRegister ? 'Đăng ký' : 'Đăng nhập';
-  document.getElementById('toggleText').textContent = isRegister ? 'Đã có tài khoản?' : 'Chưa có tài khoản?';
-  document.getElementById('toggleBtn').textContent = isRegister ? 'Đăng nhập' : 'Đăng ký';
-  document.getElementById('authError').textContent = '';
-}
-function submitAuth(){
-  const email = document.getElementById('authEmail').value.trim();
-  const pw = document.getElementById('authPassword').value;
-  const name = document.getElementById('regName').value.trim();
-  const err = document.getElementById('authError');
-  if(!email || !pw){ err.textContent = '⚠ Vui lòng nhập email và mật khẩu'; return; }
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ err.textContent = '⚠ Email không hợp lệ'; return; }
-  if(pw.length < 6){ err.textContent = '⚠ Mật khẩu tối thiểu 6 ký tự'; return; }
-  if(isRegister){
-    if(!name){ err.textContent = '⚠ Vui lòng nhập họ tên'; return; }
-    if(localStorage.getItem('vh_'+email)){ err.textContent = '⚠ Email đã được đăng ký'; return; }
-    if(nameExists(name)){ err.textContent = '⚠ Tên này đã có người dùng, hãy chọn tên khác'; return; }
-    localStorage.setItem('vh_'+email, JSON.stringify({name,pw}));
-    setUser(email,name);
-    showToast('Đăng ký thành công! Chào mừng '+name+' 🎉');
-    closeAuth();
-  } else {
-    const data = localStorage.getItem('vh_'+email);
-    if(!data){ err.textContent = '⚠ Email chưa được đăng ký'; return; }
-    const u = JSON.parse(data);
-    if(u.pw !== pw){ err.textContent = '⚠ Mật khẩu không đúng'; return; }
-    setUser(email,u.name);
-    showToast('Đăng nhập thành công, chào mừng '+u.name+'!');
-    closeAuth();
-  }
-}
-function googleDone(cred){
-  const data = JSON.parse(atob(cred.credential.split('.')[1]));
-  setUser(data.email, data.name);
-  showToast('Đăng nhập Google thành công, chào mừng '+data.name+'!');
-  closeAuth();
-}
-function setUser(email,name){
-  const prev = getSession();
-  localStorage.setItem('vh_session', JSON.stringify({email,name, joined: (prev&&prev.email===email)?prev.joined:Date.now()}));
-  updateUI();
-}
-function logout(){
-  localStorage.removeItem('vh_session');
-  updateUI();
-  showToast('Đã đăng xuất. Hẹn gặp lại!');
-}
-
-/* ============ PROFILE ============ */
-function countUserComments(email){
-  const all = JSON.parse(localStorage.getItem('cv_comments') || '{}');
-  let n = 0;
-  Object.values(all).forEach(list=>{
-    list.forEach(c=>{ if(c.email===email) n++; });
-  });
-  return n;
-}
-function countUserRequests(email){
-  const reqs = JSON.parse(localStorage.getItem('vh_requests') || '[]');
-  return reqs.filter(r=>r.by===email).length;
-}
-function openProfile(){
-  const s = getSession();
-  if(!s){ openAuth(); return; }
-  document.getElementById('pfAvatar').innerHTML = avatarContent(s, 76);
-  document.getElementById('pfName').textContent = s.name;
-  document.getElementById('pfEmail').textContent = s.email;
-  document.getElementById('pfStatCmt').textContent = countUserComments(s.email);
-  document.getElementById('pfStatReq').textContent = countUserRequests(s.email);
-  document.getElementById('pfStatMem').textContent = new Date(s.joined||Date.now()).toLocaleDateString('vi-VN');
-  document.getElementById('pfNameInput').value = '';
-  document.getElementById('pfPwInput').value = '';
-  renderAvatarGrid();
-  const adminPanel = document.getElementById('adminPanel');
-  if(isAdmin()){
-    adminPanel.style.display = 'block';
-    renderAdminReqs();
-  } else {
-    adminPanel.style.display = 'none';
-  }
-  document.getElementById('profileOverlay').classList.add('show');
-}
-function closeProfile(){ document.getElementById('profileOverlay').classList.remove('show'); }
-function pfSaveName(){
-  const s = getSession();
-  if(!s) return;
-  const name = document.getElementById('pfNameInput').value.trim();
-  if(!name){ showToast('Vui lòng nhập tên mới!'); return; }
-  const acc = JSON.parse(localStorage.getItem('vh_'+s.email) || 'null');
-  if(acc){ acc.name = name; localStorage.setItem('vh_'+s.email, JSON.stringify(acc)); }
-  s.name = name;
-  localStorage.setItem('vh_session', JSON.stringify(s));
-  updateUI();
-  openProfile();
-  showToast('Đã lưu tên mới: '+name+' ✨');
-}
-function pfSavePw(){
-  const s = getSession();
-  if(!s) return;
-  const pw = document.getElementById('pfPwInput').value;
-  if(pw.length < 6){ showToast('Mật khẩu tối thiểu 6 ký tự!'); return; }
-  const acc = JSON.parse(localStorage.getItem('vh_'+s.email) || 'null');
-  if(acc){ acc.pw = pw; localStorage.setItem('vh_'+s.email, JSON.stringify(acc)); showToast('Đã đổi mật khẩu thành công! 🔒'); }
-  else { showToast('Tài khoản Google không đổi mật khẩu được'); }
-  document.getElementById('pfPwInput').value = '';
-}
-function pfLogout(){
-  closeProfile();
-  logout();
-}
-
-/* ============ ADMIN ============ */
-const REQ_TYPES = {video:'Video mới', sua:'Sửa/Xóa video', download:'Link tải lỗi', khac:'Khác'};
-function renderAdminReqs(){
-  const reqs = JSON.parse(localStorage.getItem('vh_requests') || '[]');
-  document.getElementById('pfReqCount').textContent = '('+reqs.length+')';
-  const list = document.getElementById('pfReqList');
-  if(!reqs.length){
-    list.innerHTML = '<div class="cmt-empty">Chưa có yêu cầu nào.</div>';
-    return;
-  }
-  list.innerHTML = '';
-  reqs.slice().reverse().forEach((r,i)=>{
-    const d = document.createElement('div');
-    d.className = 'pf-req';
-    const dt = new Date(r.time);
-    const timeStr = isNaN(dt.getTime()) ? '' : dt.toLocaleString('vi-VN');
-    const who = r.by ? esc(r.by) : (esc(r.name) || 'Khách');
-    d.innerHTML = `
-      <div class="r-head">
-        <b>${who}</b>
-        <button class="r-del" onclick="delReq(${reqs.length-1-i})">✕</button>
-      </div>
-      <span class="r-tag">${REQ_TYPES[r.type]||esc(r.type)}</span>
-      <div class="r-text">${esc(r.content)}</div>
-      ${timeStr ? `<div class="r-time">🕐 ${timeStr}</div>` : ''}`;
-    list.appendChild(d);
-  });
-}
-function delReq(idx){
-  const reqs = JSON.parse(localStorage.getItem('vh_requests') || '[]');
-  reqs.splice(idx, 1);
-  localStorage.setItem('vh_requests', JSON.stringify(reqs));
-  renderAdminReqs();
-  showToast('Đã xóa yêu cầu.');
-}
-
-/* ============ AVATAR ============ */
-const AVATAR_EMOJIS = ['🎮','🎬','🎧','🎵','🎨','📷','⚽','🏀','🚗','🚀','🌙','⭐','🔥','👑','😎','🤖','🦊','🐉','🌈','💎','🐺','🦅'];
-function getAvatar(s){
-  if(s && s.avatar) return s.avatar;
-  return null;
-}
-function avatarFor(email){
-  const acc = JSON.parse(localStorage.getItem('vh_'+email) || 'null');
-  if(acc && acc.avatar) return acc.avatar;
-  const s = getSession();
-  if(s && s.email===email && s.avatar) return s.avatar;
-  return null;
-}
-function avatarContent(s, size){
-  const av = getAvatar(s);
-  if(!av) return esc((s?s.name||'?':'?').charAt(0).toUpperCase());
-  if(av.startsWith('data:')) return `<img class="avatar-img" src="${av}" alt="">`;
-  return esc(av);
-}
-function renderAvatarGrid(){
-  const grid = document.getElementById('pfAvatarGrid');
-  const s = getSession();
-  const current = getAvatar(s);
-  grid.innerHTML = '';
-  AVATAR_EMOJIS.forEach(e=>{
-    const b = document.createElement('button');
-    b.textContent = e;
-    b.className = current===e ? 'sel' : '';
-    b.onclick = ()=>setAvatar(e);
-    grid.appendChild(b);
-  });
-}
-function setAvatar(val){
-  const s = getSession();
-  if(!s) return;
-  s.avatar = val;
-  localStorage.setItem('vh_session', JSON.stringify(s));
-  const acc = JSON.parse(localStorage.getItem('vh_'+s.email) || 'null');
-  if(acc){ acc.avatar = val; localStorage.setItem('vh_'+s.email, JSON.stringify(acc)); }
-  updateUI();
-  openProfile();
-  renderPmComments();
-  showToast('Đã đổi avatar! ✨');
-}
-function resetAvatar(){
-  const s = getSession();
-  if(!s) return;
-  delete s.avatar;
-  localStorage.setItem('vh_session', JSON.stringify(s));
-  const acc = JSON.parse(localStorage.getItem('vh_'+s.email) || 'null');
-  if(acc){ delete acc.avatar; localStorage.setItem('vh_'+s.email, JSON.stringify(acc)); }
-  updateUI();
-  openProfile();
-  renderPmComments();
-  showToast('Đã đặt avatar mặc định.');
-}
-function uploadAvatar(input){
-  const f = input.files && input.files[0];
-  if(!f) return;
-  if(f.size > 1.5*1024*1024){ showToast('Ảnh tối đa 1.5MB!'); input.value=''; return; }
-  const rd = new FileReader();
-  rd.onload = ()=>{
-    const img = new Image();
-    img.onload = ()=>{
-      const cv = document.createElement('canvas');
-      const sz = 200;
-      cv.width = sz; cv.height = sz;
-      const ctx = cv.getContext('2d');
-      const min = Math.min(img.width, img.height);
-      const sx = (img.width-min)/2, sy = (img.height-min)/2;
-      ctx.drawImage(img, sx, sy, min, min, 0, 0, sz, sz);
-      const dataUrl = cv.toDataURL('image/jpeg', .85);
-      try {
-        localStorage.setItem('vh_avatar_tmp', dataUrl);
-        setAvatar(dataUrl);
-      } catch(err){
-        showToast('Ảnh quá lớn để lưu! Dùng emoji thay thế nhé.');
-      }
-    };
-    img.src = rd.result;
-  };
-  rd.readAsDataURL(f);
-  input.value = '';
-}
-function updateUI(){
-  const s = getSession();
-  const admin = isAdmin();
-  document.getElementById('userChip').style.display = s?'flex':'none';
-  document.getElementById('userName').textContent = s?s.name:'';
-  document.getElementById('chipAvatar').innerHTML = avatarContent(s, 26);
-  document.getElementById('chipCrown').style.display = admin?'inline':'none';
-  document.getElementById('btnLogin').style.display = s?'none':'block';
-  document.getElementById('btnLogout').style.display = s?'block':'none';
-}
-function initGoogle(){
-  const area = document.getElementById('googleArea');
-  if(!GOOGLE_CLIENT_ID){ area.innerHTML = ''; return; }
-  area.innerHTML = '<button class="google-btn" onclick="googleLogin()"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 0 0 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg> Đăng nhập với Google</button>';
-  area.querySelector('.google-btn').onclick = ()=>{
-    if(window.google && google.accounts){
-      google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID, callback:googleDone});
-      google.accounts.id.prompt();
-    } else {
-      showToast('Chưa cấu hình Google Client ID. Dùng đăng ký email nhé!');
-    }
-  };
-}
-(function(){
-  if(GOOGLE_CLIENT_ID){
-    const s = document.createElement('script');
-    s.src = 'https://accounts.google.com/gsi/client';
-    s.onload = initGoogle;
-    document.head.appendChild(s);
-  }
-})();
-
 /* ============ GỬI YÊU CẦU ============ */
 function sendRequest(e){
   e.preventDefault();
-  let name = document.getElementById('reqName').value.trim();
-  const s = getSession();
-  if(!name && s) name = s.name;
-  if(name) document.getElementById('reqName').value = name;
+  const name = document.getElementById('reqName').value.trim();
   const type = document.getElementById('reqType').value;
   const content = document.getElementById('reqContent').value.trim();
   if(!content){ showToast('Vui lòng nhập nội dung yêu cầu!'); return; }
   const reqs = JSON.parse(localStorage.getItem('vh_requests') || '[]');
-  reqs.push({name, type, content, by: s?s.email:null, time: Date.now()});
+  reqs.push({name, type, content, time: Date.now()});
   localStorage.setItem('vh_requests', JSON.stringify(reqs));
   showToast('Yêu cầu đã được gửi! Mình sẽ xem xét sớm nhé. 📨');
   e.target.reset();
-  if(s) document.getElementById('reqName').value = s.name;
 }
 
 /* ============ TOAST ============ */
@@ -1033,7 +367,7 @@ function showToast(msg){
 
 /* ============ CLICK ANIMATION (RIPPLE + POP) ============ */
 document.addEventListener('click', e=>{
-  const target = e.target.closest('.btn, .dl, .nav-links a, .video-card, .shop-card a, .google-btn, .close');
+  const target = e.target.closest('.btn, .dl, .nav-links a, .video-card, .shop-card a, .close');
   if(!target) return;
   const r = target.getBoundingClientRect();
   const size = Math.max(r.width, r.height) * 2.2;
@@ -1059,18 +393,9 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
 /* ============ INIT ============ */
 renderVideos(VIDEOS);
-updateUI();
-initFirebase();
-document.getElementById('userChip').addEventListener('click', openProfile);
-document.getElementById('authOverlay').addEventListener('click', e=>{ if(e.target.id==='authOverlay') closeAuth(); });
 document.getElementById('playerOverlay').addEventListener('click', e=>{ if(e.target.id==='playerOverlay') closePlayer(); });
-document.getElementById('profileOverlay').addEventListener('click', e=>{ if(e.target.id==='profileOverlay') closeProfile(); });
 document.addEventListener('keydown', e=>{
-  if(e.key==='Escape'){
-    if(document.getElementById('profileOverlay').classList.contains('show')) closeProfile();
-    if(document.getElementById('authOverlay').classList.contains('show')) closeAuth();
-    if(document.getElementById('playerOverlay').classList.contains('show')) closePlayer();
-  }
+  if(e.key==='Escape' && document.getElementById('playerOverlay').classList.contains('show')) closePlayer();
 });
 </script>
 </body>
