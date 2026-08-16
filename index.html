@@ -446,7 +446,7 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
     <div class="divider">hoặc dùng email</div>
     <div class="input-group" id="nameField" style="display:none">
       <label>Họ và tên</label>
-      <input type="text" id="regName" placeholder="Tên của bạn">
+      <input type="text" id="regName" placeholder="Tên của bạn" oninput="checkNameTaken()">
     </div>
     <div class="input-group">
       <label>Email</label>
@@ -469,9 +469,53 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
 /* ============ CẤU HÌNH GOOGLE ============ */
 const GOOGLE_CLIENT_ID = '';
 const ADMIN_EMAIL = 'duoc7919@gmail.com';
+const FIREBASE_CONFIG = null; // PASTE firebaseConfig HERE
 function isAdmin(){
   const s = getSession();
   return s && s.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+}
+
+/* ============ FIREBASE (BÌNH LUẬN CHUNG) ============ */
+let fbReady = false;
+function vidKey(src){ return String(src).replace(/[^A-Za-z0-9_-]/g,'_'); }
+function fbLoad(src){
+  return new Promise((res,rej)=>{
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = res;
+    s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+async function initFirebase(){
+  if(!FIREBASE_CONFIG) return;
+  try{
+    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbReady = true;
+    VIDEOS.forEach(v=>syncComments(v.src));
+  }catch(e){ console.warn('Firebase init failed:', e); }
+}
+async function syncComments(src){
+  if(!fbReady) return;
+  try{
+    const snap = await firebase.database().ref('comments/'+vidKey(src)).once('value');
+    const data = snap.val() || {};
+    const list = Object.entries(data).map(([id,c])=>({id:id, email:c.email, name:c.name, text:c.text, time:c.time}));
+    saveComments(src, list);
+    if(currentSrc === src) renderPmComments();
+    const count = document.querySelector(`.cmt-count[data-src="${src}"]`);
+    if(count) count.textContent = list.length;
+  }catch(e){ console.warn('Sync comments failed:', e); }
+}
+function fbPushComment(src, c){
+  if(!fbReady) return Promise.resolve();
+  return firebase.database().ref('comments/'+vidKey(src)+'/'+c.id).set({email:c.email, name:c.name, text:c.text, time:c.time});
+}
+function fbRemoveComment(src, cid){
+  if(!fbReady) return;
+  firebase.database().ref('comments/'+vidKey(src)+'/'+cid).remove().catch(()=>{});
 }
 
 /* ============ DỮ LIỆU ============ */
@@ -619,8 +663,10 @@ function pmAddComment(){
   }
   if(!currentSrc){ showToast('Lỗi: chưa chọn video!'); return; }
   const list = getComments(currentSrc);
-  list.push({id:'c'+Date.now()+Math.random().toString(36).slice(2,6), email:s.email, name:s.name, text, time:Date.now()});
+  const c = {id:'c'+Date.now()+Math.random().toString(36).slice(2,6), email:s.email, name:s.name, text, time:Date.now()};
+  list.push(c);
   saveComments(currentSrc, list);
+  fbPushComment(currentSrc, c);
   input.value = '';
   renderPmComments();
   showToast('Đã gửi bình luận! 💬');
@@ -632,7 +678,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
 function pmDelComment(cid){
   const list = getComments(currentSrc).filter(c=>c.id!==cid);
   saveComments(currentSrc, list);
+  fbRemoveComment(currentSrc, cid);
   renderPmComments();
+  const count = document.querySelector(`.cmt-count[data-src="${currentSrc}"]`);
+  if(count) count.textContent = list.length;
   showToast('Đã xóa bình luận.');
 }
 
@@ -645,6 +694,21 @@ window.addEventListener('scroll', ()=>{
 function getSession(){ return JSON.parse(localStorage.getItem('vh_session') || 'null'); }
 let isRegister = false;
 
+function nameExists(name){
+  const n = name.trim().toLowerCase();
+  if(!n) return false;
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(k && k.startsWith('vh_') && !['vh_session','vh_requests','vh_avatar_tmp'].includes(k)){
+      try{
+        const u = JSON.parse(localStorage.getItem(k));
+        if(u && u.name && u.name.trim().toLowerCase() === n) return true;
+      }catch(e){}
+    }
+  }
+  return false;
+}
+
 function openAuth(){
   document.getElementById('authError').textContent = '';
   document.getElementById('authEmail').value = '';
@@ -653,6 +717,15 @@ function openAuth(){
   document.getElementById('authOverlay').classList.add('show');
 }
 function closeAuth(){ document.getElementById('authOverlay').classList.remove('show'); }
+function checkNameTaken(){
+  const n = document.getElementById('regName').value.trim();
+  const err = document.getElementById('authError');
+  if(n && nameExists(n)){
+    err.textContent = '⚠ Tên "'+n+'" đã có người dùng, hãy chọn tên khác';
+  } else if(err.textContent.startsWith('⚠ Tên "')){
+    err.textContent = '';
+  }
+}
 function toggleAuthMode(){
   isRegister = !isRegister;
   document.getElementById('nameField').style.display = isRegister?'block':'none';
@@ -674,6 +747,7 @@ function submitAuth(){
   if(isRegister){
     if(!name){ err.textContent = '⚠ Vui lòng nhập họ tên'; return; }
     if(localStorage.getItem('vh_'+email)){ err.textContent = '⚠ Email đã được đăng ký'; return; }
+    if(nameExists(name)){ err.textContent = '⚠ Tên này đã có người dùng, hãy chọn tên khác'; return; }
     localStorage.setItem('vh_'+email, JSON.stringify({name,pw}));
     setUser(email,name);
     showToast('Đăng ký thành công! Chào mừng '+name+' 🎉');
@@ -977,6 +1051,7 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 /* ============ INIT ============ */
 renderVideos(VIDEOS);
 updateUI();
+initFirebase();
 document.getElementById('userChip').addEventListener('click', openProfile);
 document.getElementById('authOverlay').addEventListener('click', e=>{ if(e.target.id==='authOverlay') closeAuth(); });
 document.getElementById('playerOverlay').addEventListener('click', e=>{ if(e.target.id==='playerOverlay') closePlayer(); });
