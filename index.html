@@ -85,6 +85,32 @@ section{padding:60px 5% 90px}
 .video-info .meta small{color:#7c7567;font-size:12px;display:flex;align-items:center;gap:5px}
 .video-info .meta .dl{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:4px;background:linear-gradient(135deg,#c8a864,#8a6d3b);color:#0a0c10;font-size:12px;font-weight:700;text-decoration:none;transition:.3s}
 .video-info .meta .dl:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(200,168,100,.35)}
+.video-actions{display:flex;gap:10px;margin-top:14px}
+.video-actions .cmt-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 14px;border-radius:4px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#a8a298;font-size:12px;font-weight:600;cursor:pointer;transition:.3s}
+.video-actions .cmt-btn:hover{border-color:rgba(200,168,100,.45);color:#c8a864;background:rgba(200,168,100,.08)}
+/* ===== BÌNH LUẬN ===== */
+.cmt-panel{display:none;border-top:1px solid rgba(255,255,255,.07);padding:16px 18px;background:rgba(10,12,16,.5);animation:cmtIn .45s cubic-bezier(.22,1,.36,1)}
+.cmt-panel.open{display:block}
+@keyframes cmtIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.cmt-input{display:flex;gap:8px;margin-bottom:14px}
+.cmt-input input{flex:1;padding:10px 14px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#e8e4da;font-size:13px;outline:none;transition:border-color .3s;font-family:'Poppins',sans-serif}
+.cmt-input input:focus{border-color:#c8a864}
+.cmt-input button{padding:10px 18px;border-radius:6px;border:none;background:linear-gradient(135deg,#c8a864,#8a6d3b);color:#0a0c10;font-weight:700;font-size:12.5px;cursor:pointer;transition:.3s}
+.cmt-input button:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(200,168,100,.3)}
+.cmt-list{max-height:230px;overflow-y:auto}
+.cmt-list::-webkit-scrollbar{width:5px}
+.cmt-list::-webkit-scrollbar-thumb{background:rgba(200,168,100,.3);border-radius:5px}
+.cmt-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);animation:comIn .45s cubic-bezier(.22,1,.36,1)}
+.cmt-item:last-child{border-bottom:none}
+@keyframes comIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.cmt-item .c-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#c8a864,#8a6d3b);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#0a0c10;flex-shrink:0}
+.cmt-item .c-body{flex:1;min-width:0}
+.cmt-item .c-name{font-size:12.5px;font-weight:700;color:#c8a864}
+.cmt-item .c-name small{color:#5c574c;font-weight:400;margin-left:8px;font-size:10.5px}
+.cmt-item .c-text{font-size:13px;color:#c9c3b6;margin-top:3px;font-weight:300;line-height:1.5;word-break:break-word}
+.cmt-item .c-del{background:none;border:none;color:#5c574c;cursor:pointer;font-size:11px;align-self:flex-start;transition:color .3s}
+.cmt-item .c-del:hover{color:#c8756a}
+.cmt-empty{text-align:center;color:#5c574c;font-size:12.5px;padding:14px 0;font-weight:300}
 
 /* ===== MODAL ===== */
 .overlay{position:fixed;inset:0;z-index:200;background:rgba(5,6,9,.85);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s ease}
@@ -250,7 +276,7 @@ const GOOGLE_CLIENT_ID = '';
 
 /* ============ DỮ LIỆU ============ */
 const VIDEOS = [
-  {title:'Video 1 — Teyvat Store', src:'video-1.mp4', poster:'', dur:'—'},
+  {title:'Yue Qingxiao', src:'video-1.mp4', poster:'', dur:'—'},
   {title:'Video 2 — Teyvat Store', src:'video-2.mp4', poster:'', dur:'—'},
 ];
 
@@ -275,9 +301,19 @@ function renderVideos(list){
           <small>⬇ Bấm để tải về</small>
           <a class="dl" href="${v.src}" download="${(v.title||'video').replace(/[^\w\p{L}]+/gu,'_')}.mp4">Tải về</a>
         </div>
+        <div class="video-actions">
+          <button class="cmt-btn" onclick="toggleComments('${v.src}')">💬 Bình luận (<span class="cmt-count" data-src="${v.src}">${getComments(v.src).length}</span>)</button>
+        </div>
+      </div>
+      <div class="cmt-panel" data-panel="${v.src}">
+        <div class="cmt-input">
+          <input type="text" data-cmt-input placeholder="Viết bình luận... (tên: ${esc(getName())})">
+          <button onclick="addComment('${v.src}', this)">Gửi</button>
+        </div>
+        <div class="cmt-list" data-cmt-list></div>
       </div>`;
     card.addEventListener('click', e=>{
-      if(e.target.closest('.dl')) return;
+      if(e.target.closest('.dl') || e.target.closest('.cmt-btn') || e.target.closest('.cmt-panel')) return;
       const vd = card.querySelector('video');
       if(!vd) return;
       vd.controls = true;
@@ -309,6 +345,83 @@ function clearSearch(){
   document.getElementById('searchInput').value = '';
   searchVideos();
   document.getElementById('searchInput').focus();
+}
+
+/* ============ BÌNH LUẬN ============ */
+function getComments(src){
+  const all = JSON.parse(localStorage.getItem('cv_comments') || '{}');
+  return all[src] || [];
+}
+function saveComments(src, list){
+  const all = JSON.parse(localStorage.getItem('cv_comments') || '{}');
+  all[src] = list;
+  localStorage.setItem('cv_comments', JSON.stringify(all));
+}
+function getName(){
+  const s = getSession();
+  return s ? s.name : 'Khách';
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function toggleComments(src){
+  const panel = document.querySelector(`.cmt-panel[data-panel="${src}"]`);
+  if(!panel) return;
+  const isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.cmt-panel.open').forEach(p=>{
+    if(p !== panel) p.classList.remove('open');
+  });
+  panel.classList.toggle('open', !isOpen);
+  renderComments(src);
+}
+function renderComments(src){
+  const list = document.querySelector(`.cmt-list[data-cmt-list="${src}"]`);
+  if(!list) return;
+  const coms = getComments(src).slice().reverse();
+  if(!coms.length){
+    list.innerHTML = '<div class="cmt-empty">Chưa có bình luận nào. Hãy là người đầu tiên!</div>';
+    return;
+  }
+  list.innerHTML = '';
+  coms.forEach(c=>{
+    const d = document.createElement('div');
+    d.className = 'cmt-item';
+    d.innerHTML = `
+      <div class="c-avatar">${esc((c.name||'?').charAt(0).toUpperCase())}</div>
+      <div class="c-body">
+        <div class="c-name">${esc(c.name)} <small>${new Date(c.time).toLocaleDateString('vi-VN')}</small></div>
+        <div class="c-text">${esc(c.text)}</div>
+      </div>
+      ${(getSession() && c.email===getSession().email) ? `<button class="c-del" onclick="delComment('${src}','${c.id}')">✕</button>` : ''}`;
+    list.appendChild(d);
+  });
+}
+function addComment(src, btn){
+  const input = btn.parentElement.querySelector('[data-cmt-input]');
+  const text = input.value.trim();
+  if(!text) return;
+  const s = getSession();
+  if(!s){
+    showToast('Vui lòng đăng nhập để bình luận!');
+    setTimeout(openAuth, 700);
+    return;
+  }
+  const list = getComments(src);
+  list.push({id:'c'+Date.now()+Math.random().toString(36).slice(2,6), email:s.email, name:s.name, text, time:Date.now()});
+  saveComments(src, list);
+  input.value = '';
+  renderComments(src);
+  const count = document.querySelector(`.cmt-count[data-src="${src}"]`);
+  if(count) count.textContent = list.length;
+  showToast('Đã gửi bình luận! 💬');
+}
+function delComment(src, cid){
+  const list = getComments(src).filter(c=>c.id!==cid);
+  saveComments(src, list);
+  renderComments(src);
+  const count = document.querySelector(`.cmt-count[data-src="${src}"]`);
+  if(count) count.textContent = list.length;
+  showToast('Đã xóa bình luận.');
 }
 
 /* ============ NAV SCROLL ============ */
