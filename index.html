@@ -83,15 +83,13 @@ section{padding:60px 5% 90px;scroll-margin-top:90px}
 .overlay.show{opacity:1;pointer-events:auto}
 .modal{width:min(420px,92vw);background:#13161d;border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:36px 32px;transform:translateY(40px) scale(.96);transition:transform .5s cubic-bezier(.34,1.56,.64,1);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 50px 120px rgba(0,0,0,.7);margin:auto;position:relative}
 .overlay.show .modal{transform:translateY(0) scale(1)}
-/* ===== MODAL PLAYER ===== */
-.player-modal{width:min(860px,94vw);padding:0;overflow:visible;background:#0d0f14;box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 60px 140px rgba(0,0,0,.8);max-height:none}
-.player-modal .pm-head{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.07);position:sticky;top:0;background:#0d0f14;z-index:5}
-.player-modal .pm-head h3{font-family:'Playfair Display',serif;font-size:19px;letter-spacing:.5px}
-.player-wrap{background:#000;position:relative}
-.player-wrap video{width:100%;display:block;max-height:58vh;background:#000}
-.pm-tools{display:flex;gap:12px;padding:16px 24px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.pm-tools .dl{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:6px;background:linear-gradient(135deg,#c8a864,#8a6d3b);color:#0a0c10;font-size:13px;font-weight:700;text-decoration:none;transition:.3s}
-.pm-tools .dl:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,168,100,.35)}
+/* ===== MỤC XEM VIDEO ===== */
+.vd-wrap{max-width:900px;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:#0d0f14;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+.vd-player{background:#000;position:relative}
+.vd-player video{width:100%;display:block;max-height:62vh;background:#000}
+.vd-info{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;flex-wrap:wrap}
+.vd-info h3{font-family:'Playfair Display',serif;font-size:19px;letter-spacing:.5px}
+.vd-actions{display:flex;gap:12px;flex-wrap:wrap}
 .modal .close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#a8a298;font-size:15px;cursor:pointer;transition:all .3s}
 .modal .close:hover{background:rgba(200,120,90,.2);color:#c8756a;transform:rotate(90deg)}
 .modal h2{font-family:'Playfair Display',serif;font-size:22px;text-align:center;letter-spacing:1px;margin-bottom:6px}
@@ -149,12 +147,12 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
   .request-wrap input,.request-wrap textarea,.request-wrap select{width:100%;max-width:100%;box-sizing:border-box}
   .fb-wrap{padding:22px 18px}
   .fb-wrap input,.fb-wrap textarea,.fb-wrap select{width:100%;max-width:100%;box-sizing:border-box}
-  .player-modal{width:100vw;max-height:100vh;border-radius:0;border:none}
-  .player-modal .pm-head{padding:14px 16px}
-  .player-modal .pm-head h3{font-size:15px;max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .player-wrap video{max-height:52vh;width:100%}
-  .pm-tools{padding:14px 16px;gap:10px;box-sizing:border-box}
-  .pm-tools .dl{flex:1;justify-content:center;padding:13px 12px;white-space:nowrap}
+  .vd-wrap{border-radius:0;border-left:none;border-right:none}
+  .vd-info{padding:16px 14px;flex-direction:column;align-items:stretch}
+  .vd-info h3{font-size:16px}
+  .vd-actions{flex-direction:column;width:100%}
+  .vd-actions .btn{width:100%;justify-content:center;white-space:normal}
+  .vd-player video{max-height:52vh;width:100%}
   .modal{width:min(92vw,420px);padding:30px 22px;box-sizing:border-box}
   .overlay{padding:12px 0;align-items:flex-start}
   #toast{width:88vw;justify-content:center;font-size:12.5px;padding:13px 16px;bottom:18px;box-sizing:border-box}
@@ -164,7 +162,7 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
 }
 @media(max-width:400px){
   .logo{font-size:15px}
-  .pm-tools{flex-direction:column;align-items:stretch}
+  .vd-actions .btn{flex-direction:row}
 }
 @media(max-width:760px){
   html,body{overflow-x:hidden}
@@ -224,6 +222,23 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
   <div id="noResult" style="display:none;text-align:center;color:#5c574c;padding:50px 0;font-size:14px">Không tìm thấy video nào phù hợp 😢</div>
 </section>
 
+<!-- ===== MỤC XEM VIDEO ===== -->
+<section id="videoDetail" style="display:none">
+  <div class="sec-title reveal visible"><div class="bar"></div><h2 id="vdTitle">▶ <em>Xem</em> Video</h2></div>
+  <div class="vd-wrap reveal visible">
+    <div class="vd-player">
+      <video id="vdVideo" controls playsinline preload="metadata"></video>
+    </div>
+    <div class="vd-info">
+      <h3 id="vdName">Video</h3>
+      <div class="vd-actions">
+        <a class="btn solid" id="vdDownload" href="#" download>⬇️ Tải video</a>
+        <button class="btn" onclick="closeDetail()">← Quay lại danh sách</button>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ===== MỤC 3: GỬI YÊU CẦU ===== -->
 <section id="request">
   <div class="sec-title reveal"><div class="bar"></div><h2>✉️ <em>Gửi</em> Yêu Cầu</h2></div>
@@ -271,22 +286,6 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
 
 <!-- TOAST -->
 <div id="toast"><i>✦</i><span id="toastMsg">Thành công!</span></div>
-
-<!-- PLAYER MODAL -->
-<div class="overlay" id="playerOverlay">
-  <div class="modal player-modal">
-    <div class="pm-head">
-      <h3 id="pmTitle">Video</h3>
-      <button class="close" onclick="closePlayer()">✕</button>
-    </div>
-    <div class="player-wrap">
-      <video id="pmVideo" controls playsinline preload="metadata"></video>
-    </div>
-    <div class="pm-tools">
-      <a class="dl" id="pmDownload" href="#" download>⬇️ Tải video</a>
-    </div>
-  </div>
-</div>
 
 <script>
 /* ============ DỮ LIỆU ============ */
@@ -342,26 +341,33 @@ function clearSearch(){
   document.getElementById('searchInput').focus();
 }
 
-/* ============ PLAYER ============ */
+/* ============ PLAYER (SECTION XEM VIDEO) ============ */
 function findVideo(src){
   return VIDEOS.find(v=>v.src===src);
 }
 function openPlayer(src){
   const v = findVideo(src);
   if(!v) return;
-  document.getElementById('pmTitle').textContent = v.title;
-  const player = document.getElementById('pmVideo');
+  document.getElementById('vdName').textContent = v.title;
+  const player = document.getElementById('vdVideo');
   player.src = v.src;
-  document.getElementById('pmDownload').href = v.src;
-  document.getElementById('pmDownload').download = (v.title||'video').replace(/[^\w\p{L}]+/gu,'_')+'.mp4';
-  document.getElementById('playerOverlay').classList.add('show');
-  requestAnimationFrame(()=>player.play().catch(()=>{}));
+  document.getElementById('vdDownload').href = v.src;
+  document.getElementById('vdDownload').download = (v.title||'video').replace(/[^\w\p{L}]+/gu,'_')+'.mp4';
+  document.getElementById('videos').style.display = 'none';
+  const d = document.getElementById('videoDetail');
+  d.style.display = 'block';
+  requestAnimationFrame(()=>{
+    d.scrollIntoView({behavior:'smooth'});
+    player.play().catch(()=>{});
+  });
 }
-function closePlayer(){
-  document.getElementById('playerOverlay').classList.remove('show');
-  const p = document.getElementById('pmVideo');
+function closeDetail(){
+  document.getElementById('videoDetail').style.display = 'none';
+  const p = document.getElementById('vdVideo');
   p.pause();
   p.removeAttribute('src');
+  document.getElementById('videos').style.display = 'block';
+  document.getElementById('videos').scrollIntoView({behavior:'smooth'});
 }
 
 /* ============ NAV SCROLL ============ */
@@ -476,10 +482,6 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 /* ============ INIT ============ */
 renderVideos(VIDEOS);
 initFirebase();
-document.getElementById('playerOverlay').addEventListener('click', e=>{ if(e.target.id==='playerOverlay') closePlayer(); });
-document.addEventListener('keydown', e=>{
-  if(e.key==='Escape' && document.getElementById('playerOverlay').classList.contains('show')) closePlayer();
-});
 </script>
 </body>
 </html>
