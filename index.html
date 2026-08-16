@@ -469,7 +469,16 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
 /* ============ CẤU HÌNH GOOGLE ============ */
 const GOOGLE_CLIENT_ID = '';
 const ADMIN_EMAIL = 'duoc7919@gmail.com';
-const FIREBASE_CONFIG = null; // PASTE firebaseConfig HERE
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw",
+  authDomain: "cinevault-ec9d1.firebaseapp.com",
+  databaseURL: "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "cinevault-ec9d1",
+  storageBucket: "cinevault-ec9d1.firebasestorage.app",
+  messagingSenderId: "732539981440",
+  appId: "1:732539981440:web:84403c072905d8afcd6065",
+  measurementId: "G-HST3SLPEVH"
+};
 function isAdmin(){
   const s = getSession();
   return s && s.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
