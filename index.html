@@ -60,6 +60,17 @@ nav.scrolled{background:rgba(10,12,16,.75);-webkit-backdrop-filter:blur(20px);ba
 .pf-avatars button.sel{border-color:#c8a864;background:rgba(200,168,100,.18);box-shadow:0 0 0 2px rgba(200,168,100,.4)}
 .avatar-img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
 .big-avatar img,.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+#userChip .crown{color:#c8a864;font-size:12px}
+/* ===== ADMIN REQUESTS ===== */
+.pf-reqs{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px}
+.pf-req{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px;font-size:12px}
+.pf-req .r-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.pf-req .r-head b{color:#c8a864;font-size:11.5px;word-break:break-word}
+.pf-req .r-head .r-del{background:none;border:none;color:#5c574c;cursor:pointer;font-size:11px;flex-shrink:0;transition:color .3s}
+.pf-req .r-head .r-del:hover{color:#c8756a}
+.pf-req .r-tag{display:inline-block;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(200,168,100,.15);color:#c8a864;font-weight:600}
+.pf-req .r-text{color:#c9c3b6;font-weight:300;line-height:1.5;margin-top:5px;word-break:break-word}
+.pf-req .r-time{color:#5c574c;font-size:10px;margin-top:5px}
 .btn{padding:10px 22px;border-radius:4px;border:1px solid rgba(200,168,100,.5);background:transparent;color:#c8a864;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:.35s cubic-bezier(.34,1.56,.64,1);display:inline-flex;align-items:center;gap:7px;position:relative;overflow:hidden}
 .btn:active{transform:scale(.93)}
 .btn:hover{background:rgba(200,168,100,.1);transform:translateY(-2px);box-shadow:0 0 24px rgba(200,168,100,.15)}
@@ -286,7 +297,7 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
     <a class="btn" href="#videos">🎬 Free video</a>
     <a class="btn" href="#request">✉️ Gửi yêu cầu</a>
   </div>
-  <div id="userChip"><div class="avatar" id="chipAvatar">K</div><span class="u-name" id="userName">Khách</span></div>
+  <div id="userChip"><div class="avatar" id="chipAvatar">K</div><span class="u-name" id="userName">Khách</span><span class="crown" id="chipCrown" style="display:none">👑</span></div>
   <button class="btn" id="btnLogin" onclick="openAuth()">Đăng nhập</button>
   <button class="btn danger" id="btnLogout" onclick="logout()" style="display:none">Đăng xuất</button>
 </nav>
@@ -414,6 +425,12 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
           <button onclick="pfSavePw()">Đổi</button>
         </div>
       </div>
+      <div id="adminPanel" style="display:none">
+        <div class="pf-field">
+          <label>👑 Quản trị — Yêu cầu từ người dùng <span id="pfReqCount" style="color:#c8a864;text-transform:none;letter-spacing:0">(0)</span></label>
+          <div class="pf-reqs" id="pfReqList"></div>
+        </div>
+      </div>
       <button class="btn danger pf-logout" onclick="pfLogout()">🚪 Đăng xuất</button>
     </div>
   </div>
@@ -451,6 +468,11 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
 <script>
 /* ============ CẤU HÌNH GOOGLE ============ */
 const GOOGLE_CLIENT_ID = '';
+const ADMIN_EMAIL = 'duoc7919@gmail.com';
+function isAdmin(){
+  const s = getSession();
+  return s && s.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+}
 
 /* ============ DỮ LIỆU ============ */
 const VIDEOS = [
@@ -581,7 +603,7 @@ function renderPmComments(){
         <div class="c-name">${esc(c.name)} ${dateStr}</div>
         <div class="c-text">${esc(c.text)}</div>
       </div>
-      ${(getSession() && c.email===getSession().email) ? `<button class="c-del" onclick="pmDelComment('${c.id}')">✕</button>` : ''}`;
+      ${((getSession() && c.email===getSession().email) || isAdmin()) ? `<button class="c-del" onclick="pmDelComment('${c.id}')">✕</button>` : ''}`;
     list.appendChild(d);
   });
 }
@@ -708,6 +730,13 @@ function openProfile(){
   document.getElementById('pfNameInput').value = '';
   document.getElementById('pfPwInput').value = '';
   renderAvatarGrid();
+  const adminPanel = document.getElementById('adminPanel');
+  if(isAdmin()){
+    adminPanel.style.display = 'block';
+    renderAdminReqs();
+  } else {
+    adminPanel.style.display = 'none';
+  }
   document.getElementById('profileOverlay').classList.add('show');
 }
 function closeProfile(){ document.getElementById('profileOverlay').classList.remove('show'); }
@@ -737,6 +766,42 @@ function pfSavePw(){
 function pfLogout(){
   closeProfile();
   logout();
+}
+
+/* ============ ADMIN ============ */
+const REQ_TYPES = {video:'Video mới', sua:'Sửa/Xóa video', download:'Link tải lỗi', khac:'Khác'};
+function renderAdminReqs(){
+  const reqs = JSON.parse(localStorage.getItem('vh_requests') || '[]');
+  document.getElementById('pfReqCount').textContent = '('+reqs.length+')';
+  const list = document.getElementById('pfReqList');
+  if(!reqs.length){
+    list.innerHTML = '<div class="cmt-empty">Chưa có yêu cầu nào.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  reqs.slice().reverse().forEach((r,i)=>{
+    const d = document.createElement('div');
+    d.className = 'pf-req';
+    const dt = new Date(r.time);
+    const timeStr = isNaN(dt.getTime()) ? '' : dt.toLocaleString('vi-VN');
+    const who = r.by ? esc(r.by) : (esc(r.name) || 'Khách');
+    d.innerHTML = `
+      <div class="r-head">
+        <b>${who}</b>
+        <button class="r-del" onclick="delReq(${reqs.length-1-i})">✕</button>
+      </div>
+      <span class="r-tag">${REQ_TYPES[r.type]||esc(r.type)}</span>
+      <div class="r-text">${esc(r.content)}</div>
+      ${timeStr ? `<div class="r-time">🕐 ${timeStr}</div>` : ''}`;
+    list.appendChild(d);
+  });
+}
+function delReq(idx){
+  const reqs = JSON.parse(localStorage.getItem('vh_requests') || '[]');
+  reqs.splice(idx, 1);
+  localStorage.setItem('vh_requests', JSON.stringify(reqs));
+  renderAdminReqs();
+  showToast('Đã xóa yêu cầu.');
 }
 
 /* ============ AVATAR ============ */
@@ -825,9 +890,11 @@ function uploadAvatar(input){
 }
 function updateUI(){
   const s = getSession();
+  const admin = isAdmin();
   document.getElementById('userChip').style.display = s?'flex':'none';
   document.getElementById('userName').textContent = s?s.name:'';
   document.getElementById('chipAvatar').innerHTML = avatarContent(s, 26);
+  document.getElementById('chipCrown').style.display = admin?'inline':'none';
   document.getElementById('btnLogin').style.display = s?'none':'block';
   document.getElementById('btnLogout').style.display = s?'block':'none';
 }
