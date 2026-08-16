@@ -68,7 +68,7 @@ header h1 em{font-style:normal;background:linear-gradient(100deg,#e8d9a8,#c8a864
 header p{color:#9a9388;font-weight:300;font-size:15px;max-width:560px;margin:0 auto}
 
 /* ===== SECTION ===== */
-section{padding:60px 5% 90px}
+section{padding:60px 5% 90px;scroll-margin-top:90px}
 .sec-title{display:flex;align-items:center;gap:16px;max-width:1200px;margin:0 auto 36px}
 .sec-title .bar{width:4px;height:30px;background:linear-gradient(180deg,#c8a864,transparent);border-radius:2px}
 .sec-title h2{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,32px);letter-spacing:1px}
@@ -116,7 +116,7 @@ section{padding:60px 5% 90px}
 /* ===== MODAL ===== */
 .overlay{position:fixed;inset:0;z-index:200;background:rgba(5,6,9,.85);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:flex;align-items:flex-start;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s ease;overflow-y:auto;padding:24px 0}
 .overlay.show{opacity:1;pointer-events:auto}
-.modal{width:min(420px,92vw);background:#13161d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:36px 32px;transform:translateY(40px) scale(.96);transition:transform .5s cubic-bezier(.34,1.56,.64,1);box-shadow:0 50px 120px rgba(0,0,0,.7);margin:auto}
+.modal{width:min(420px,92vw);background:#13161d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:36px 32px;transform:translateY(40px) scale(.96);transition:transform .5s cubic-bezier(.34,1.56,.64,1);box-shadow:0 50px 120px rgba(0,0,0,.7);margin:auto;position:relative}
 .overlay.show .modal{transform:translateY(0) scale(1)}
 /* ===== MODAL PLAYER ===== */
 .player-modal{width:min(860px,94vw);padding:0;overflow:visible;background:#0d0f14;max-height:none}
@@ -206,7 +206,6 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
   header{padding:95px 5% 28px}
   header p{font-size:13px;line-height:1.6}
   .grid{grid-template-columns:1fr;gap:18px;padding:0 3%}
-  .video-thumb video{height:auto}
   .video-info{padding:14px 14px 18px}
   .video-info h3{font-size:15px;word-break:break-word}
   .shop-card{padding:22px 18px;gap:18px}
@@ -556,10 +555,12 @@ function renderPmComments(){
   coms.forEach(c=>{
     const d = document.createElement('div');
     d.className = 'cmt-item';
+    const dt = new Date(c.time);
+    const dateStr = isNaN(dt.getTime()) ? '' : `<small>${dt.toLocaleDateString('vi-VN')}</small>`;
     d.innerHTML = `
       <div class="c-avatar">${esc((c.name||'?').charAt(0).toUpperCase())}</div>
       <div class="c-body">
-        <div class="c-name">${esc(c.name)} <small>${new Date(c.time).toLocaleDateString('vi-VN')}</small></div>
+        <div class="c-name">${esc(c.name)} ${dateStr}</div>
         <div class="c-text">${esc(c.text)}</div>
       </div>
       ${(getSession() && c.email===getSession().email) ? `<button class="c-del" onclick="pmDelComment('${c.id}')">✕</button>` : ''}`;
@@ -576,6 +577,7 @@ function pmAddComment(){
     setTimeout(openAuth, 700);
     return;
   }
+  if(!currentSrc){ showToast('Lỗi: chưa chọn video!'); return; }
   const list = getComments(currentSrc);
   list.push({id:'c'+Date.now()+Math.random().toString(36).slice(2,6), email:s.email, name:s.name, text, time:Date.now()});
   saveComments(currentSrc, list);
@@ -583,6 +585,10 @@ function pmAddComment(){
   renderPmComments();
   showToast('Đã gửi bình luận! 💬');
 }
+document.addEventListener('DOMContentLoaded', ()=>{
+  const ci = document.getElementById('pmCmtInput');
+  if(ci) ci.addEventListener('keydown', e=>{ if(e.key==='Enter') pmAddComment(); });
+});
 function pmDelComment(cid){
   const list = getComments(currentSrc).filter(c=>c.id!==cid);
   saveComments(currentSrc, list);
@@ -601,6 +607,9 @@ let isRegister = false;
 
 function openAuth(){
   document.getElementById('authError').textContent = '';
+  document.getElementById('authEmail').value = '';
+  document.getElementById('authPassword').value = '';
+  document.getElementById('regName').value = '';
   document.getElementById('authOverlay').classList.add('show');
 }
 function closeAuth(){ document.getElementById('authOverlay').classList.remove('show'); }
@@ -743,16 +752,19 @@ function initGoogle(){
 /* ============ GỬI YÊU CẦU ============ */
 function sendRequest(e){
   e.preventDefault();
-  const name = document.getElementById('reqName').value.trim();
+  let name = document.getElementById('reqName').value.trim();
+  const s = getSession();
+  if(!name && s) name = s.name;
+  if(name) document.getElementById('reqName').value = name;
   const type = document.getElementById('reqType').value;
   const content = document.getElementById('reqContent').value.trim();
-  if(!content){ return; }
+  if(!content){ showToast('Vui lòng nhập nội dung yêu cầu!'); return; }
   const reqs = JSON.parse(localStorage.getItem('vh_requests') || '[]');
-  const s = getSession();
   reqs.push({name, type, content, by: s?s.email:null, time: Date.now()});
   localStorage.setItem('vh_requests', JSON.stringify(reqs));
   showToast('Yêu cầu đã được gửi! Mình sẽ xem xét sớm nhé. 📨');
   e.target.reset();
+  if(s) document.getElementById('reqName').value = s.name;
 }
 
 /* ============ TOAST ============ */
@@ -798,6 +810,13 @@ document.getElementById('userChip').addEventListener('click', openProfile);
 document.getElementById('authOverlay').addEventListener('click', e=>{ if(e.target.id==='authOverlay') closeAuth(); });
 document.getElementById('playerOverlay').addEventListener('click', e=>{ if(e.target.id==='playerOverlay') closePlayer(); });
 document.getElementById('profileOverlay').addEventListener('click', e=>{ if(e.target.id==='profileOverlay') closeProfile(); });
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){
+    if(document.getElementById('profileOverlay').classList.contains('show')) closeProfile();
+    if(document.getElementById('authOverlay').classList.contains('show')) closeAuth();
+    if(document.getElementById('playerOverlay').classList.contains('show')) closePlayer();
+  }
+});
 </script>
 </body>
 </html>
