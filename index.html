@@ -36,6 +36,12 @@ body{background:#0a0c10;color:#e8e4da;font-family:'Poppins',sans-serif;overflow-
 .liquid-sheen{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;mix-blend-mode:screen;background:radial-gradient(1200px 600px at 20% 0%,rgba(200,168,100,.10),transparent 55%),radial-gradient(900px 500px at 85% 20%,rgba(80,110,180,.08),transparent 55%),radial-gradient(700px 700px at 50% 100%,rgba(200,168,100,.06),transparent 60%);animation:liquidMove 22s ease-in-out infinite alternate}
 @keyframes liquidMove{0%{transform:translate3d(0,0,0) rotate(0deg)}100%{transform:translate3d(30px,-40px,0) rotate(4deg)}}
 
+/* ===== CURSOR GLOW (TƯƠNG TÁC THEO CHUỘT) ===== */
+.cursor-glow{position:fixed;top:0;left:0;width:420px;height:420px;border-radius:50%;pointer-events:none;z-index:2;transform:translate(-50%,-50%);opacity:0;transition:opacity .4s;background:radial-gradient(circle,rgba(200,168,100,.16) 0%,rgba(200,168,100,.07) 30%,rgba(80,110,180,.05) 55%,transparent 70%)}
+body:hover .cursor-glow{opacity:1}
+.glass .glass-spot{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(380px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.16),rgba(200,168,100,.07) 45%,transparent 70%)}
+.glass:hover .glass-spot{opacity:1}
+
 /* ===== NAV ===== */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:18px 5%;transition:.5s cubic-bezier(.22,1,.36,1)}
 nav.scrolled{background:rgba(18,21,28,.6);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border-bottom:1px solid rgba(255,255,255,.1);padding:12px 5%;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 12px 40px rgba(0,0,0,.4)}
@@ -201,6 +207,7 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 5%;text-align:cen
 
 <div class="bg"><div class="glow g1"></div><div class="glow g2"></div></div>
 <div class="liquid-sheen"></div>
+<div class="cursor-glow"></div>
 <div class="film"></div>
 
 <!-- NAV -->
@@ -530,6 +537,32 @@ document.getElementById('playerOverlay').addEventListener('click', e=>{ if(e.tar
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape' && document.getElementById('playerOverlay').classList.contains('show')) closePlayer();
 });
+/* ===== CURSOR GLOW: đèn pin lướt theo chuột ===== */
+(function(){
+  const glow = document.querySelector('.cursor-glow');
+  let mx = innerWidth/2, my = innerHeight/3, tx = mx, ty = my, raf = null;
+  const lerp = (a,b,t)=>a+(b-a)*t;
+  function tick(){
+    mx = lerp(mx, tx, .12);
+    my = lerp(my, ty, .12);
+    glow.style.transform = 'translate3d('+mx+'px,'+my+'px,0) translate(-50%,-50%)';
+    raf = requestAnimationFrame(tick);
+  }
+  addEventListener('mousemove', e=>{ tx = e.clientX; ty = e.clientY; if(!raf) tick(); }, {passive:true});
+  /* panel kính phản chiếu theo vị trí chuột bên trong */
+  document.querySelectorAll('.glass').forEach(p=>{
+    if(!p.querySelector('.glass-spot')){
+      const spot = document.createElement('div');
+      spot.className = 'glass-spot';
+      p.appendChild(spot);
+    }
+    p.addEventListener('mousemove', e=>{
+      const r = p.getBoundingClientRect();
+      p.style.setProperty('--mx', ((e.clientX-r.left)/r.width*100)+'%');
+      p.style.setProperty('--my', ((e.clientY-r.top)/r.height*100)+'%');
+    }, {passive:true});
+  });
+})();
 </script>
 </body>
 </html>
