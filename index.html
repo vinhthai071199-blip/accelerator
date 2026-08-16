@@ -38,13 +38,12 @@ body{background:#0a0c10;color:#e8e4da;font-family:'Poppins',sans-serif;overflow-
 
 /* ===== MOBILE: nhẹ bớt để không giật ===== */
 @media (max-width:640px), (pointer:coarse){
-  .glass{-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%)}
-  .glass::before{animation:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.12) 45%,transparent 60%)}
-  .glass::after{animation:none}
-  .bg .glow{filter:blur(60px);opacity:.3}
-  .liquid-sheen{animation:none;opacity:.2}
+  .glass{-webkit-backdrop-filter:blur(8px) saturate(120%);backdrop-filter:blur(8px) saturate(120%)}
+  .glass::before,.glass::after{display:none}
+  .bg .glow{filter:blur(60px);opacity:.25}
+  .liquid-sheen{animation:none;opacity:.15}
   .glow.g1,.glow.g2{animation:none}
-  nav.scrolled,.shop-card,.search-bar,.video-card,.request-wrap,.fb-wrap,.player-modal{-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%)}
+  nav.scrolled,.shop-card,.search-bar,.video-card,.request-wrap,.fb-wrap,.player-modal{-webkit-backdrop-filter:blur(8px) saturate(120%);backdrop-filter:blur(8px) saturate(120%)}
 }
 
 /* ===== NAV ===== */
