@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Quản trị — Free Khung Xanh</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0c10;color:#e8e4da;min-height:100vh;padding:24px 5% 60px}
+a{color:inherit}
+.login-wrap{max-width:380px;margin:12vh auto 0;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:34px 28px}
+.login-wrap h1{font-size:20px;margin-bottom:22px;text-align:center;letter-spacing:1px}
+.login-wrap h1 em{color:#c8a864;font-style:normal}
+label{display:block;font-size:12px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#9a937f;margin:14px 0 7px}
+input{width:100%;padding:13px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#fff;font-size:14px;outline:none}
+input:focus{border-color:rgba(200,168,100,.55)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:6px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#e8e4da;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none}
+.btn:hover{background:rgba(255,255,255,.06)}
+.btn.solid{background:linear-gradient(135deg,#c8a864,#8a6d3b);color:#0a0c10;border:none}
+.btn.solid:hover{box-shadow:0 6px 18px rgba(200,168,100,.3)}
+.btn.full{width:100%;justify-content:center;margin-top:20px}
+.err{color:#ff8080;font-size:13px;margin-top:14px;text-align:center;min-height:18px}
+.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:26px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.08)}
+.topbar .brand{font-size:17px;font-weight:700;letter-spacing:1px}
+.topbar .brand em{color:#c8a864;font-style:normal}
+.topbar .actions{display:flex;gap:10px}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:26px}
+.stat{flex:1;min-width:140px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px 18px}
+.stat b{display:block;font-size:26px;color:#c8a864}
+.stat span{font-size:12.5px;color:#9a937f;letter-spacing:.5px}
+h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px}
+.item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:15px 18px;margin-bottom:11px}
+.item .head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.item .who{font-weight:600;font-size:14.5px}
+.item .when{color:#7c7567;font-size:12px}
+.stars{color:#c8a864;font-size:14px;letter-spacing:2px}
+.item p{margin-top:8px;font-size:13.5px;line-height:1.65;color:#cfc9bb;word-break:break-word}
+.item .tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:3px;background:rgba(200,168,100,.14);color:#c8a864;margin-left:8px;vertical-align:middle}
+.del{padding:6px 13px;border-radius:5px;border:1px solid rgba(255,120,120,.35);background:transparent;color:#ff9090;font-size:12.5px;cursor:pointer}
+.del:hover{background:rgba(255,120,120,.12)}
+.empty{color:#5c574c;font-size:13.5px;padding:22px 0;text-align:center}
+.live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8fd694}
+.live i{width:8px;height:8px;border-radius:50%;background:#4caf6d;display:inline-block}
+@media(max-width:600px){.login-wrap{margin-top:8vh}.topbar{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+
+<!-- ===== ĐĂNG NHẬP ===== -->
+<div class="login-wrap" id="loginView" style="display:none">
+  <h1><em>Quản trị</em> — Free Khung Xanh</h1>
+  <form onsubmit="doLogin(event)">
+    <label>Email</label>
+    <input type="email" id="lgEmail" placeholder="admin@gmail.com" required>
+    <label>Mật khẩu</label>
+    <input type="password" id="lgPass" placeholder="••••••••" required>
+    <button class="btn solid full" type="submit">🔐 Đăng nhập</button>
+    <div class="err" id="lgErr"></div>
+  </form>
+</div>
+
+<!-- ===== NỘI DUNG QUẢN TRỊ ===== -->
+<div id="adminView" style="display:none">
+  <div class="topbar">
+    <div class="brand">🛠️ Quản trị <em>Free Khung Xanh</em> <span class="live"><i></i>Real-time</span></div>
+    <div class="actions">
+      <button class="btn" onclick="doLogout()">Đăng xuất</button>
+      <a class="btn" href="/">← Về trang chủ</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="cntFb">0</b><span>Phản hồi</span></div>
+    <div class="stat"><b id="cntRq">0</b><span>Yêu cầu</span></div>
+  </div>
+
+  <h2 class="sec">💬 Phản hồi khách</h2>
+  <div id="fbList"></div>
+
+  <h2 class="sec">📨 Yêu cầu khách</h2>
+  <div id="rqList"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw",
+  authDomain: "cinevault-ec9d1.firebaseapp.com",
+  databaseURL: "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "cinevault-ec9d1",
+  storageBucket: "cinevault-ec9d1.firebasestorage.app",
+  messagingSenderId: "732539981440",
+  appId: "1:732539981440:web:84403c072905d8afcd6065"
+};
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db = firebase.database();
+
+let fbUnsub = null, rqUnsub = null;
+
+function fmtTime(t){
+  if(!t) return '';
+  const d = new Date(typeof t === 'number' ? t : Date.parse(t));
+  if(isNaN(d.getTime())) return '';
+  return d.toLocaleString('vi-VN');
+}
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function stars(n){ n=Math.max(0,Math.min(5,n||0)); return '★'.repeat(n)+'☆'.repeat(5-n); }
+
+function renderFb(list){
+  document.getElementById('cntFb').textContent = list.length;
+  const box = document.getElementById('fbList');
+  if(!list.length){ box.innerHTML = '<div class="empty">Chưa có phản hồi nào.</div>'; return; }
+  box.innerHTML = list.map(([k,r])=>`
+    <div class="item">
+      <div class="head">
+        <div>
+          <span class="who">${esc(r.name)||'Khách ẩn danh'}</span>
+          <span class="stars">${stars(r.rating)}</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="when">${fmtTime(r.time)}</span>
+          <button class="del" onclick="delItem('feedback','${k}')">Xóa</button>
+        </div>
+      </div>
+      <p>${esc(r.content)}</p>
+    </div>`).join('');
+}
+
+function renderRq(list){
+  document.getElementById('cntRq').textContent = list.length;
+  const box = document.getElementById('rqList');
+  if(!list.length){ box.innerHTML = '<div class="empty">Chưa có yêu cầu nào.</div>'; return; }
+  const typeNames = {khung:'Yêu cầu khung mới',sua:'Sửa / xóa khung',download:'Link tải bị lỗi',shop:'Yêu cầu nạp game',khac:'Khác'};
+  box.innerHTML = list.map(([k,r])=>`
+    <div class="item">
+      <div class="head">
+        <div>
+          <span class="who">${esc(r.name)||'Khách ẩn danh'}</span>
+          <span class="tag">${typeNames[r.type]||esc(r.type)||'Khác'}</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="when">${fmtTime(r.time)}</span>
+          <button class="del" onclick="delItem('requests','${k}')">Xóa</button>
+        </div>
+      </div>
+      <p>${esc(r.content || r.message)}</p>
+    </div>`).join('');
+}
+
+function toList(v){ return v ? Object.entries(v).sort((a,b)=>(b[1].time||b[1].ts||0)-(a[1].time||a[1].ts||0)) : []; }
+
+function startListeners(){
+  stopListeners();
+  fbUnsub = db.ref('feedback').on('value', s => renderFb(toList(s.val())));
+  rqUnsub = db.ref('requests').on('value', s => renderRq(toList(s.val())));
+}
+function stopListeners(){
+  if(fbUnsub){ db.ref('feedback').off('value', fbUnsub); fbUnsub=null; }
+  if(rqUnsub){ db.ref('requests').off('value', rqUnsub); rqUnsub=null; }
+}
+function delItem(node, key){
+  if(!confirm('Xóa mục này vĩnh viễn?')) return;
+  db.ref(node+'/'+key).remove()
+    .then(()=>console.log('deleted'))
+    .catch(e=>alert('Không xóa được: '+e.message));
+}
+
+function showLogin(){ document.getElementById('loginView').style.display='block'; document.getElementById('adminView').style.display='none'; stopListeners(); }
+function showAdmin(){ document.getElementById('loginView').style.display='none'; document.getElementById('adminView').style.display='block'; startListeners(); }
+
+function doLogin(e){
+  e.preventDefault();
+  const err = document.getElementById('lgErr');
+  err.textContent='';
+  auth.signInWithEmailAndPassword(document.getElementById('lgEmail').value.trim(), document.getElementById('lgPass').value)
+    .catch(ex => { err.textContent = 'Sai email hoặc mật khẩu! ('+ex.code+')'; });
+}
+function doLogout(){ auth.signOut(); }
+
+auth.onAuthStateChanged(u => { u ? showAdmin() : showLogin(); });
+</script>
+</body>
+</html>
