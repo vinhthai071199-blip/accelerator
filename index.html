@@ -104,13 +104,6 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 .modal h2{font-family:'Playfair Display',serif;font-size:22px;text-align:center;letter-spacing:1px;margin-bottom:6px}
 
 /* ===== FORM GỬI YÊU CẦU ===== */
-.request-wrap{max-width:620px;margin:0 auto;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));box-shadow:0 20px 60px rgba(0,0,0,.4);padding:38px}
-.request-wrap label{display:block;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#a89f8e;margin-bottom:8px}
-.request-wrap input,.request-wrap textarea,.request-wrap select{width:100%;padding:13px 16px;border-radius:10px;background:rgba(10,12,16,.6);border:1px solid rgba(255,255,255,.1);color:#e8e4da;font-size:14px;outline:none;font-family:'Poppins',sans-serif;transition:border-color .3s,box-shadow .3s;margin-bottom:18px}
-.request-wrap input:focus,.request-wrap textarea:focus,.request-wrap select:focus{border-color:rgba(200,168,100,.8);box-shadow:0 0 0 4px rgba(200,168,100,.12)}
-.request-wrap textarea{resize:vertical;min-height:110px}
-.request-wrap select option{background:#0a0c10;color:#e8e4da}
-
 /* ===== FOOTER ===== */
 footer{border-top:1px solid rgba(200,168,100,.16);padding:46px 5%;text-align:center;color:#6b6558;font-size:12.5px;letter-spacing:1.2px}
 footer .f-orn{color:#c8a864;font-size:14px;letter-spacing:8px;margin-bottom:12px}
@@ -179,8 +172,6 @@ footer .f-orn{color:#c8a864;font-size:14px;letter-spacing:8px;margin-bottom:12px
   <div class="logo"><img class="logo-avatar" src="avatar.jpg" alt="avatar"></div>
   <div class="nav-links">
     <a class="btn" href="#shop">🛒 Shop</a>
-    <a class="btn" href="#videos">🖼️ Free khung xanh</a>
-    <a class="btn" href="#request">✉️ Gửi yêu cầu</a>
   </div>
 </nav>
 
@@ -203,58 +194,6 @@ footer .f-orn{color:#c8a864;font-size:14px;letter-spacing:8px;margin-bottom:12px
       <a class="btn solid" href="https://teyvatstore.com/" target="_blank">🛒 Vào shop: teyvatstore.com</a>
       <a class="btn" href="https://www.facebook.com/people/Teyvat-Store/61589322797808/" target="_blank">💬 Liên hệ CSKH</a>
     </div>
-  </div>
-</section>
-
-<!-- ===== MỤC 2: FREE KHUNG (ẢNH) ===== -->
-<section id="videos">
-  <div class="sec-title reveal"><div class="bar"></div><h2>🖼️ <em>Free Khung</em> Xanh</h2></div>
-  <div class="search-bar reveal d1">
-    <span class="s-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Tìm kiếm khung xanh..." oninput="searchVideos()">
-    <button class="clear" id="clearSearch" onclick="clearSearch()">✕</button>
-  </div>
-  <div class="grid" id="videoGrid"></div>
-  <div id="noResult" style="display:none;text-align:center;color:#5c574c;padding:50px 0;font-size:14px">Không tìm thấy khung nào phù hợp 😢</div>
-</section>
-
-<!-- ===== MỤC XEM KHUNG ===== -->
-<section id="videoDetail" style="display:none">
-  <div class="sec-title reveal visible"><div class="bar"></div><h2>▶ <em>Xem Khung</em> Xanh</h2></div>
-  <div class="vd-wrap reveal visible">
-    <div class="vd-player">
-      <img id="vdImage" src="" alt="" style="width:100%;display:block;max-height:88vh;object-fit:contain;background:#0d0f14">
-      <button class="vd-close" onclick="closeDetail()" aria-label="Đóng">✕</button>
-    </div>
-    <div class="vd-info">
-      <h3 id="vdName">Khung</h3>
-      <div class="vd-actions">
-        <a class="btn solid" id="vdDownload" href="#" download>⬇️ Tải khung</a>
-        <button class="btn" onclick="closeDetail()">← Quay lại danh sách</button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== MỤC 3: GỬI YÊU CẦU ===== -->
-<section id="request">
-  <div class="sec-title reveal"><div class="bar"></div><h2>✉️ <em>Gửi</em> Yêu Cầu</h2></div>
-  <div class="request-wrap reveal d1">
-    <form onsubmit="sendRequest(event)">
-      <label>Họ tên / Biệt danh</label>
-      <input type="text" id="reqName" placeholder="Tên của bạn" required>
-      <label>Loại yêu cầu</label>
-      <select id="reqType">
-        <option value="khung">Yêu cầu khung mới</option>
-        <option value="sua">Sửa / xóa khung</option>
-        <option value="download">Link tải bị lỗi</option>
-        <option value="shop">Yêu cầu nạp game</option>
-        <option value="khac">Khác</option>
-      </select>
-      <label>Nội dung yêu cầu</label>
-      <textarea id="reqContent" placeholder="Mô tả chi tiết yêu cầu của bạn..." required></textarea>
-      <button class="btn solid" type="submit" style="width:100%;justify-content:center">📨 Gửi yêu cầu</button>
-    </form>
   </div>
 </section>
 
@@ -345,33 +284,6 @@ window.addEventListener('scroll', ()=>{
   document.getElementById('navbar').classList.toggle('scrolled', window.scrollY>40);
 });
 
-/* ============ GỬI YÊU CẦU ============ */
-function sendRequest(e){
-  e.preventDefault();
-  const name = document.getElementById('reqName').value.trim();
-  const type = document.getElementById('reqType').value;
-  const content = document.getElementById('reqContent').value.trim();
-  if(!content){ showToast('Vui lòng nhập nội dung yêu cầu!'); return; }
-  const reqs = JSON.parse(localStorage.getItem('vh_requests') || '[]');
-  reqs.push({name, type, content, time: Date.now()});
-  localStorage.setItem('vh_requests', JSON.stringify(reqs));
-  if(fbReady){
-    firebase.database().ref('requests').push({
-      name, type, content, time: Date.now()
-    }).then(()=>{
-      showToast('Yêu cầu đã được gửi! Mình sẽ xem xét sớm nhé. 📨');
-      e.target.reset();
-    }).catch(err=>{
-      console.warn('Send request failed:', err);
-      showToast('Yêu cầu đã được gửi! Mình sẽ xem xét sớm nhé. 📨');
-      e.target.reset();
-    });
-  } else {
-    showToast('Yêu cầu đã được gửi! Mình sẽ xem xét sớm nhé. 📨');
-    e.target.reset();
-  }
-}
-
 /* ============ TOAST ============ */
 let toastTimer;
 function showToast(msg){
@@ -382,35 +294,11 @@ function showToast(msg){
   toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
 }
 
-/* ============ FIREBASE (PHẢN HỒI) ============ */
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw",
-  authDomain: "cinevault-ec9d1.firebaseapp.com",
-  databaseURL: "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "cinevault-ec9d1",
-  storageBucket: "cinevault-ec9d1.firebasestorage.app",
-  messagingSenderId: "732539981440",
-  appId: "1:732539981440:web:84403c072905d8afcd6065",
-  measurementId: "G-HST3SLPEVH"
-};
-let fbReady = false;
-function fbLoad(src){
-  return new Promise((res,rej)=>{
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload = res;
-    s.onerror = rej;
-    document.head.appendChild(s);
-  });
-}
-async function initFirebase(){
-  try{
-    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
-    firebase.initializeApp(FIREBASE_CONFIG);
-    fbReady = true;
-  }catch(e){ console.warn('Firebase init failed:', e); }
-}
+/* ============ NAV SCROLL ============ */
+window.addEventListener('scroll', ()=>{
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY>40);
+});
+
 /* ============ REVEAL ============ */
 const io = new IntersectionObserver(es=>{
   es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target); } });
@@ -418,8 +306,6 @@ const io = new IntersectionObserver(es=>{
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
 /* ============ INIT ============ */
-renderVideos(VIDEOS);
-initFirebase();
 </script>
 </body>
 </html>
