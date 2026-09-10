@@ -24,7 +24,8 @@ body{background:#0a0c10;color:#e8e4da;font-family:'Poppins',sans-serif;overflow-
 .glow.g3{width:680px;height:680px;background:radial-gradient(circle,rgba(200,168,100,.09),transparent 66%);bottom:-260px;left:30%}
 
 /* ===== NAV ===== */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 6%;transition:.45s cubic-bezier(.22,1,.36,1)}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:16px;padding:20px 6%;transition:.45s cubic-bezier(.22,1,.36,1)}
+.nav-links{margin-left:auto}
 nav.scrolled{background:rgba(17,20,27,.94);border-bottom:1px solid rgba(200,168,100,.22);padding:12px 6%;box-shadow:0 14px 44px rgba(0,0,0,.45)}
 .logo{display:flex;align-items:center}
 .logo .logo-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;display:block;border:2px solid rgba(200,168,100,.75);box-shadow:0 0 0 4px rgba(200,168,100,.12),0 0 22px rgba(200,168,100,.35)}
@@ -75,18 +76,33 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 .vid-dl:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,168,100,.38)}
 .vid-empty{grid-column:1/-1;text-align:center;color:#5c574c;padding:40px 0;font-size:14px}
 
+/* ===== MENU MOBILE ===== */
+.menu-btn{display:flex;flex-direction:column;gap:5px;background:none;border:1px solid rgba(200,168,100,.45);border-radius:10px;padding:11px 12px;cursor:pointer}
+.menu-btn span{display:block;width:20px;height:2px;background:#d4b87a;border-radius:1px;transition:.3s}
+.menu-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.menu-btn.open span:nth-child(2){opacity:0}
+.menu-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.menu-overlay{position:fixed;inset:0;z-index:101;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .35s}
+.menu-overlay.open{opacity:1;pointer-events:auto}
+.menu-panel{position:fixed;top:0;left:0;bottom:0;z-index:102;width:min(290px,82vw);background:#10131a;border-right:1px solid rgba(200,168,100,.3);box-shadow:30px 0 80px rgba(0,0,0,.5);padding:24px 18px;transform:translateX(-110%);transition:transform .45s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;gap:6px}
+.menu-panel.open{transform:translateX(0)}
+.menu-panel .mp-head{display:flex;align-items:center;gap:12px;padding-bottom:18px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.menu-panel .mp-head img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid rgba(200,168,100,.7);flex-shrink:0}
+.menu-panel .mp-head b{font-family:'Playfair Display',serif;letter-spacing:1px;font-size:16px;flex:1;white-space:nowrap}
+.menu-panel .mp-head b em{font-style:normal;color:#c8a864}
+.menu-panel .mp-x{margin-left:auto;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#a8a298;font-size:15px;cursor:pointer;width:34px;height:34px;border-radius:50%;flex-shrink:0;transition:.3s}
+.menu-panel .mp-x:hover{color:#ffb4a4;border-color:rgba(255,150,130,.5)}
+.menu-panel a{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:10px;color:#e8e4da;text-decoration:none;font-size:15px;transition:.3s}
+.menu-panel a:hover{background:rgba(200,168,100,.12)}
+
 /* ===== HIỆU ỨNG XUẤT HIỆN ===== */
 .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1)}
 .reveal.visible{opacity:1;transform:translateY(0)}
-.reveal.d1{transition-delay:.1s}.reveal.d2{transition-delay:.2s}.reveal.d3{transition-delay:.3s}
-
-#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(130px);z-index:300;padding:15px 28px;border-radius:10px;background:#171a21;border:1px solid rgba(200,168,100,.4);border-left:3px solid #c8a864;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;box-shadow:0 24px 60px rgba(0,0,0,.6);transition:transform .6s cubic-bezier(.34,1.56,.64,1)}
-#toast.show{transform:translateX(-50%) translateY(0)}
-#toast i{color:#c8a864}
+.reveal.d1{transition-delay:.1s}
 
 @media(max-width:760px){
   .nav-links .btn{display:none}
-  nav{padding:12px 4%;gap:8px}
+  nav{padding:12px 4%;gap:14px;justify-content:flex-start}
   nav>*{min-width:0}
   .logo{white-space:nowrap}
   header{padding:95px 5% 28px}
@@ -101,7 +117,6 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
   section{padding:60px 4%}
   .sec-title h2{font-size:21px}
   .vid-grid{grid-template-columns:1fr;gap:18px}
-  #toast{width:88vw;justify-content:center;font-size:12.5px;padding:13px 16px;bottom:18px;box-sizing:border-box}
 }
 @media(max-width:760px){
   html,body{overflow-x:hidden}
@@ -116,17 +131,24 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 
 <!-- NAV -->
 <nav id="navbar">
+  <button class="menu-btn" id="menuBtn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
   <div class="logo"><img class="logo-avatar" src="avatar.jpg" alt="avatar"></div>
   <div class="nav-links">
-    <a class="btn" href="#shop">🛒 Shop</a>
-    <a class="btn" href="#videos">🎬 Video</a>
+    <a class="btn" href="#shop">Shop</a>
+    <!-- TAM AN: <a class="btn" href="#videos">Video</a> -->
   </div>
 </nav>
+<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu(false)"></div>
+<div class="menu-panel" id="menuPanel">
+  <div class="mp-head"><img src="avatar.jpg" alt=""><b>Accelerator<em>Ares</em></b><button class="mp-x" onclick="toggleMenu(false)">✕</button></div>
+  <a href="#shop" onclick="toggleMenu(false)">Shop</a>
+  <!-- TAM AN: <a href="#videos" onclick="toggleMenu(false)">Video</a> -->
+</div>
 
 <!-- HEADER -->
 <header>
   <h1><img class="head-avatar" src="avatar.jpg" alt=""><em>AcceleratorAres</em></h1>
-  <p class="welcome">✦ Chào mừng đến với Bio của tôi ✦</p>
+  <p class="welcome">✦ Chào mừng đến với Bio của Ares ✦</p>
 </header>
 
 <!-- ===== MỤC 1: QUẢNG CÁO SHOP ===== -->
@@ -145,14 +167,13 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
   </div>
 </section>
 
-<!-- ===== MỤC 2: VIDEO ===== -->
+<!-- TAM AN MUC VIDEO - mo lai khi can
+===== MỤC 2: VIDEO =====
 <section id="videos">
   <div class="sec-title reveal"><div class="bar"></div><h2>🎬 <em>Video</em> Của Tôi</h2></div>
   <div class="vid-grid reveal d1" id="vidGrid"><div class="vid-empty">Đang tải video...</div></div>
 </section>
-
-<!-- TOAST -->
-<div id="toast"><i>✦</i><span id="toastMsg">Thành công!</span></div>
+-->
 
 <script>
 /* ============ NAV SCROLL ============ */
@@ -160,14 +181,15 @@ window.addEventListener('scroll', ()=>{
   document.getElementById('navbar').classList.toggle('scrolled', window.scrollY>40);
 });
 
-/* ============ TOAST ============ */
-let toastTimer;
-function showToast(msg){
-  const t = document.getElementById('toast');
-  document.getElementById('toastMsg').textContent = msg;
-  requestAnimationFrame(()=>t.classList.add('show'));
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
+/* ============ MENU MOBILE ============ */
+function toggleMenu(force){
+  const p = document.getElementById('menuPanel');
+  const b = document.getElementById('menuBtn');
+  const o = document.getElementById('menuOverlay');
+  const open = force !== undefined ? force : !p.classList.contains('open');
+  p.classList.toggle('open', open);
+  b.classList.toggle('open', open);
+  o.classList.toggle('open', open);
 }
 
 /* ============ REVEAL ============ */
@@ -216,7 +238,7 @@ async function initVideos(){
           + '<video controls preload="metadata" src="'+esc(r.url)+'"></video>'
           + '<div class="vid-info"><h3>'+esc(r.title)+'</h3>'
           + '<div class="meta"><small>'+fmtSize(r.size)+'</small>'
-          + '<a class="vid-dl" href="'+esc(r.url)+'" target="_blank" rel="noopener" download>⬇️ Tải xuống</a>'
+          + '<a class="vid-dl" href="'+esc(r.url)+'" target="_blank" rel="noopener" download>Tải xuống</a>'
           + '</div></div></div>';
       }).join('');
     }, function(){ box.innerHTML = '<div class="vid-empty">Không tải được video.</div>'; });

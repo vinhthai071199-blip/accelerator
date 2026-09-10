@@ -47,7 +47,6 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 .up-row input[type=file]{padding:10px;font-size:12.5px}
 .prog{height:8px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:12px;overflow:hidden;display:none}
 .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c8a864,#8a6d3b)}
-.vthumb{width:110px;border-radius:6px;background:#000;display:block}
 .live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8fd694}
 .live i{width:8px;height:8px;border-radius:50%;background:#4caf6d;display:inline-block}
 @media(max-width:600px){.login-wrap{margin-top:8vh}.topbar{flex-direction:column;align-items:flex-start}}
@@ -106,7 +105,6 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script>
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw",
@@ -120,7 +118,10 @@ const FIREBASE_CONFIG = {
 firebase.initializeApp(FIREBASE_CONFIG);
 const auth = firebase.auth();
 const db = firebase.database();
-const storage = firebase.storage();
+
+// --- CLOUDINARY (dien thong so cua ban vao) ---
+const CLOUD_NAME = "ck9gvbcq";
+const UPLOAD_PRESET = "web_upload";
 
 let fbUnsub = null, rqUnsub = null, vdUnsub = null;
 const MAX_MB = 100;
@@ -226,39 +227,44 @@ function uploadVideo(){
   err.textContent = '';
   if(!f){ err.textContent = 'Hãy chọn 1 file video!'; return; }
   if(f.size > MAX_MB*1024*1024){ err.textContent = 'Video quá lớn! Tối đa '+MAX_MB+'MB (file này '+fmtSize(f.size)+')'; return; }
+  if(CLOUD_NAME.indexOf('DANGKY')===0){ err.textContent = 'Chưa cấu hình Cloudinary! Nhờ admin điền Cloud name + Preset.'; return; }
   const title = document.getElementById('upTitle').value.trim() || f.name.replace(/\.[^.]+$/,'');
   const btn = document.getElementById('upBtn');
   btn.disabled = true; btn.textContent = 'Đang tải...';
   const prog = document.getElementById('upProg');
   const bar = document.getElementById('upBar');
   prog.style.display = 'block'; bar.style.width = '0';
-  const safe = f.name.replace(/[^\w.\-]+/g,'_');
-  const ref = storage.ref('videos/'+Date.now()+'_'+safe);
-  const task = ref.put(f);
-  task.on('state_changed',
-    function(s){ bar.style.width = Math.round(s.bytesTransferred/s.totalBytes*100)+'%'; },
-    function(e){ err.textContent = 'Tải thất bại: '+(e.code||e.message); btn.disabled=false; btn.textContent='⬆️ Tải lên'; },
-    function(){
-      task.snapshot.ref.getDownloadURL().then(function(url){
-        db.ref('videos').push({title:title, url:url, path:ref.fullPath, size:f.size, time:Date.now()}).then(function(){
-          document.getElementById('upTitle').value = '';
-          fi.value = '';
-          prog.style.display = 'none';
-          btn.disabled = false; btn.textContent = '⬆️ Tải lên';
-        });
+  const fd = new FormData();
+  fd.append('file', f);
+  fd.append('upload_preset', UPLOAD_PRESET);
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/video/upload');
+  xhr.upload.onprogress = function(e){
+    if(e.lengthComputable) bar.style.width = Math.round(e.loaded/e.total*100)+'%';
+  };
+  xhr.onload = function(){
+    if(xhr.status===200){
+      let r = {};
+      try{ r = JSON.parse(xhr.responseText); }catch(e){}
+      db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', size:f.size, time:Date.now()}).then(function(){
+        document.getElementById('upTitle').value = '';
+        fi.value = '';
+        prog.style.display = 'none';
+        btn.disabled = false; btn.textContent = '⬆️ Tải lên';
       });
+    } else {
+      err.textContent = 'Tải thất bại (mã '+xhr.status+'). Kiểm tra Cloud name + Preset!';
+      btn.disabled = false; btn.textContent = '⬆️ Tải lên';
     }
-  );
+  };
+  xhr.onerror = function(){ err.textContent = 'Lỗi mạng! Thử lại nhé.'; btn.disabled=false; btn.textContent='⬆️ Tải lên'; };
+  xhr.send(fd);
 }
 
 function delVideo(key){
-  if(!confirm('Xóa video này vĩnh viễn (cả file)?')) return;
-  db.ref('videos/'+key).once('value').then(function(s){
-    const r = s.val()||{};
-    const jobs = [db.ref('videos/'+key).remove()];
-    if(r.path) jobs.push(storage.ref(r.path).delete().catch(function(){}));
-    return Promise.all(jobs);
-  }).catch(function(e){ alert('Không xóa được: '+e.message); });
+  if(!confirm('Gỡ video này khỏi web? (file gốc vẫn còn trong kho Cloudinary)')) return;
+  db.ref('videos/'+key).remove()
+    .catch(function(e){ alert('Không xóa được: '+e.message); });
 }
 
 function showLogin(){ document.getElementById('loginView').style.display='block'; document.getElementById('adminView').style.display='none'; stopListeners(); }

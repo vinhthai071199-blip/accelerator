@@ -4,3 +4,6 @@ node_modules/
 build/
 dist_app/
 *.spec
+*.mp4
+backups/
+__pycache__/
