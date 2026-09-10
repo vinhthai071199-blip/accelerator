@@ -41,6 +41,13 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 .del{padding:6px 13px;border-radius:5px;border:1px solid rgba(255,120,120,.35);background:transparent;color:#ff9090;font-size:12.5px;cursor:pointer}
 .del:hover{background:rgba(255,120,120,.12)}
 .empty{color:#5c574c;font-size:13.5px;padding:22px 0;text-align:center}
+.up-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:20px;margin-bottom:16px}
+.up-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.up-row input[type=text]{flex:1;min-width:180px}
+.up-row input[type=file]{padding:10px;font-size:12.5px}
+.prog{height:8px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:12px;overflow:hidden;display:none}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c8a864,#8a6d3b)}
+.vthumb{width:110px;border-radius:6px;background:#000;display:block}
 .live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8fd694}
 .live i{width:8px;height:8px;border-radius:50%;background:#4caf6d;display:inline-block}
 @media(max-width:600px){.login-wrap{margin-top:8vh}.topbar{flex-direction:column;align-items:flex-start}}
@@ -74,6 +81,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   <div class="stats">
     <div class="stat"><b id="cntFb">0</b><span>Phản hồi</span></div>
     <div class="stat"><b id="cntRq">0</b><span>Yêu cầu</span></div>
+    <div class="stat"><b id="cntVd">0</b><span>Video</span></div>
   </div>
 
   <h2 class="sec">💬 Phản hồi khách</h2>
@@ -81,11 +89,24 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 
   <h2 class="sec">📨 Yêu cầu khách</h2>
   <div id="rqList"></div>
+
+  <h2 class="sec">🎬 Video của tôi</h2>
+  <div class="up-wrap">
+    <div class="up-row">
+      <input type="text" id="upTitle" placeholder="Tên video...">
+      <input type="file" id="upFile" accept="video/*">
+      <button class="btn solid" id="upBtn" onclick="uploadVideo()">⬆️ Tải lên</button>
+    </div>
+    <div class="prog" id="upProg"><i id="upBar"></i></div>
+    <div class="err" id="upErr" style="text-align:left"></div>
+  </div>
+  <div id="vdList"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script>
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw",
@@ -99,8 +120,10 @@ const FIREBASE_CONFIG = {
 firebase.initializeApp(FIREBASE_CONFIG);
 const auth = firebase.auth();
 const db = firebase.database();
+const storage = firebase.storage();
 
-let fbUnsub = null, rqUnsub = null;
+let fbUnsub = null, rqUnsub = null, vdUnsub = null;
+const MAX_MB = 100;
 
 function fmtTime(t){
   if(!t) return '';
@@ -158,16 +181,84 @@ function startListeners(){
   stopListeners();
   fbUnsub = db.ref('feedback').on('value', s => renderFb(toList(s.val())));
   rqUnsub = db.ref('requests').on('value', s => renderRq(toList(s.val())));
+  vdUnsub = db.ref('videos').on('value', s => renderVd(toList(s.val())));
 }
 function stopListeners(){
   if(fbUnsub){ db.ref('feedback').off('value', fbUnsub); fbUnsub=null; }
   if(rqUnsub){ db.ref('requests').off('value', rqUnsub); rqUnsub=null; }
+  if(vdUnsub){ db.ref('videos').off('value', vdUnsub); vdUnsub=null; }
 }
 function delItem(node, key){
   if(!confirm('Xóa mục này vĩnh viễn?')) return;
   db.ref(node+'/'+key).remove()
     .then(()=>console.log('deleted'))
     .catch(e=>alert('Không xóa được: '+e.message));
+}
+
+function fmtSize(b){
+  if(!b && b!==0) return '';
+  const u=['B','KB','MB','GB']; let i=0;
+  while(b>=1024 && i<3){ b/=1024; i++; }
+  return (b>=10||i===0 ? Math.round(b) : b.toFixed(1))+' '+u[i];
+}
+
+function renderVd(list){
+  document.getElementById('cntVd').textContent = list.length;
+  const box = document.getElementById('vdList');
+  if(!list.length){ box.innerHTML = '<div class="empty">Chưa có video nào. Tải lên video đầu tiên nhé!</div>'; return; }
+  box.innerHTML = list.map(function(v){
+    const k=v[0], r=v[1]||{};
+    return '<div class="item"><div class="head">'
+      + '<div><span class="who">'+esc(r.title)+'</span>'
+      + '<span class="tag">'+fmtSize(r.size)+'</span></div>'
+      + '<div style="display:flex;gap:10px;align-items:center">'
+      + '<span class="when">'+fmtTime(r.time)+'</span>'
+      + '<a class="del" style="text-decoration:none" href="'+esc(r.url)+'" target="_blank" rel="noopener">Mở</a>'
+      + '<button class="del" onclick="delVideo(\''+k+'\')">Xóa</button>'
+      + '</div></div></div>';
+  }).join('');
+}
+
+function uploadVideo(){
+  const fi = document.getElementById('upFile');
+  const f = fi.files[0];
+  const err = document.getElementById('upErr');
+  err.textContent = '';
+  if(!f){ err.textContent = 'Hãy chọn 1 file video!'; return; }
+  if(f.size > MAX_MB*1024*1024){ err.textContent = 'Video quá lớn! Tối đa '+MAX_MB+'MB (file này '+fmtSize(f.size)+')'; return; }
+  const title = document.getElementById('upTitle').value.trim() || f.name.replace(/\.[^.]+$/,'');
+  const btn = document.getElementById('upBtn');
+  btn.disabled = true; btn.textContent = 'Đang tải...';
+  const prog = document.getElementById('upProg');
+  const bar = document.getElementById('upBar');
+  prog.style.display = 'block'; bar.style.width = '0';
+  const safe = f.name.replace(/[^\w.\-]+/g,'_');
+  const ref = storage.ref('videos/'+Date.now()+'_'+safe);
+  const task = ref.put(f);
+  task.on('state_changed',
+    function(s){ bar.style.width = Math.round(s.bytesTransferred/s.totalBytes*100)+'%'; },
+    function(e){ err.textContent = 'Tải thất bại: '+(e.code||e.message); btn.disabled=false; btn.textContent='⬆️ Tải lên'; },
+    function(){
+      task.snapshot.ref.getDownloadURL().then(function(url){
+        db.ref('videos').push({title:title, url:url, path:ref.fullPath, size:f.size, time:Date.now()}).then(function(){
+          document.getElementById('upTitle').value = '';
+          fi.value = '';
+          prog.style.display = 'none';
+          btn.disabled = false; btn.textContent = '⬆️ Tải lên';
+        });
+      });
+    }
+  );
+}
+
+function delVideo(key){
+  if(!confirm('Xóa video này vĩnh viễn (cả file)?')) return;
+  db.ref('videos/'+key).once('value').then(function(s){
+    const r = s.val()||{};
+    const jobs = [db.ref('videos/'+key).remove()];
+    if(r.path) jobs.push(storage.ref(r.path).delete().catch(function(){}));
+    return Promise.all(jobs);
+  }).catch(function(e){ alert('Không xóa được: '+e.message); });
 }
 
 function showLogin(){ document.getElementById('loginView').style.display='block'; document.getElementById('adminView').style.display='none'; stopListeners(); }

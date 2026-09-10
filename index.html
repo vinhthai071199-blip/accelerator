@@ -41,6 +41,8 @@ header{padding:132px 5% 48px;text-align:center;position:relative}
 header h1{font-family:'Playfair Display',serif;font-size:clamp(32px,5.4vw,56px);letter-spacing:1.5px;margin-bottom:14px}
 header h1 .head-avatar{width:86px;height:86px;border-radius:50%;object-fit:cover;vertical-align:middle;border:3px solid rgba(200,168,100,.8);box-shadow:0 0 0 6px rgba(200,168,100,.12),0 0 46px rgba(200,168,100,.32);margin-right:12px}
 header h1 em{font-style:normal;background:linear-gradient(100deg,#f0e2b0,#c8a864 45%,#96762f);-webkit-background-clip:text;background-clip:text;color:transparent}
+header .welcome{color:#9a9388;font-weight:300;font-size:15px;letter-spacing:1px}
+header .welcome b{color:#c8a864;font-weight:600}
 
 /* ===== SECTION ===== */
 section{padding:64px 5% 92px;scroll-margin-top:90px}
@@ -59,6 +61,19 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 .shop-card p{color:#a89f8e;font-size:14px;font-weight:300}
 .shop-card .shop-actions{display:flex;flex-direction:column;gap:11px}
 @media(max-width:760px){.shop-card{grid-template-columns:1fr;text-align:center;justify-items:center}}
+
+/* ===== VIDEO ===== */
+.vid-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:30px}
+.vid-card{border-radius:16px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.09);box-shadow:0 14px 40px rgba(0,0,0,.4);transition:.45s cubic-bezier(.22,1,.36,1)}
+.vid-card:hover{transform:translateY(-8px);border-color:rgba(200,168,100,.5);box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 0 1px rgba(200,168,100,.18)}
+.vid-card video{width:100%;display:block;aspect-ratio:16/9;background:#000}
+.vid-info{padding:18px 20px 22px}
+.vid-info h3{font-size:16px;font-weight:600;margin-bottom:12px;line-height:1.4;word-break:break-word}
+.vid-info .meta{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.vid-info .meta small{color:#7c7567;font-size:12px}
+.vid-dl{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:999px;background:linear-gradient(135deg,#e0c078,#b08c46 55%,#8a6d3b);color:#161005;font-size:12px;font-weight:700;text-decoration:none;transition:.3s;box-shadow:0 4px 16px rgba(200,168,100,.22)}
+.vid-dl:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,168,100,.38)}
+.vid-empty{grid-column:1/-1;text-align:center;color:#5c574c;padding:40px 0;font-size:14px}
 
 /* ===== HIỆU ỨNG XUẤT HIỆN ===== */
 .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1)}
@@ -85,6 +100,7 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
   .shop-actions .btn{width:100%;justify-content:center;white-space:normal}
   section{padding:60px 4%}
   .sec-title h2{font-size:21px}
+  .vid-grid{grid-template-columns:1fr;gap:18px}
   #toast{width:88vw;justify-content:center;font-size:12.5px;padding:13px 16px;bottom:18px;box-sizing:border-box}
 }
 @media(max-width:760px){
@@ -103,12 +119,14 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
   <div class="logo"><img class="logo-avatar" src="avatar.jpg" alt="avatar"></div>
   <div class="nav-links">
     <a class="btn" href="#shop">🛒 Shop</a>
+    <a class="btn" href="#videos">🎬 Video</a>
   </div>
 </nav>
 
 <!-- HEADER -->
 <header>
   <h1><img class="head-avatar" src="avatar.jpg" alt=""><em>AcceleratorAres</em></h1>
+  <p class="welcome">✦ Chào mừng đến với Bio của tôi ✦</p>
 </header>
 
 <!-- ===== MỤC 1: QUẢNG CÁO SHOP ===== -->
@@ -125,6 +143,12 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
       <a class="btn" href="https://www.facebook.com/people/Teyvat-Store/61589322797808/" target="_blank">💬 Liên hệ CSKH</a>
     </div>
   </div>
+</section>
+
+<!-- ===== MỤC 2: VIDEO ===== -->
+<section id="videos">
+  <div class="sec-title reveal"><div class="bar"></div><h2>🎬 <em>Video</em> Của Tôi</h2></div>
+  <div class="vid-grid reveal d1" id="vidGrid"><div class="vid-empty">Đang tải video...</div></div>
 </section>
 
 <!-- TOAST -->
@@ -151,6 +175,54 @@ const io = new IntersectionObserver(es=>{
   es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target); } });
 },{threshold:.1});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ============ VIDEO (FIREBASE, ĐỌC CÔNG KHAI) ============ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw",
+  authDomain: "cinevault-ec9d1.firebaseapp.com",
+  databaseURL: "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "cinevault-ec9d1",
+  storageBucket: "cinevault-ec9d1.firebasestorage.app",
+  messagingSenderId: "732539981440",
+  appId: "1:732539981440:web:84403c072905d8afcd6065"
+};
+function fbLoad(src){
+  return new Promise((res,rej)=>{
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+function esc(s){ const d=document.createElement('div'); d.textContent=(s==null?'':String(s)); return d.innerHTML; }
+function fmtSize(b){
+  if(!b && b!==0) return '';
+  const u=['B','KB','MB','GB']; let i=0;
+  while(b>=1024 && i<3){ b/=1024; i++; }
+  return (b>=10||i===0 ? Math.round(b) : b.toFixed(1))+' '+u[i];
+}
+async function initVideos(){
+  const box = document.getElementById('vidGrid');
+  try{
+    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+    firebase.initializeApp(FIREBASE_CONFIG);
+    firebase.database().ref('videos').on('value', function(s){
+      const v = s.val();
+      if(!v){ box.innerHTML = '<div class="vid-empty">Chưa có video nào.</div>'; return; }
+      const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
+      box.innerHTML = list.map(function(v){
+        const r = v[1]||{};
+        return '<div class="vid-card">'
+          + '<video controls preload="metadata" src="'+esc(r.url)+'"></video>'
+          + '<div class="vid-info"><h3>'+esc(r.title)+'</h3>'
+          + '<div class="meta"><small>'+fmtSize(r.size)+'</small>'
+          + '<a class="vid-dl" href="'+esc(r.url)+'" target="_blank" rel="noopener" download>⬇️ Tải xuống</a>'
+          + '</div></div></div>';
+      }).join('');
+    }, function(){ box.innerHTML = '<div class="vid-empty">Không tải được video.</div>'; });
+  }catch(e){ box.innerHTML = '<div class="vid-empty">Không tải được video.</div>'; }
+}
+initVideos();
 </script>
 </body>
 </html>
