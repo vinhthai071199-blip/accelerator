@@ -6,23 +6,19 @@ echo   ACCELERATORARES - TU DEPLOY LEN WEB
 echo ============================================
 echo.
 
-set SRC_DIR=%~dp0
-set REPO_DIR=D:\Opencode Project
+set REPO_DIR=%~dp0
+cd /d "%REPO_DIR%"
 
-echo [1/4] Copy file vao thu muc lam viec...
-copy /Y "%SRC_DIR%Acceleratorares.html" "%REPO_DIR%\index.html" >nul
-copy /Y "%SRC_DIR%admin.html" "%REPO_DIR%\admin.html" >nul
-copy /Y "%SRC_DIR%avatar.jpg" "%REPO_DIR%\avatar.jpg" >nul
-copy /Y "%SRC_DIR%shop-logo.jpg" "%REPO_DIR%\shop-logo.jpg" >nul
-if errorlevel 1 (
-    echo LOI: Khong copy duoc file!
-    pause
-    exit /b 1
+echo [1/4] Chuan bi file...
+if exist "%REPO_DIR%Acceleratorares.html" (
+    copy /Y "%REPO_DIR%Acceleratorares.html" "%REPO_DIR%index.html" >nul
+    echo       Lay tu Acceleratorares.html.
+) else (
+    echo       Dung index.html co san.
 )
 echo       Xong.
 
 echo [2/4] Luu len GitHub...
-cd /d "%REPO_DIR%"
 git add -A
 git -c user.name="vinhthai071199-blip" -c user.email="vinhthai071199-blip@users.noreply.github.com" commit -m "Update website"
 git push origin master
@@ -38,7 +34,7 @@ echo [3/4] Deploy len Vercel (cho khoang 30 giay)...
 call vercel deploy --prod --yes
 if errorlevel 1 (
     echo.
-    echo LOI: Deploy that bai.
+    echo LOI: Deploy that bai. Neu moi cai lai may, chay: vercel login
     pause
     exit /b 1
 )

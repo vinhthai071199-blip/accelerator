@@ -2,6 +2,7 @@ import subprocess
 import threading
 import shutil
 import os
+import re
 from datetime import datetime
 import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog, messagebox
@@ -13,6 +14,25 @@ SITE_URL = "https://acceleratorares.vercel.app/"
 EXTRA_FILES = ["admin.html", "avatar.jpg", "shop-logo.jpg"]
 SRC_DIR = os.path.dirname(DEFAULT_HTML)
 VERSION = "v2.0"
+CONFIG = os.path.join(REPO_DIR, "deploy_config.json")
+
+
+def load_cfg():
+    try:
+        import json
+        with open(CONFIG, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def save_cfg(d):
+    try:
+        import json
+        with open(CONFIG, "w", encoding="utf-8") as f:
+            json.dump(d, f)
+    except Exception:
+        pass
 
 BG = "#0d0f14"
 PANEL = "#12151d"
@@ -33,6 +53,7 @@ class App:
     def __init__(self, root):
         self.html_file = DEFAULT_HTML
         self.busy = False
+        self.auto_var = tk.BooleanVar(value=load_cfg().get("auto_backup", True))
         root.title("AcceleratorAres Deploy " + VERSION)
         root.geometry("640x700")
         root.minsize(600, 640)
@@ -110,6 +131,11 @@ class App:
                              relief="flat", pady=12, cursor="hand2",
                              command=self.start)
         self.btn.pack(fill="x", padx=14, pady=(8, 4))
+        tk.Checkbutton(tab1, text="Tự động sao lưu trước khi deploy / khôi phục",
+                       variable=self.auto_var, command=self.save_auto,
+                       font=("Segoe UI", 10), bg=BG, fg=TXT,
+                       selectcolor=CARD, activebackground=BG, activeforeground=TXT,
+                       cursor="hand2").pack(anchor="w", padx=18, pady=(0, 2))
         self.backup_btn = tk.Button(tab1, text="💾  SAO LƯU BẢN HIỆN TẠI", font=("Segoe UI", 11, "bold"),
                                     bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
                                     relief="flat", pady=9, cursor="hand2",
@@ -186,6 +212,16 @@ class App:
         self.prog.configure(value=v)
         self.prog.update_idletasks()
 
+    def save_auto(self):
+        save_cfg({"auto_backup": bool(self.auto_var.get())})
+
+    def maybe_auto_backup(self):
+        if self.auto_var.get():
+            self.write("[0/4] Tu dong sao luu ban dang chay...")
+            self.auto_backup()
+        else:
+            self.write("[0/4] Bo qua sao luu tu dong (dang TAT).")
+
     # ---------- deploy ----------
     def pick_file(self):
         if self.busy:
@@ -233,6 +269,7 @@ class App:
 
     def deploy(self):
         try:
+            self.maybe_auto_backup()
             self.write("[1/4] Copy file...")
             shutil.copy2(self.html_file, os.path.join(REPO_DIR, "index.html"))
             self.write("  + " + os.path.basename(self.html_file) + "  →  index.html")
@@ -255,6 +292,33 @@ class App:
             self.done(False)
 
     # ---------- backup ----------
+    def next_ver(self, auto):
+        mx = 0
+        bdir = os.path.join(REPO_DIR, "backups")
+        if os.path.isdir(bdir):
+            for x in os.listdir(bdir):
+                m = re.match(r"^v(\d+)(?:-auto)?$", x)
+                if m:
+                    mx = max(mx, int(m.group(1)))
+        return ("v%d-auto" if auto else "v%d") % (mx + 1)
+
+    def auto_backup(self):
+        try:
+            stamp = self.next_ver(True)
+            dest = os.path.join(REPO_DIR, "backups", stamp)
+            os.makedirs(dest, exist_ok=True)
+            n = 0
+            for f in ["index.html", "admin.html", "avatar.jpg", "shop-logo.jpg"]:
+                p = os.path.join(REPO_DIR, f)
+                if os.path.exists(p):
+                    shutil.copy2(p, os.path.join(dest, f))
+                    n += 1
+            self.write("Tu dong sao luu ban cu: backups\\" + stamp + " (" + str(n) + " file)")
+            return True
+        except Exception as e:
+            self.write("Khong sao luu tu dong duoc: " + str(e))
+            return True
+
     def backup(self):
         if self.busy:
             return
@@ -264,7 +328,7 @@ class App:
 
     def do_backup(self):
         try:
-            stamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+            stamp = self.next_ver(False)
             dest = os.path.join(REPO_DIR, "backups", stamp)
             os.makedirs(dest, exist_ok=True)
             self.write("Dang sao luu vao: backups\\" + stamp)
@@ -294,12 +358,17 @@ class App:
             bk = sorted([x for x in os.listdir(bdir)
                          if os.path.isdir(os.path.join(bdir, x))], reverse=True)
         for stamp in bk[:15]:
+            auto = stamp.endswith("-auto")
             try:
-                dt = datetime.strptime(stamp, "%Y-%m-%d_%H%M%S").strftime("%d/%m %H:%M")
+                dt = datetime.fromtimestamp(os.path.getmtime(os.path.join(bdir, stamp))).strftime("%d/%m %H:%M")
             except Exception:
                 dt = stamp
-            n = len([x for x in os.listdir(os.path.join(bdir, stamp))])
-            self.hist.insert("end", "BKUP:" + stamp + " | " + dt + " | Sao luu tren may (" + str(n) + " file)")
+            try:
+                n = len([x for x in os.listdir(os.path.join(bdir, stamp)) if os.path.isfile(os.path.join(bdir, stamp, x))])
+            except Exception:
+                n = 0
+            tag = "Tu dong" if auto else "Sao luu tay"
+            self.hist.insert("end", "BKUP:" + stamp + " | " + dt + " | " + tag + " (" + str(n) + " file)")
         # 2. cac ban da deploy (git)
         code, out = run('git log --date=format:"%d/%m %H:%M" --pretty=format:"%h | %ad | %s" -15', REPO_DIR)
         if code == 0 and out.strip():
@@ -341,6 +410,7 @@ class App:
 
     def restore(self, h):
         try:
+            self.maybe_auto_backup()
             self.write("Dang lay noi dung ban " + h + "...")
             code, out = run("git show " + h + ":index.html", REPO_DIR)
             if code != 0 or not out.strip().startswith("<"):
@@ -365,6 +435,7 @@ class App:
 
     def restore_backup(self, stamp):
         try:
+            self.maybe_auto_backup()
             src = os.path.join(REPO_DIR, "backups", stamp)
             idx = os.path.join(src, "index.html")
             if not os.path.exists(idx):
