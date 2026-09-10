@@ -51,6 +51,7 @@ def run(cmd, cwd=None):
 
 class App:
     def __init__(self, root):
+        self.root = root
         self.html_file = DEFAULT_HTML
         self.busy = False
         self.auto_var = tk.BooleanVar(value=load_cfg().get("auto_backup", True))
@@ -183,6 +184,29 @@ class App:
                   relief="flat", padx=14, pady=8, cursor="hand2",
                   command=self.ask_restore).pack(side="right")
         threading.Thread(target=self.load_hist, daemon=True).start()
+
+        # ---- Tab Suc khoe ----
+        tab3 = ttk.Frame(nb)
+        nb.add(tab3, text="  🩺  Sức khỏe  ")
+
+        tk.Label(tab3, text="Kiểm tra máy có đủ đồ nghề để deploy không. Thiếu gì app sẽ báo.",
+                 font=("Segoe UI", 9), fg=MUTED, bg=BG,
+                 wraplength=560, justify="left").pack(anchor="w", padx=16, pady=(14, 6))
+        fr5 = tk.Frame(tab3, bg=BG)
+        fr5.pack(fill="x", padx=14, pady=4)
+        tk.Button(fr5, text="🩺  KIỂM TRA", font=("Segoe UI", 10, "bold"),
+                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
+                  relief="flat", padx=14, pady=8, cursor="hand2",
+                  command=self.health_check).pack(side="left")
+        tk.Button(fr5, text="🔨  BUILD LẠI FILE EXE", font=("Segoe UI", 10, "bold"),
+                  bg="#3a5a3a", fg="#ffffff", activebackground="#4a704a",
+                  relief="flat", padx=14, pady=8, cursor="hand2",
+                  command=self.rebuild_exe).pack(side="right")
+        self.hlog_box = scrolledtext.ScrolledText(tab3, font=("Consolas", 10),
+                                                  bg=PANEL, fg="#d6d0c2",
+                                                  relief="flat", height=14)
+        self.hlog_box.pack(fill="both", expand=True, padx=14, pady=(4, 14))
+        self.hlog_box.configure(state="disabled")
 
         # ===== STATUS BAR =====
         bar = tk.Frame(root, bg=PANEL)
@@ -459,6 +483,87 @@ class App:
             webbrowser.open(SITE_URL + "?v=new")
             self.done(True)
             threading.Thread(target=self.load_hist, daemon=True).start()
+        except Exception as e:
+            self.write("LOI: " + str(e))
+            self.done(False)
+
+    # ---------- suc khoe / rebuild ----------
+    def hlog(self, text):
+        self.hlog_box.configure(state="normal")
+        self.hlog_box.insert("end", text + "\n")
+        self.hlog_box.see("end")
+        self.hlog_box.configure(state="disabled")
+
+    def health_check(self):
+        if self.busy:
+            return
+        threading.Thread(target=self.do_health, daemon=True).start()
+
+    def do_health(self):
+        self.hlog_box.configure(state="normal")
+        self.hlog_box.delete("1.0", "end")
+        self.hlog_box.configure(state="disabled")
+        self.hlog("=== KIEM TRA MOI TRUONG ===")
+        ok_all = True
+        for name, cmd in [("Git", "git --version"),
+                          ("Node.js", "node --version"),
+                          ("Vercel CLI", "vercel --version"),
+                          ("Python", "python --version")]:
+            code, out = run(cmd)
+            ver = (out.strip().splitlines()[0] if out.strip() else "")
+            good = (code == 0 and ver != "")
+            ok_all = ok_all and good
+            self.hlog(("✔ " if good else "✘ THIEU ") + name + ((" — " + ver) if good else " (can cai dat)"))
+        code, out = run("vercel whoami")
+        logged = (code == 0 and out.strip() != "")
+        ok_all = ok_all and logged
+        self.hlog(("✔ Da dang nhap Vercel (" + out.strip().splitlines()[0] + ")" if logged else "✘ Chua dang nhap Vercel (chay: vercel login)"))
+        repo_ok = os.path.isdir(os.path.join(REPO_DIR, ".git"))
+        ok_all = ok_all and repo_ok
+        self.hlog(("✔ Folder lam viec OK" if repo_ok else "✘ Khong thay folder " + REPO_DIR))
+        src_ok = os.path.exists(self.html_file)
+        ok_all = ok_all and src_ok
+        self.hlog(("✔ File nguon OK" if src_ok else "✘ Khong thay file " + self.html_file))
+        self.hlog("=== " + ("MAY SAN SANG ✔" if ok_all else "CAN BO SUNG (xem dong ✘)"))
+        try:
+            import PyInstaller
+            self.hlog("✔ PyInstaller san sang (build EXE duoc)")
+        except Exception:
+            self.hlog("○ PyInstaller chua cai (can khi build EXE: pip install pyinstaller)")
+
+    def rebuild_exe(self):
+        if self.busy:
+            return
+        if not messagebox.askyesno("Xac nhan",
+                "Build lai file DeployWeb.exe (mat 3-5 phut)?\nApp se tu tat va mo lai ban moi."):
+            return
+        self.set_state(True, "Đang build EXE...", GOLD)
+        threading.Thread(target=self.do_rebuild, daemon=True).start()
+
+    def do_rebuild(self):
+        try:
+            self.write("Dang build file EXE moi (3-5 phut, dung tat app)...")
+            self.set_prog(20)
+            code, out = run("python -m PyInstaller --onefile --windowed --name DeployWeb --distpath dist_app deploy_app.py", REPO_DIR)
+            new_exe = os.path.join(REPO_DIR, "dist_app", "DeployWeb.exe")
+            if code != 0 or not os.path.exists(new_exe):
+                self.write("LOI build:\n" + out[-1500:])
+                return self.done(False)
+            self.set_prog(90)
+            self.write("Build xong. Dang thay file exe moi...")
+            desk = os.path.join(os.environ.get("USERPROFILE", ""), "Desktop", "DeployWeb.exe")
+            bat = os.path.join(REPO_DIR, "dist_app", "_update.bat")
+            with open(bat, "w") as f:
+                f.write("@echo off\n"
+                        + "timeout /t 3 /nobreak >nul\n"
+                        + "taskkill /F /IM DeployWeb.exe >nul 2>&1\n"
+                        + "timeout /t 2 /nobreak >nul\n"
+                        + 'copy /Y "' + new_exe + '" "' + desk + '"\n'
+                        + 'start "" "' + desk + '"\n'
+                        + 'del "%~f0"\n')
+            os.startfile(bat)
+            self.write("App se tat va mo lai ban moi. Tam biet!")
+            self.root.after(1500, self.root.destroy)
         except Exception as e:
             self.write("LOI: " + str(e))
             self.done(False)
