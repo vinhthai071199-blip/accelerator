@@ -75,6 +75,16 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 .vid-dl:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.5)}
 .vid-empty{grid-column:1/-1;text-align:center;color:#5c574c;padding:40px 0;font-size:14px}
 
+/* ===== LINKS & ẢNH ===== */
+.link-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:24px}
+.link-card{border-radius:16px;overflow:hidden;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.09);transition:transform .35s,border-color .35s}
+.link-card:hover{transform:translateY(-6px);border-color:rgba(200,168,100,.5)}
+.link-card img{width:100%;display:block;aspect-ratio:16/10;object-fit:cover;background:#000}
+.link-info{padding:14px 16px 18px}
+.link-info h3{font-size:14.5px;font-weight:600;margin-bottom:12px;line-height:1.4;word-break:break-word}
+.link-info .meta{display:flex;justify-content:flex-end}
+.link-empty{grid-column:1/-1;text-align:center;color:#5c574c;padding:40px 0;font-size:14px}
+
 /* ===== MENU MOBILE ===== */
 .menu-btn{display:flex;flex-direction:column;gap:5px;background:none;border:1px solid rgba(200,168,100,.45);border-radius:10px;padding:11px 12px;cursor:pointer}
 .menu-btn span{display:block;width:20px;height:2px;background:#d4b87a;border-radius:1px;transition:.3s}
@@ -135,6 +145,7 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
   <div class="nav-links">
     <a class="btn" href="#shop">Shop</a>
     <a class="btn" href="#videos">Video</a>
+    <a class="btn" href="#links">Links</a>
   </div>
 </nav>
 <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu(false)"></div>
@@ -142,6 +153,7 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
   <div class="mp-head"><img src="avatar.jpg" alt=""><b>Accelerator<em>Ares</em></b><button class="mp-x" onclick="toggleMenu(false)">✕</button></div>
   <a href="#shop" onclick="toggleMenu(false)">Shop</a>
   <a href="#videos" onclick="toggleMenu(false)">Video</a>
+  <a href="#links" onclick="toggleMenu(false)">Links</a>
 </div>
 
 <!-- HEADER -->
@@ -170,6 +182,12 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 <section id="videos">
   <div class="sec-title reveal"><div class="bar"></div><h2>🎬 <em>Video</em></h2></div>
   <div class="vid-grid reveal d1" id="vidGrid"><div class="vid-empty">Đang tải video...</div></div>
+</section>
+
+<!-- ===== MỤC 3: LINKS & ẢNH ===== -->
+<section id="links">
+  <div class="sec-title reveal"><div class="bar"></div><h2>🔗 <em>Links</em></h2></div>
+  <div class="link-grid reveal d1" id="linkGrid"><div class="link-empty">Đang tải...</div></div>
 </section>
 
 <script>
@@ -308,6 +326,50 @@ async function initVideoVisibility(){
 }
 initVideos();
 initVideoVisibility();
+
+/* ============ LINKS (FIREBASE, ĐỌC CÔNG KHAI, ANH LAZY) ============ */
+function applyLinksVisibility(show){
+  const els = [document.getElementById('links')]
+    .concat(Array.from(document.querySelectorAll('a[href="#links"]')));
+  els.forEach(function(el){ if(el) el.style.display = show ? '' : 'none'; });
+}
+async function ensureFb(){
+  if(typeof firebase === 'undefined'){
+    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+  }
+  if(!firebase.apps.length){ firebase.initializeApp(FIREBASE_CONFIG); }
+}
+async function initLinks(){
+  const box = document.getElementById('linkGrid');
+  if(!box) return;
+  try{
+    await ensureFb();
+    firebase.database().ref('links').on('value', function(s){
+      const v = s.val();
+      if(!v){ box.innerHTML = '<div class="link-empty">Chưa có link nào.</div>'; return; }
+      const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
+      box.innerHTML = list.map(function(x){
+        const r = x[1]||{};
+        return '<div class="link-card">'
+          + '<a href="'+esc(r.url)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+esc(r.img)+'" alt=""></a>'
+          + '<div class="link-info"><h3>'+esc(r.title)+'</h3>'
+          + '<div class="meta"><a class="vid-dl" href="'+esc(r.url)+'" target="_blank" rel="noopener">Mở link</a></div>'
+          + '</div></div>';
+      }).join('');
+    }, function(){ box.innerHTML = '<div class="link-empty">Không tải được.</div>'; });
+  }catch(e){ box.innerHTML = '<div class="link-empty">Không tải được.</div>'; }
+}
+async function initLinksVisibility(){
+  try{
+    await ensureFb();
+    firebase.database().ref('settings/showLinks').on('value', function(s){
+      applyLinksVisibility(s.val() !== false);
+    });
+  }catch(e){ applyLinksVisibility(true); }
+}
+initLinks();
+initLinksVisibility();
 </script>
 </body>
 </html>
