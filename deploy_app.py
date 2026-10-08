@@ -3,6 +3,13 @@ import threading
 import shutil
 import os
 import re
+import io
+import json
+import time
+import uuid
+import mimetypes
+import urllib.request
+import urllib.error
 from datetime import datetime
 import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog, messagebox
@@ -13,8 +20,18 @@ REPO_DIR = r"D:\Opencode Project"
 SITE_URL = "https://acceleratorares.vercel.app/"
 EXTRA_FILES = ["admin.html", "avatar.jpg", "shop-logo.jpg"]
 SRC_DIR = os.path.dirname(DEFAULT_HTML)
-VERSION = "v2.0"
+VERSION = "v3.0"
 CONFIG = os.path.join(REPO_DIR, "deploy_config.json")
+FB_API_KEY = "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw"
+FB_DB_URL = "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app"
+URLS = [
+    ("🌐  Trang chủ", SITE_URL),
+    ("🛠️  Trang quản trị", SITE_URL + "admin"),
+    ("🔥  Firebase Console", "https://console.firebase.google.com/project/cinevault-ec9d1/database"),
+    ("☁️  Cloudinary", "https://cloudinary.com/console"),
+    ("▲  Vercel", "https://vercel.com/dashboard"),
+    ("🐙  GitHub", "https://github.com/vinhthai071199-blip/accelerator"),
+]
 
 
 def load_cfg():
@@ -184,6 +201,138 @@ class App:
                   relief="flat", padx=14, pady=8, cursor="hand2",
                   command=self.ask_restore).pack(side="right")
         threading.Thread(target=self.load_hist, daemon=True).start()
+
+        # ---- Tab Noi dung ----
+        tab4 = ttk.Frame(nb)
+        nb.add(tab4, text="  📝  Nội dung  ")
+
+        tk.Label(tab4, text="Sửa chữ trên web. Lưu xong nhớ sang tab Deploy để đưa lên.",
+                 font=("Segoe UI", 9), fg=MUTED, bg=BG,
+                 wraplength=560, justify="left").pack(anchor="w", padx=16, pady=(14, 6))
+        self.content_vars = {}
+        cf = tk.Frame(tab4, bg=BG)
+        cf.pack(fill="both", expand=True, padx=16)
+        for key, label in [("title", "Tiêu đề (cạnh avatar)"),
+                           ("welcome", "Dòng chào mừng"),
+                           ("shopname", "Tên shop"),
+                           ("shopdesc", "Mô tả shop"),
+                           ("shoplink", "Link shop"),
+                           ("cskhlink", "Link CSKH")]:
+            tk.Label(cf, text=label, font=("Segoe UI", 9, "bold"),
+                     fg=MUTED, bg=BG).pack(anchor="w", pady=(6, 2))
+            var = tk.StringVar()
+            self.content_vars[key] = var
+            tk.Entry(cf, textvariable=var, font=("Segoe UI", 10),
+                     bg=CARD, fg=TXT, insertbackground=GOLD,
+                     relief="flat").pack(fill="x", ipady=7, ipadx=8)
+        fr6 = tk.Frame(tab4, bg=BG)
+        fr6.pack(fill="x", padx=14, pady=12)
+        tk.Button(fr6, text="↻  Tải nội dung hiện tại", font=("Segoe UI", 10, "bold"),
+                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
+                  relief="flat", padx=14, pady=8, cursor="hand2",
+                  command=self.content_load).pack(side="left")
+        tk.Button(fr6, text="💾  LƯU THAY ĐỔI", font=("Segoe UI", 10, "bold"),
+                  bg=GOLD, fg="#161005", activebackground=GOLD_LT,
+                  relief="flat", padx=14, pady=8, cursor="hand2",
+                  command=self.content_save).pack(side="right")
+        self.content_msg = tk.Label(tab4, text="", font=("Segoe UI", 9),
+                                    fg=GOLD, bg=BG)
+        self.content_msg.pack(padx=16, pady=(0, 10), anchor="w")
+
+        # ---- Tab Hinh anh ----
+        tab5 = ttk.Frame(nb)
+        nb.add(tab5, text="  🖼️  Hình ảnh  ")
+
+        tk.Label(tab5, text="Đổi avatar và logo shop. Ảnh mới tự đi theo khi deploy.",
+                 font=("Segoe UI", 9), fg=MUTED, bg=BG,
+                 wraplength=560, justify="left").pack(anchor="w", padx=16, pady=(14, 6))
+        self.img_rows = {}
+        imgf = tk.Frame(tab5, bg=BG)
+        imgf.pack(fill="x", padx=16)
+        for key, label, fname in [("avatar", "Avatar (cạnh tiêu đề + icon tab)", "avatar.jpg"),
+                                  ("logo", "Logo Teyvat Store", "shop-logo.jpg")]:
+            row = ttk.Frame(tab5, style="Card.TFrame", padding=12)
+            row.pack(fill="x", padx=14, pady=6)
+            tk.Label(row, text=label, font=("Segoe UI", 10, "bold"),
+                     fg=TXT, bg=PANEL).pack(anchor="w")
+            sub = tk.Frame(row, bg=PANEL)
+            sub.pack(fill="x", pady=(6, 0))
+            lbl = tk.Label(sub, text=fname, font=("Segoe UI", 9), fg=MUTED, bg=PANEL)
+            lbl.pack(side="left", fill="x", expand=True)
+            self.img_rows[key] = (fname, lbl)
+            tk.Button(sub, text="Chọn ảnh...", font=("Segoe UI", 9, "bold"),
+                      bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
+                      relief="flat", padx=12, pady=6, cursor="hand2",
+                      command=lambda k=key: self.pick_image(k)).pack(side="right")
+        self.img_msg = tk.Label(tab5, text="", font=("Segoe UI", 9),
+                                fg=GOLD, bg=BG)
+        self.img_msg.pack(padx=16, pady=8, anchor="w")
+
+        # ---- Tab Video ----
+        tab6 = ttk.Frame(nb)
+        nb.add(tab6, text="  🎬  Video  ")
+
+        tk.Label(tab6, text="Upload video lên Cloudinary, tự hiện lên web. Tối đa 100MB.",
+                 font=("Segoe UI", 9), fg=MUTED, bg=BG,
+                 wraplength=560, justify="left").pack(anchor="w", padx=16, pady=(14, 6))
+        cfg = load_cfg()
+        vf = tk.Frame(tab6, bg=BG)
+        vf.pack(fill="x", padx=16)
+        tk.Label(vf, text="Tên video", font=("Segoe UI", 9, "bold"),
+                 fg=MUTED, bg=BG).pack(anchor="w", pady=(4, 2))
+        self.vd_title = tk.Entry(vf, font=("Segoe UI", 10), bg=CARD, fg=TXT,
+                                 insertbackground=GOLD, relief="flat")
+        self.vd_title.pack(fill="x", ipady=7, ipadx=8)
+        self.vd_file_lbl = tk.Label(vf, text="File video: chưa chọn", font=("Segoe UI", 9),
+                                      fg=MUTED, bg=BG, wraplength=540, justify="left")
+        self.vd_file_lbl.pack(anchor="w", pady=(8, 2))
+        self.vd_file = None
+        fr7 = tk.Frame(tab6, bg=BG)
+        fr7.pack(fill="x", padx=14, pady=8)
+        tk.Button(fr7, text="Chọn video...", font=("Segoe UI", 10, "bold"),
+                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
+                  relief="flat", padx=14, pady=8, cursor="hand2",
+                  command=self.pick_video).pack(side="left")
+        self.vd_btn = tk.Button(fr7, text="⬆️  UPLOAD", font=("Segoe UI", 10, "bold"),
+                                bg=GOLD, fg="#161005", activebackground=GOLD_LT,
+                                relief="flat", padx=14, pady=8, cursor="hand2",
+                                command=self.start_vdupload)
+        self.vd_btn.pack(side="right")
+        self.vd_prog = ttk.Progressbar(tab6, style="Gold.Horizontal.TProgressbar",
+                                       mode="determinate", maximum=100, value=0)
+        self.vd_prog.pack(fill="x", padx=14, pady=(0, 8))
+        tk.Label(tab6, text="Tài khoản admin (để lưu video vào web)", font=("Segoe UI", 9, "bold"),
+                 fg=MUTED, bg=BG).pack(anchor="w", padx=16, pady=(4, 2))
+        af = tk.Frame(tab6, bg=BG)
+        af.pack(fill="x", padx=16)
+        self.vd_email = tk.Entry(af, font=("Segoe UI", 10), bg=CARD, fg=TXT,
+                                 insertbackground=GOLD, relief="flat", width=28)
+        self.vd_email.insert(0, cfg.get("admin_email", ""))
+        self.vd_email.pack(side="left", ipady=7, ipadx=8)
+        self.vd_pass = tk.Entry(af, font=("Segoe UI", 10), bg=CARD, fg=TXT,
+                                insertbackground=GOLD, relief="flat", width=20, show="•")
+        self.vd_pass.insert(0, cfg.get("admin_pass", ""))
+        self.vd_pass.pack(side="left", padx=(8, 0), ipady=7, ipadx=8)
+        tk.Label(tab6, text="Mật khẩu chỉ lưu trên máy bạn.", font=("Segoe UI", 8),
+                 fg=MUTED, bg=BG).pack(anchor="w", padx=16)
+        self.vd_msg = tk.Label(tab6, text="", font=("Segoe UI", 9),
+                               fg=GOLD, bg=BG, wraplength=560, justify="left")
+        self.vd_msg.pack(padx=16, pady=8, anchor="w", fill="x")
+
+        # ---- Tab Mo nhanh ----
+        tab7 = ttk.Frame(nb)
+        nb.add(tab7, text="  🔗  Mở nhanh  ")
+
+        tk.Label(tab7, text="Bấm để mở các trang liên quan.", font=("Segoe UI", 9),
+                 fg=MUTED, bg=BG).pack(anchor="w", padx=16, pady=(14, 6))
+        lkf = tk.Frame(tab7, bg=BG)
+        lkf.pack(fill="x", padx=16)
+        for i, (label, url) in enumerate(URLS):
+            tk.Button(lkf, text=label, font=("Segoe UI", 11, "bold"),
+                      bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=GOLD,
+                      relief="flat", pady=12, cursor="hand2", anchor="w",
+                      command=lambda u=url: webbrowser.open(u)
+                      ).pack(fill="x", pady=4)
 
         # ---- Tab Suc khoe ----
         tab3 = ttk.Frame(nb)
@@ -486,6 +635,244 @@ class App:
         except Exception as e:
             self.write("LOI: " + str(e))
             self.done(False)
+
+    # ---------- noi dung ----------
+    CONTENT_PATS = [
+        ("title", "Tiêu đề",
+         r"(<h1><img class=\"head-avatar\" src=\"avatar\.jpg\" alt=\"\"><em>)(.*?)(</em></h1>)"),
+        ("welcome", "Dòng chào mừng",
+         r"(<p class=\"welcome\">)(.*?)(</p>)"),
+        ("shopname", "Tên shop",
+         r"(<section id=\"shop\">[\s\S]*?<h3>)(.*?)(</h3>)"),
+        ("shopdesc", "Mô tả shop",
+         r"(<section id=\"shop\">[\s\S]*?<h3>.*?</h3>\s*<p>)(.*?)(</p>)"),
+        ("shoplink", "Link shop",
+         r"(<a class=\"btn solid\" href=\")(.*?)(\" target=\"_blank\">[\s\S]*?Vào shop)"),
+        ("cskhlink", "Link CSKH",
+         r"(<a class=\"btn\" href=\")(.*?)(\" target=\"_blank\">[\s\S]*?Liên hệ CSKH)"),
+    ]
+
+    def content_load(self):
+        try:
+            with open(self.html_file, encoding="utf-8") as f:
+                t = f.read()
+        except Exception as e:
+            self.content_msg.configure(text="Không đọc được file: " + str(e));
+            return
+        n = 0
+        for key, label, pat in self.CONTENT_PATS:
+            m = re.search(pat, t)
+            if m:
+                self.content_vars[key].set(m.group(2))
+                n += 1
+        self.content_msg.configure(text="Đã tải %d/6 mục từ %s" % (n, os.path.basename(self.html_file)))
+
+    def content_save(self):
+        try:
+            with open(self.html_file, encoding="utf-8") as f:
+                t = f.read()
+        except Exception as e:
+            self.content_msg.configure(text="Không đọc được file: " + str(e));
+            return
+        n = 0
+        for key, label, pat in self.CONTENT_PATS:
+            new = self.content_vars[key].get()
+            if not new.strip():
+                continue
+            t2, c = re.subn(pat, lambda m: m.group(1) + new + m.group(3), t, count=1)
+            if c:
+                t = t2
+                n += 1
+        try:
+            with open(self.html_file, "w", encoding="utf-8") as f:
+                f.write(t)
+        except Exception as e:
+            self.content_msg.configure(text="Không lưu được: " + str(e));
+            return
+        self.content_msg.configure(text="Đã lưu %d mục. Sang tab Deploy để đưa lên web!" % n)
+
+    # ---------- hinh anh ----------
+    def pick_image(self, which):
+        fname, lbl = self.img_rows[which]
+        f = filedialog.askopenfilename(title="Chọn ảnh mới cho " + fname,
+                                       filetypes=[("Ảnh", "*.png *.jpg *.jpeg *.webp"), ("All", "*.*")],
+                                       initialdir=SRC_DIR)
+        if not f:
+            return
+        if os.path.splitext(f)[1].lower() not in (".png", ".jpg", ".jpeg", ".webp"):
+            self.img_msg.configure(text="Chỉ nhận file ảnh (png/jpg/webp)!");
+            return
+        try:
+            shutil.copy2(f, os.path.join(SRC_DIR, fname))
+            lbl.configure(text=fname + "  ✔ vừa đổi")
+            self.img_msg.configure(text="Đã đổi %s. Deploy để lên web!" % fname)
+        except Exception as e:
+            self.img_msg.configure(text="Lỗi: " + str(e))
+
+    # ---------- video upload ----------
+    def pick_video(self):
+        f = filedialog.askopenfilename(title="Chọn video (tối đa 100MB)",
+                                       filetypes=[("Video", "*.mp4 *.mov *.webm *.mkv"), ("All", "*.*")])
+        if not f:
+            return
+        size = os.path.getsize(f)
+        if size > 100 * 1024 * 1024:
+            self.vd_msg.configure(text="Video quá lớn (%.1fMB)! Tối đa 100MB." % (size / 1024 / 1024));
+            return
+        self.vd_file = f
+        if not self.vd_title.get().strip():
+            base = os.path.splitext(os.path.basename(f))[0]
+            self.vd_title.delete(0, "end")
+            self.vd_title.insert(0, base)
+        self.vd_file_lbl.configure(text="File: %s (%.1fMB)" % (os.path.basename(f), size / 1024 / 1024))
+
+    def start_vdupload(self):
+        if self.busy:
+            return
+        if not self.vd_file or not os.path.exists(self.vd_file):
+            self.vd_msg.configure(text="Hãy chọn file video trước!");
+            return
+        title = self.vd_title.get().strip() or os.path.splitext(os.path.basename(self.vd_file))[0]
+        email = self.vd_email.get().strip()
+        pw = self.vd_pass.get()
+        if not email or not pw:
+            self.vd_msg.configure(text="Nhập email + mật khẩu admin để lưu video vào web!");
+            return
+        cfg = load_cfg()
+        cfg.update({"admin_email": email, "admin_pass": pw})
+        save_cfg(cfg)
+        try:
+            with open(os.path.join(SRC_DIR, "admin.html"), encoding="utf-8") as f:
+                at = f.read()
+            cm = re.search(r'const CLOUD_NAME = "(.*?)";', at)
+            pm = re.search(r'const UPLOAD_PRESET = "(.*?)";', at)
+            cloud = cm.group(1) if cm else ""
+            preset = pm.group(1) if pm else ""
+        except Exception:
+            cloud, preset = "", ""
+        if not cloud or "DANGKY" in cloud or not preset or "DANGKY" in preset:
+            self.vd_msg.configure(text="Chưa cấu hình Cloudinary trong admin.html!");
+            return
+        self.set_state(True, "Đang upload video...", GOLD)
+        self.vd_btn.configure(state="disabled")
+        self.vd_prog.configure(value=0)
+        threading.Thread(target=self.do_vdupload,
+                         args=(self.vd_file, title, email, pw, cloud, preset),
+                         daemon=True).start()
+
+    def vd_progress(self, sent, total):
+        try:
+            self.vd_prog.configure(value=sent * 100 / total)
+            self.vd_prog.update_idletasks()
+        except Exception:
+            pass
+
+    def do_vdupload(self, path, title, email, pw, cloud, preset):
+        try:
+            size = os.path.getsize(path)
+            self.vd_msg.configure(text="Đang tải lên Cloudinary...")
+            boundary = uuid.uuid4().hex
+            fname = os.path.basename(path)
+            ctype = mimetypes.guess_type(fname)[0] or "video/mp4"
+            pre = b""
+            for k, v in [("upload_preset", preset)]:
+                pre += b"--" + boundary.encode() + b"\r\n" \
+                    + ('Content-Disposition: form-data; name="%s"\r\n\r\n%s\r\n' % (k, v)).encode()
+            pre += b"--" + boundary.encode() + b"\r\n" \
+                + ('Content-Disposition: form-data; name="file"; filename="%s"\r\nContent-Type: %s\r\n\r\n' % (fname, ctype)).encode()
+            post = b"\r\n--" + boundary.encode() + b"--\r\n"
+
+            fp = open(path, "rb")
+            reader = self.MultiReader(pre, fp, size, post, self.vd_progress)
+            req = urllib.request.Request(
+                "https://api.cloudinary.com/v1_1/" + cloud + "/video/upload",
+                data=reader,
+                headers={"Content-Type": "multipart/form-data; boundary=" + boundary,
+                         "Content-Length": str(len(reader))},
+                method="POST")
+            try:
+                with urllib.request.urlopen(req, timeout=600) as r:
+                    resp = json.loads(r.read().decode())
+            finally:
+                fp.close()
+            url = resp.get("secure_url", "")
+            if not url:
+                self.vd_msg.configure(text="Cloudinary không trả link! Thử lại.");
+                return self.done(False)
+            self.vd_msg.configure(text="Tải lên xong. Đang lưu vào web...")
+            token = self.fb_token(email, pw)
+            if not token:
+                self.vd_msg.configure(text="Sai email/mật khẩu admin!");
+                return self.done(False)
+            payload = {"title": title, "url": url,
+                       "public_id": resp.get("public_id", ""),
+                       "size": size, "time": int(time.time() * 1000)}
+            req2 = urllib.request.Request(
+                FB_DB_URL + "/videos.json?auth=" + token,
+                data=json.dumps(payload).encode(),
+                headers={"Content-Type": "application/json"}, method="POST")
+            urllib.request.urlopen(req2, timeout=60).read()
+            self.vd_msg.configure(text="XONG! Video '%s' đã lên web. 🎉" % title)
+            self.vd_file = None
+            self.vd_file_lbl.configure(text="File video: chưa chọn")
+            self.vd_title.delete(0, "end")
+            try:
+                self.vd_prog.configure(value=100)
+            except Exception:
+                pass
+            webbrowser.open(SITE_URL)
+            self.done(True)
+        except urllib.error.HTTPError as e:
+            try:
+                detail = e.read().decode()[:300]
+            except Exception:
+                detail = ""
+            self.vd_msg.configure(text="Lỗi upload (%s). %s" % (e.code, detail))
+            self.done(False)
+        except Exception as e:
+            self.vd_msg.configure(text="Lỗi: " + str(e))
+            self.done(False)
+        finally:
+            try:
+                self.vd_btn.configure(state="normal")
+            except Exception:
+                pass
+
+    def fb_token(self, email, pw):
+        try:
+            data = json.dumps({"email": email, "password": pw,
+                               "returnSecureToken": True}).encode()
+            req = urllib.request.Request(
+                "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + FB_API_KEY,
+                data=data, headers={"Content-Type": "application/json"})
+            return json.loads(urllib.request.urlopen(req, timeout=30).read().decode()).get("idToken", "")
+        except Exception:
+            return ""
+
+    class MultiReader:
+        def __init__(self, pre, fp, total, post, cb):
+            self.parts = [io.BytesIO(pre), fp, io.BytesIO(post)]
+            self.i = 0
+            self.sent = 0
+            self.total = len(pre) + total + len(post)
+            self.cb = cb
+
+        def __len__(self):
+            return self.total
+
+        def read(self, n=65536):
+            if self.i >= len(self.parts):
+                return b""
+            chunk = self.parts[self.i].read(n)
+            if chunk == b"":
+                self.i += 1
+                return self.read(n)
+            self.sent += len(chunk)
+            try:
+                self.cb(self.sent, self.total)
+            except Exception:
+                pass
+            return chunk
 
     # ---------- suc khoe / rebuild ----------
     def hlog(self, text):

@@ -10,12 +10,7 @@ set REPO_DIR=%~dp0
 cd /d "%REPO_DIR%"
 
 echo [1/4] Chuan bi file...
-if exist "%REPO_DIR%Acceleratorares.html" (
-    copy /Y "%REPO_DIR%Acceleratorares.html" "%REPO_DIR%index.html" >nul
-    echo       Lay tu Acceleratorares.html.
-) else (
-    echo       Dung index.html co san.
-)
+echo       Dung index.html co san.
 echo       Xong.
 
 echo [2/4] Luu len GitHub...

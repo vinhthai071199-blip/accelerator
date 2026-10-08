@@ -1,6 +1,6 @@
 const fs = require('fs');
-const d = 'C:/Users/HP/OneDrive/Documents/Default Project/';
-['Acceleratorares.html', 'admin.html'].forEach((f) => {
+const d = 'D:/Opencode Project/';
+['index.html', 'admin.html'].forEach((f) => {
   const t = fs.readFileSync(d + f, 'utf8');
   console.log('=== ' + f + ': ' + t.length + ' bytes ===');
   // 1. ID duoc JS goi nhung khong co trong HTML

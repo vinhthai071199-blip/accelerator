@@ -1,6 +1,14 @@
 const admin = require('firebase-admin');
 const database = require('firebase-admin/database');
-const sa = require('C:/Users/HP/Downloads/cinevault-ec9d1-c444c3b53ff5.json');
+const path = require('path');
+const fs = require('fs');
+const saPath = process.env.GOOGLE_APPLICATION_CREDENTIALS || path.join(__dirname, 'serviceAccount.json');
+if (!fs.existsSync(saPath)) {
+  console.log('THIEU serviceAccount.json! Copy file json vao D:\\Opencode Project\\serviceAccount.json');
+  console.log('hoac set env GOOGLE_APPLICATION_CREDENTIALS.');
+  process.exit(1);
+}
+const sa = require(saPath);
 admin.initializeApp({credential: admin.cert(sa), databaseURL: 'https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app'});
 const db = database.getDatabase();
 
