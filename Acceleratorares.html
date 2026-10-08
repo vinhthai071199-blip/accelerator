@@ -192,6 +192,37 @@ const io = new IntersectionObserver(es=>{
 },{threshold:.1});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
+/* ============ CHONG RELOAD SPAM: >5 lan/10 giay -> khoa 5 giay ============ */
+(function(){
+  try{
+    var KEY='ares_rl', now=Date.now(), arr=[];
+    try{ arr=JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ arr=[]; }
+    arr=arr.filter(function(t){ return now-t<10000; });
+    arr.push(now);
+    try{ localStorage.setItem(KEY,JSON.stringify(arr)); }catch(e){}
+    if(arr.length>5){
+      document.documentElement.style.overflow='hidden';
+      var d=document.createElement('div');
+      d.id='rlLock';
+      d.style.cssText='position:fixed;inset:0;z-index:9999;background:#0a0c10;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;text-align:center;padding:20px';
+      d.innerHTML='<div style="font-size:40px">⏳</div><b style="color:#e0c078;font-size:18px">Tải lại quá nhanh!</b><p style="color:#9a9388;font-size:14px">Chờ <span id="rlSec">5</span> giây rồi xem tiếp nhé.</p>';
+      document.body.appendChild(d);
+      var s=5;
+      var iv=setInterval(function(){
+        s--;
+        var el=document.getElementById('rlSec');
+        if(el) el.textContent=s;
+        if(s<=0){
+          clearInterval(iv);
+          if(d.parentNode) d.parentNode.removeChild(d);
+          document.documentElement.style.overflow='';
+          try{ localStorage.setItem(KEY,'[]'); }catch(e){}
+        }
+      },1000);
+    }
+  }catch(e){}
+})();
+
 /* ============ VIDEO (FIREBASE, ĐỌC CÔNG KHAI) ============ */
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw",
