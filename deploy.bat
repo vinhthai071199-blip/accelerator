@@ -10,7 +10,7 @@ set REPO_DIR=%~dp0
 cd /d "%REPO_DIR%"
 
 echo [1/4] Chuan bi file...
-echo       Dung index.html co san.
+echo       Dung Acceleratorares.html co san.
 echo       Xong.
 
 echo [2/4] Luu len GitHub...

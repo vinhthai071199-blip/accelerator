@@ -15,7 +15,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog, messagebox
 import webbrowser
 
-DEFAULT_HTML = r"C:\Users\HP\OneDrive\Documents\Default Project\Acceleratorares.html"
+DEFAULT_HTML = r"D:\Opencode Project\Acceleratorares.html"
 REPO_DIR = r"D:\Opencode Project"
 SITE_URL = "https://acceleratorares.vercel.app/"
 EXTRA_FILES = ["admin.html", "avatar.jpg", "shop-logo.jpg"]
@@ -444,8 +444,10 @@ class App:
         try:
             self.maybe_auto_backup()
             self.write("[1/4] Copy file...")
-            shutil.copy2(self.html_file, os.path.join(REPO_DIR, "index.html"))
-            self.write("  + " + os.path.basename(self.html_file) + "  →  index.html")
+            _dst = os.path.join(REPO_DIR, "Acceleratorares.html")
+            if os.path.abspath(self.html_file) != os.path.abspath(_dst):
+                shutil.copy2(self.html_file, _dst)
+            self.write("  + " + os.path.basename(self.html_file) + "  →  Acceleratorares.html")
             for f in EXTRA_FILES:
                 src = os.path.join(SRC_DIR, f)
                 if os.path.exists(src):
@@ -481,7 +483,7 @@ class App:
             dest = os.path.join(REPO_DIR, "backups", stamp)
             os.makedirs(dest, exist_ok=True)
             n = 0
-            for f in ["index.html", "admin.html", "avatar.jpg", "shop-logo.jpg"]:
+            for f in ["Acceleratorares.html", "admin.html", "avatar.jpg", "shop-logo.jpg"]:
                 p = os.path.join(REPO_DIR, f)
                 if os.path.exists(p):
                     shutil.copy2(p, os.path.join(dest, f))
@@ -505,7 +507,7 @@ class App:
             dest = os.path.join(REPO_DIR, "backups", stamp)
             os.makedirs(dest, exist_ok=True)
             self.write("Dang sao luu vao: backups\\" + stamp)
-            names = [("index.html", self.html_file)]
+            names = [("Acceleratorares.html", self.html_file)]
             names += [(f, os.path.join(SRC_DIR, f)) for f in EXTRA_FILES]
             n = 0
             for dst_name, src in names:
@@ -585,15 +587,15 @@ class App:
         try:
             self.maybe_auto_backup()
             self.write("Dang lay noi dung ban " + h + "...")
-            code, out = run("git show " + h + ":index.html", REPO_DIR)
+            code, out = run("git show " + h + ":Acceleratorares.html", REPO_DIR)
             if code != 0 or not out.strip().startswith("<"):
                 self.write("LOI: khong lay duoc noi dung ban nay.")
                 return self.done(False)
-            with open(os.path.join(REPO_DIR, "index.html"), "w", encoding="utf-8") as f:
+            with open(os.path.join(REPO_DIR, "Acceleratorares.html"), "w", encoding="utf-8") as f:
                 f.write(out)
             with open(self.html_file, "w", encoding="utf-8") as f:
                 f.write(out)
-            self.write("  Da chep ve index.html + file nguon.")
+            self.write("  Da chep ve Acceleratorares.html + file nguon.")
             self.set_prog(40)
             self.write("Dang day ban khoi phuc len...")
             if not self.push_and_deploy("Khoi phuc ve " + h):
@@ -610,14 +612,14 @@ class App:
         try:
             self.maybe_auto_backup()
             src = os.path.join(REPO_DIR, "backups", stamp)
-            idx = os.path.join(src, "index.html")
+            idx = os.path.join(src, "Acceleratorares.html")
             if not os.path.exists(idx):
                 self.write("LOI: khong tim thay ban sao luu " + stamp)
                 return self.done(False)
             self.write("Dang lay file tu sao luu " + stamp + "...")
-            shutil.copy2(idx, os.path.join(REPO_DIR, "index.html"))
+            shutil.copy2(idx, os.path.join(REPO_DIR, "Acceleratorares.html"))
             shutil.copy2(idx, self.html_file)
-            self.write("  + index.html + file nguon")
+            self.write("  + Acceleratorares.html + file nguon")
             for f in EXTRA_FILES:
                 p = os.path.join(src, f)
                 if os.path.exists(p):

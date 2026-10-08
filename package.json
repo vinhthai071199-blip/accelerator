@@ -19,7 +19,6 @@
   },
   "homepage": "https://github.com/vinhthai071199-blip/accelerator#readme",
   "dependencies": {
-    "firebase-admin": "^14.3.0",
-    "three": "^0.186.1"
+    "firebase-admin": "^14.3.0"
   }
 }
