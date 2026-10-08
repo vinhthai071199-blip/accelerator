@@ -222,7 +222,7 @@ async function initVideos(){
   try{
     await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
     await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
-    firebase.initializeApp(FIREBASE_CONFIG);
+    if(!firebase.apps.length){ firebase.initializeApp(FIREBASE_CONFIG); }
     firebase.database().ref('videos').on('value', function(s){
       const v = s.val();
       if(!v){ box.innerHTML = '<div class="vid-empty">Chưa có video nào.</div>'; return; }
@@ -239,7 +239,29 @@ async function initVideos(){
     }, function(){ box.innerHTML = '<div class="vid-empty">Không tải được video.</div>'; });
   }catch(e){ box.innerHTML = '<div class="vid-empty">Không tải được video.</div>'; }
 }
+
+/* ============ AN/HIEN MUC VIDEO (ADMIN DIEU KHIEN) ============ */
+function applyVideoVisibility(show){
+  const els = [document.getElementById('videos')]
+    .concat(Array.from(document.querySelectorAll('a[href="#videos"]')));
+  els.forEach(function(el){ if(el) el.style.display = show ? '' : 'none'; });
+}
+async function initVideoVisibility(){
+  try{
+    if(typeof firebase === 'undefined'){
+      await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+      await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+      firebase.initializeApp(FIREBASE_CONFIG);
+    } else if(!firebase.apps.length){
+      firebase.initializeApp(FIREBASE_CONFIG);
+    }
+    firebase.database().ref('settings/showVideos').on('value', function(s){
+      applyVideoVisibility(s.val() !== false);
+    });
+  }catch(e){ applyVideoVisibility(true); }
+}
 initVideos();
+initVideoVisibility();
 </script>
 </body>
 </html>

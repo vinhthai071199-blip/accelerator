@@ -91,6 +91,13 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 
   <h2 class="sec">🎬 Video của tôi</h2>
   <div class="up-wrap">
+    <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#e8e4da;margin:0;cursor:pointer">
+      <input type="checkbox" id="showVideos" style="width:18px;height:18px;accent-color:#c8a864" onchange="toggleShowVideos(this.checked)">
+      Hiện mục Video trên trang chính
+    </label>
+    <div class="err" id="showErr" style="text-align:left"></div>
+  </div>
+  <div class="up-wrap">
     <div class="up-row">
       <input type="text" id="upTitle" placeholder="Tên video...">
       <input type="file" id="upFile" accept="video/*">
@@ -123,7 +130,7 @@ const db = firebase.database();
 const CLOUD_NAME = "ck9gvbcq";
 const UPLOAD_PRESET = "web_upload";
 
-let fbUnsub = null, rqUnsub = null, vdUnsub = null;
+let fbUnsub = null, rqUnsub = null, vdUnsub = null, stUnsub = null;
 const MAX_MB = 100;
 
 function fmtTime(t){
@@ -183,11 +190,15 @@ function startListeners(){
   fbUnsub = db.ref('feedback').on('value', s => renderFb(toList(s.val())));
   rqUnsub = db.ref('requests').on('value', s => renderRq(toList(s.val())));
   vdUnsub = db.ref('videos').on('value', s => renderVd(toList(s.val())));
+  stUnsub = db.ref('settings/showVideos').on('value',
+    s => { document.getElementById('showVideos').checked = s.val() !== false; },
+    () => { document.getElementById('showVideos').checked = true; });
 }
 function stopListeners(){
   if(fbUnsub){ db.ref('feedback').off('value', fbUnsub); fbUnsub=null; }
   if(rqUnsub){ db.ref('requests').off('value', rqUnsub); rqUnsub=null; }
   if(vdUnsub){ db.ref('videos').off('value', vdUnsub); vdUnsub=null; }
+  if(stUnsub){ db.ref('settings/showVideos').off('value', stUnsub); stUnsub=null; }
 }
 function delItem(node, key){
   if(!confirm('Xóa mục này vĩnh viễn?')) return;
@@ -265,6 +276,15 @@ function delVideo(key){
   if(!confirm('Gỡ video này khỏi web? (file gốc vẫn còn trong kho Cloudinary)')) return;
   db.ref('videos/'+key).remove()
     .catch(function(e){ alert('Không xóa được: '+e.message); });
+}
+
+function toggleShowVideos(on){
+  const err = document.getElementById('showErr');
+  err.textContent = '';
+  db.ref('settings/showVideos').set(!!on).catch(function(e){
+    err.textContent = 'Không lưu được ('+e.code+'). Vào Firebase Console → Realtime Database → Rules, thêm "settings": { ".read": true, ".write": "auth != null" } rồi Publish.';
+    document.getElementById('showVideos').checked = !on;
+  });
 }
 
 function showLogin(){ document.getElementById('loginView').style.display='block'; document.getElementById('adminView').style.display='none'; stopListeners(); }
