@@ -231,6 +231,26 @@ function renderVd(list){
   }).join('');
 }
 
+const CHUNK_MB = 6;
+function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+function xhrChunk(fd, range, uniqueId, base, total, bar){
+  return new Promise(function(res, rej){
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/video/upload');
+    xhr.setRequestHeader('X-Unique-Upload-Id', uniqueId);
+    xhr.setRequestHeader('Content-Range', range);
+    xhr.upload.onprogress = function(e){
+      if(e.lengthComputable) bar.style.width = Math.round((base+e.loaded)/total*100)+'%';
+    };
+    xhr.onload = function(){
+      if(xhr.status===200){ try{ res(JSON.parse(xhr.responseText)); }catch(e){ rej(new Error('bad-res')); } }
+      else rej(new Error('http-'+xhr.status));
+    };
+    xhr.onerror = function(){ rej(new Error('net')); };
+    xhr.send(fd);
+  });
+}
+
 function uploadVideo(){
   const fi = document.getElementById('upFile');
   const f = fi.files[0];
@@ -241,35 +261,39 @@ function uploadVideo(){
   if(CLOUD_NAME.indexOf('DANGKY')===0){ err.textContent = 'Chưa cấu hình Cloudinary! Nhờ admin điền Cloud name + Preset.'; return; }
   const title = document.getElementById('upTitle').value.trim() || f.name.replace(/\.[^.]+$/,'');
   const btn = document.getElementById('upBtn');
-  btn.disabled = true; btn.textContent = 'Đang tải...';
+  btn.disabled = true;
   const prog = document.getElementById('upProg');
   const bar = document.getElementById('upBar');
   prog.style.display = 'block'; bar.style.width = '0';
-  const fd = new FormData();
-  fd.append('file', f);
-  fd.append('upload_preset', UPLOAD_PRESET);
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', 'https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/video/upload');
-  xhr.upload.onprogress = function(e){
-    if(e.lengthComputable) bar.style.width = Math.round(e.loaded/e.total*100)+'%';
-  };
-  xhr.onload = function(){
-    if(xhr.status===200){
-      let r = {};
-      try{ r = JSON.parse(xhr.responseText); }catch(e){}
-      db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', size:f.size, time:Date.now()}).then(function(){
-        document.getElementById('upTitle').value = '';
-        fi.value = '';
-        prog.style.display = 'none';
-        btn.disabled = false; btn.textContent = '⬆️ Tải lên';
-      });
-    } else {
-      err.textContent = 'Tải thất bại (mã '+xhr.status+'). Kiểm tra Cloud name + Preset!';
+  const total = f.size, cs = CHUNK_MB*1024*1024;
+  const n = Math.max(1, Math.ceil(total/cs));
+  const uid = 'web'+Date.now()+Math.floor(Math.random()*1e6);
+  (async function(){
+    try{
+      let r = null;
+      for(let i=0;i<n;i++){
+        const start = i*cs, end = Math.min(start+cs, total);
+        btn.textContent = 'Đang tải '+(i+1)+'/'+n+'...';
+        const fd = new FormData();
+        fd.append('file', f.slice(start,end));
+        fd.append('upload_preset', UPLOAD_PRESET);
+        const range = 'bytes '+start+'-'+(end-1)+'/'+total;
+        let done = false;
+        for(let a=0;a<3 && !done;a++){
+          try{ r = await xhrChunk(fd, range, uid, start, total, bar); done = true; }
+          catch(e){ if(a===2) throw e; await sleep(1500); }
+        }
+      }
+      await db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', size:f.size, time:Date.now()});
+      document.getElementById('upTitle').value = '';
+      fi.value = '';
+      prog.style.display = 'none';
+      btn.disabled = false; btn.textContent = '⬆️ Tải lên';
+    }catch(e){
+      err.textContent = 'Rớt mạng giữa chừng, khúc lỗi đã tự thử lại 3 lần. Mạng ổn thì bấm Tải lên lại nhé!';
       btn.disabled = false; btn.textContent = '⬆️ Tải lên';
     }
-  };
-  xhr.onerror = function(){ err.textContent = 'Lỗi mạng! Thử lại nhé.'; btn.disabled=false; btn.textContent='⬆️ Tải lên'; };
-  xhr.send(fd);
+  })();
 }
 
 function delVideo(key){
