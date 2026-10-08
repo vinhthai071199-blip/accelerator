@@ -64,6 +64,9 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 .vid-card{border-radius:16px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.09);box-shadow:0 14px 40px rgba(0,0,0,.4);transition:.45s cubic-bezier(.22,1,.36,1)}
 .vid-card:hover{transform:translateY(-8px);border-color:rgba(200,168,100,.5);box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 0 1px rgba(200,168,100,.18)}
 .vid-card video{width:100%;display:block;aspect-ratio:16/9;background:#000}
+.vid-facade{aspect-ratio:16/9;background:#000;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;cursor:pointer}
+.vid-play{width:64px;height:64px;border-radius:50%;background:#c8a864;color:#0a0c10;font-size:24px;display:flex;align-items:center;justify-content:center;padding-left:4px}
+.vid-note{color:#9a9388;font-size:12px}
 .vid-info{padding:18px 20px 22px}
 .vid-info h3{font-size:16px;font-weight:600;margin-bottom:12px;line-height:1.4;word-break:break-word}
 .vid-info .meta{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -247,6 +250,15 @@ function fmtSize(b){
   while(b>=1024 && i<3){ b/=1024; i++; }
   return (b>=10||i===0 ? Math.round(b) : b.toFixed(1))+' '+u[i];
 }
+function loadVid(el){
+  var url = el.getAttribute('data-url');
+  if(!url) return;
+  var v = document.createElement('video');
+  v.controls = true; v.preload = 'metadata'; v.src = url;
+  v.style.cssText = 'width:100%;display:block;aspect-ratio:16/9;background:#000';
+  el.parentNode.replaceChild(v, el);
+  var p = v.play(); if(p && p.catch) p.catch(function(){});
+}
 async function initVideos(){
   const box = document.getElementById('vidGrid');
   if(!box) return; // muc video dang an
@@ -261,7 +273,10 @@ async function initVideos(){
       box.innerHTML = list.map(function(v){
         const r = v[1]||{};
         return '<div class="vid-card">'
-          + '<video controls preload="metadata" src="'+esc(r.url)+'"></video>'
+          + '<div class="vid-facade" data-url="'+esc(r.url)+'" onclick="loadVid(this)">'
+          + '<div class="vid-play">▶</div>'
+          + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div>'
+          + '</div>'
           + '<div class="vid-info"><h3>'+esc(r.title)+'</h3>'
           + '<div class="meta"><small>'+fmtSize(r.size)+'</small>'
           + '<a class="vid-dl" href="'+esc(r.url)+'" target="_blank" rel="noopener" download>Tải xuống</a>'
