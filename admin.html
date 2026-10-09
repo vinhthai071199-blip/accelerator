@@ -98,6 +98,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="stat"><b id="cntRq">0</b><span>Yêu cầu</span></div>
     <div class="stat"><b id="cntVd">0</b><span>Video</span></div>
     <div class="stat"><b id="cntLk">0</b><span>Links</span></div>
+    <div class="stat"><b id="cntPh">0</b><span>Ảnh</span></div>
   </div>
 
   <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Phản hồi khách</h2>
@@ -117,8 +118,8 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   <div class="up-wrap">
     <div class="up-row">
       <input type="text" id="upTitle" placeholder="Tên video...">
-      <input type="file" id="upFile" accept="video/*">
-      <button class="btn solid" id="upBtn" onclick="uploadVideo()"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Tải lên</button>
+      <input type="file" id="upFile" accept="video/*" style="display:none" onchange="if(this.files[0])uploadVideo()">
+      <button class="btn solid" id="upBtn" onclick="document.getElementById('upFile').click()"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Tải lên</button>
     </div>
     <div class="prog" id="upProg"><i id="upBar"></i></div>
     <div class="err" id="upErr" style="text-align:left"></div>
@@ -137,13 +138,30 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="up-row">
       <input type="text" id="lkTitle" placeholder="Tên link...">
       <input type="text" id="lkUrl" placeholder="Link https://...">
-      <input type="text" id="lkImg" placeholder="Link ảnh (nếu có sẵn)...">
-      <input type="file" id="lkFile" accept="image/*">
       <button class="btn solid" id="lkBtn" onclick="addLink()"><svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Thêm</button>
     </div>
     <div class="err" id="lkErr" style="text-align:left"></div>
   </div>
   <div id="lkList"></div>
+
+  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg> Ảnh</h2>
+  <div class="up-wrap">
+    <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
+      <input type="checkbox" id="showPhotos" style="width:18px;height:18px;accent-color:#c4b5fd" onchange="toggleShowPhotos(this.checked)">
+      Hiện mục Ảnh trên trang chính
+    </label>
+    <div class="err" id="showPhErr" style="text-align:left"></div>
+  </div>
+  <div class="up-wrap">
+    <div class="up-row">
+      <input type="text" id="phTitle" placeholder="Tên ảnh...">
+      <input type="text" id="phImg" placeholder="Link ảnh (nếu có sẵn)...">
+      <input type="file" id="phFile" accept="image/*" style="display:none" onchange="if(this.files[0])addPhoto()">
+      <button class="btn solid" id="phBtn" onclick="addPhoto()"><svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Thêm</button>
+    </div>
+    <div class="err" id="phErr" style="text-align:left"></div>
+  </div>
+  <div id="phList"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -169,9 +187,10 @@ const UPLOAD_PRESET = "web_upload";
 const IC_UP = '<svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>';
 const IC_ADD = '<svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
-let fbUnsub = null, rqUnsub = null, vdUnsub = null, stUnsub = null, lkUnsub = null, slUnsub = null;
+let fbUnsub = null, rqUnsub = null, vdUnsub = null, stUnsub = null, lkUnsub = null, slUnsub = null, phUnsub = null, spUnsub = null;
 let vdCache = {};
-const MAX_MB = 100;
+const MAX_MB = 200;
+const CL_MAX = 100*1024*1024;
 
 function fmtTime(t){
   if(!t) return '';
@@ -237,6 +256,10 @@ function startListeners(){
   slUnsub = db.ref('settings/showLinks').on('value',
     s => { document.getElementById('showLinks').checked = s.val() !== false; },
     () => { document.getElementById('showLinks').checked = true; });
+  phUnsub = db.ref('photos').on('value', s => renderPh(toList(s.val())));
+  spUnsub = db.ref('settings/showPhotos').on('value',
+    s => { document.getElementById('showPhotos').checked = s.val() !== false; },
+    () => { document.getElementById('showPhotos').checked = true; });
 }
 function stopListeners(){
   if(fbUnsub){ db.ref('feedback').off('value', fbUnsub); fbUnsub=null; }
@@ -245,6 +268,8 @@ function stopListeners(){
   if(stUnsub){ db.ref('settings/showVideos').off('value', stUnsub); stUnsub=null; }
   if(lkUnsub){ db.ref('links').off('value', lkUnsub); lkUnsub=null; }
   if(slUnsub){ db.ref('settings/showLinks').off('value', slUnsub); slUnsub=null; }
+  if(phUnsub){ db.ref('photos').off('value', phUnsub); phUnsub=null; }
+  if(spUnsub){ db.ref('settings/showPhotos').off('value', spUnsub); spUnsub=null; }
 }
 function delItem(node, key){
   if(!confirm('Xóa mục này vĩnh viễn?')) return;
@@ -303,12 +328,45 @@ function xhrChunk(fd, range, uniqueId, base, total, bar){
   });
 }
 
+function upCatbox(f,title,btn,prog,bar,err){
+  function attempt(left){
+    const fd = new FormData();
+    fd.append('reqtype','fileupload');
+    fd.append('fileToUpload',f);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST','https://catbox.moe/user/api.php');
+    xhr.upload.onprogress = function(e){
+      if(e.lengthComputable) bar.style.width = Math.round(e.loaded/e.total*100)+'%';
+    };
+    xhr.onload = function(){
+      if(xhr.status===200 && xhr.responseText.indexOf('https://')===0){
+        db.ref('videos').push({title:title, url:xhr.responseText.trim(), public_id:'', host:'catbox', size:f.size, time:Date.now()}).then(function(){
+          document.getElementById('upTitle').value = '';
+          prog.style.display = 'none';
+          btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
+        });
+      } else if(left>0){ setTimeout(function(){ attempt(left-1); },2000); }
+      else {
+        err.textContent = 'Catbox từ chối (mã '+xhr.status+'). File quá 200MB hoặc sai định dạng!';
+        btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
+      }
+    };
+    xhr.onerror = function(){
+      if(left>0){ setTimeout(function(){ attempt(left-1); },2000); }
+      else { err.textContent = 'Rớt mạng! Bấm Tải lên lại nhé.'; btn.disabled=false; btn.innerHTML=IC_UP+' Tải lên'; }
+    };
+    xhr.send(fd);
+  }
+  attempt(2);
+}
+
 function uploadVideo(){
   const fi = document.getElementById('upFile');
   const f = fi.files[0];
   const err = document.getElementById('upErr');
   err.textContent = '';
-  if(!f){ err.textContent = 'Hãy chọn 1 file video!'; return; }
+  if(!f){ return; }
+  fi.value = '';
   if(f.size > MAX_MB*1024*1024){ err.textContent = 'Video quá lớn! Tối đa '+MAX_MB+'MB (file này '+fmtSize(f.size)+')'; return; }
   if(CLOUD_NAME.indexOf('DANGKY')===0){ err.textContent = 'Chưa cấu hình Cloudinary! Nhờ admin điền Cloud name + Preset.'; return; }
   const title = document.getElementById('upTitle').value.trim() || f.name.replace(/\.[^.]+$/,'');
@@ -317,6 +375,7 @@ function uploadVideo(){
   const prog = document.getElementById('upProg');
   const bar = document.getElementById('upBar');
   prog.style.display = 'block'; bar.style.width = '0';
+  if(f.size > CL_MAX){ btn.textContent = 'Đang tải lên Catbox...'; upCatbox(f,title,btn,prog,bar,err); return; }
   const total = f.size, cs = CHUNK_MB*1024*1024;
   const n = Math.max(1, Math.ceil(total/cs));
   const uid = 'web'+Date.now()+Math.floor(Math.random()*1e6);
@@ -425,30 +484,77 @@ function delLink(key){
     .catch(function(e){ alert('Không xóa được: '+e.message); });
 }
 
-const LK_MAX_MB = 10;
 function addLink(){
   const title = document.getElementById('lkTitle').value.trim();
   const url = document.getElementById('lkUrl').value.trim();
-  const imgUrl = document.getElementById('lkImg').value.trim();
-  const fi = document.getElementById('lkFile');
-  const f = fi.files[0];
   const err = document.getElementById('lkErr');
   err.textContent = '';
   if(!title){ err.textContent = 'Nhập tên link!'; return; }
   if(!url || !/^https?:\/\//i.test(url)){ err.textContent = 'Link phải bắt đầu bằng http:// hoặc https://'; return; }
-  if(!f && !imgUrl){ err.textContent = 'Chọn 1 file ảnh hoặc dán link ảnh!'; return; }
-  if(f && f.size > LK_MAX_MB*1024*1024){ err.textContent = 'Ảnh quá lớn! Tối đa '+LK_MAX_MB+'MB'; return; }
   const btn = document.getElementById('lkBtn');
   btn.disabled = true; btn.textContent = 'Đang thêm...';
+  db.ref('links').push({title:title, url:url, time:Date.now()}).then(function(){
+    document.getElementById('lkTitle').value = '';
+    document.getElementById('lkUrl').value = '';
+    btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
+  }).catch(function(e){
+    err.textContent = 'Không lưu được ('+e.code+'). Kiểm tra Rules rồi Publish.';
+    btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
+  });
+}
+
+const PH_MAX_MB = 10;
+function renderPh(list){
+  document.getElementById('cntPh').textContent = list.length;
+  const box = document.getElementById('phList');
+  if(!list.length){ box.innerHTML = '<div class="empty">Chưa có ảnh nào. Thêm ảnh đầu tiên nhé!</div>'; return; }
+  box.innerHTML = '<div class="vid-grid">' + list.map(function(x){
+    const k=x[0], r=x[1]||{};
+    return '<div class="vid-card">'
+      + '<a href="'+esc(r.img)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+esc(r.img)+'" alt="" style="width:100%;display:block;aspect-ratio:16/10;object-fit:cover;background:#000"></a>'
+      + '<div class="vid-info"><h3>'+esc(r.title)+'</h3>'
+      + '<div class="meta"><small>'+fmtTime(r.time)+'</small>'
+      + '<button class="del" onclick="delPhoto(\''+k+'\')">Xóa</button>'
+      + '</div></div></div>';
+  }).join('') + '</div>';
+}
+
+function delPhoto(key){
+  if(!confirm('Xóa ảnh này khỏi web? (file gốc vẫn còn trong kho Cloudinary)')) return;
+  db.ref('photos/'+key).remove()
+    .catch(function(e){ alert('Không xóa được: '+e.message); });
+}
+
+function toggleShowPhotos(on){
+  const err = document.getElementById('showPhErr');
+  err.textContent = '';
+  db.ref('settings/showPhotos').set(!!on).catch(function(e){
+    err.textContent = 'Không lưu được ('+e.code+'). Kiểm tra Rules đã có "settings" và "photos" chưa rồi Publish.';
+    document.getElementById('showPhotos').checked = !on;
+  });
+}
+
+function addPhoto(){
+  const title = document.getElementById('phTitle').value.trim();
+  const imgUrl = document.getElementById('phImg').value.trim();
+  const fi = document.getElementById('phFile');
+  const f = fi.files[0];
+  const err = document.getElementById('phErr');
+  err.textContent = '';
+  if(!title){ err.textContent = 'Nhập tên ảnh!'; return; }
+  if(!f && !imgUrl){ fi.click(); return; }
+  fi.value = '';
+  if(f && f.size > PH_MAX_MB*1024*1024){ err.textContent = 'Ảnh quá lớn! Tối đa '+PH_MAX_MB+'MB'; return; }
+  const btn = document.getElementById('phBtn');
+  btn.disabled = true; btn.textContent = 'Đang thêm...';
   function save(img){
-    db.ref('links').push({title:title, url:url, img:img, time:Date.now()}).then(function(){
-      document.getElementById('lkTitle').value = '';
-      document.getElementById('lkUrl').value = '';
-      document.getElementById('lkImg').value = '';
+    db.ref('photos').push({title:title, img:img, time:Date.now()}).then(function(){
+      document.getElementById('phTitle').value = '';
+      document.getElementById('phImg').value = '';
       fi.value = '';
       btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
     }).catch(function(e){
-      err.textContent = 'Không lưu được ('+e.code+'). Kiểm tra Rules đã có "links" chưa rồi Publish.';
+      err.textContent = 'Không lưu được ('+e.code+'). Kiểm tra Rules đã có "photos" chưa rồi Publish.';
       btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
     });
   }
