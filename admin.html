@@ -308,26 +308,6 @@ function renderVd(list){
   }).join('') + '</div>';
 }
 
-const CHUNK_MB = 6;
-function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
-function xhrChunk(fd, range, uniqueId, base, total, bar){
-  return new Promise(function(res, rej){
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/video/upload');
-    xhr.setRequestHeader('X-Unique-Upload-Id', uniqueId);
-    xhr.setRequestHeader('Content-Range', range);
-    xhr.upload.onprogress = function(e){
-      if(e.lengthComputable) bar.style.width = Math.round((base+e.loaded)/total*100)+'%';
-    };
-    xhr.onload = function(){
-      if(xhr.status===200){ try{ res(JSON.parse(xhr.responseText)); }catch(e){ rej(new Error('bad-res')); } }
-      else rej(new Error('http-'+xhr.status));
-    };
-    xhr.onerror = function(){ rej(new Error('net')); };
-    xhr.send(fd);
-  });
-}
-
 function upCatbox(f,title,btn,prog,bar,err){
   function attempt(left){
     const fd = new FormData();
@@ -386,34 +366,39 @@ function uploadVideo(){
   const bar = document.getElementById('upBar');
   prog.style.display = 'block'; bar.style.width = '0';
   if(f.size > CL_MAX){ btn.textContent = 'Đang tải lên Catbox...'; upCatbox(f,title,btn,prog,bar,err); return; }
-  const total = f.size, cs = CHUNK_MB*1024*1024;
-  const n = Math.max(1, Math.ceil(total/cs));
-  const uid = 'web'+Date.now()+Math.floor(Math.random()*1e6);
-  (async function(){
-    try{
-      let r = null;
-      for(let i=0;i<n;i++){
-        const start = i*cs, end = Math.min(start+cs, total);
-        btn.textContent = 'Đang tải '+(i+1)+'/'+n+'...';
-        const fd = new FormData();
-        fd.append('file', f.slice(start,end));
-        fd.append('upload_preset', UPLOAD_PRESET);
-        const range = 'bytes '+start+'-'+(end-1)+'/'+total;
-        let done = false;
-        for(let a=0;a<3 && !done;a++){
-          try{ r = await xhrChunk(fd, range, uid, start, total, bar); done = true; }
-          catch(e){ if(a===2) throw e; await sleep(1500); }
-        }
+  let tries = 0;
+  (function upOne(){
+    tries++;
+    btn.textContent = 'Đang tải lên Cloudinary' + (tries>1 ? ' (lần '+tries+')' : '') + '...';
+    const fd = new FormData();
+    fd.append('file', f);
+    fd.append('upload_preset', UPLOAD_PRESET);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/video/upload');
+    xhr.upload.onprogress = function(e){
+      if(e.lengthComputable) bar.style.width = Math.round(e.loaded/e.total*100)+'%';
+    };
+    xhr.onload = function(){
+      if(xhr.status===200){
+        let r = {};
+        try{ r = JSON.parse(xhr.responseText); }catch(e){}
+        if(!r.secure_url && tries<3){ setTimeout(function(){ upOne(); },1500); return; }
+        db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', size:f.size, time:Date.now()}).then(function(){
+          document.getElementById('upTitle').value = '';
+          prog.style.display = 'none';
+          btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
+        });
+      } else if(tries<3){ setTimeout(function(){ upOne(); },1500); }
+      else {
+        err.textContent = 'Tải thất bại (mã '+xhr.status+'). Kiểm tra Cloud name + Preset!';
+        btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
       }
-      await db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', size:f.size, time:Date.now()});
-      document.getElementById('upTitle').value = '';
-      fi.value = '';
-      prog.style.display = 'none';
-      btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
-    }catch(e){
-      err.textContent = 'Rớt mạng giữa chừng, khúc lỗi đã tự thử lại 3 lần. Mạng ổn thì bấm Tải lên lại nhé!';
-      btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
-    }
+    };
+    xhr.onerror = function(){
+      if(tries<3){ setTimeout(function(){ upOne(); },1500); }
+      else { err.textContent = 'Rớt mạng 3 lần liên tiếp! Bấm Tải lên thử lại nhé.'; btn.disabled=false; btn.innerHTML=IC_UP+' Tải lên'; }
+    };
+    xhr.send(fd);
   })();
 }
 
