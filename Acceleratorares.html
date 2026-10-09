@@ -64,9 +64,12 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 .vid-card{border-radius:16px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.09);box-shadow:0 14px 40px rgba(0,0,0,.4);transition:.45s cubic-bezier(.22,1,.36,1)}
 .vid-card:hover{transform:translateY(-8px);border-color:rgba(200,168,100,.5);box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 0 1px rgba(200,168,100,.18)}
 .vid-card video{width:100%;display:block;aspect-ratio:16/9;background:#000}
-.vid-facade{aspect-ratio:16/9;background:#000;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;cursor:pointer}
+.vid-facade{aspect-ratio:16/9;background:#000;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
+.vid-facade::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.vid-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vid-play{position:relative;z-index:1}
 .vid-play{width:64px;height:64px;border-radius:50%;background:#c8a864;color:#0a0c10;font-size:24px;display:flex;align-items:center;justify-content:center;padding-left:4px}
-.vid-note{color:#9a9388;font-size:12px}
+.vid-note{color:#9a9388;font-size:12px;position:relative;z-index:1}
 .vid-info{padding:18px 20px 22px}
 .vid-info h3{font-size:16px;font-weight:600;margin-bottom:12px;line-height:1.4;word-break:break-word}
 .vid-info .meta{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -268,11 +271,22 @@ function fmtSize(b){
   while(b>=1024 && i<3){ b/=1024; i++; }
   return (b>=10||i===0 ? Math.round(b) : b.toFixed(1))+' '+u[i];
 }
+function dlUrl(u){
+  u = u||'';
+  if(u.indexOf('fl_attachment')!==-1) return u;
+  return u.replace('/upload/','/upload/fl_attachment/');
+}
+function posterUrl(pid){
+  if(!pid) return '';
+  return 'https://res.cloudinary.com/ck9gvbcq/video/upload/so_0,w_640/'+pid+'.jpg';
+}
 function loadVid(el){
   var url = el.getAttribute('data-url');
   if(!url) return;
   var v = document.createElement('video');
   v.controls = true; v.preload = 'metadata'; v.src = url;
+  var poster = el.getAttribute('data-poster');
+  if(poster) v.poster = poster;
   v.style.cssText = 'width:100%;display:block;aspect-ratio:16/9;background:#000';
   el.parentNode.replaceChild(v, el);
   var p = v.play(); if(p && p.catch) p.catch(function(){});
@@ -290,14 +304,17 @@ async function initVideos(){
       const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
       box.innerHTML = list.map(function(v){
         const r = v[1]||{};
+        const dl = dlUrl(r.url);
+        const poster = posterUrl(r.public_id);
         return '<div class="vid-card">'
-          + '<div class="vid-facade" data-url="'+esc(r.url)+'" onclick="loadVid(this)">'
+          + '<div class="vid-facade" data-url="'+esc(r.url)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)">'
+          + (poster ? '<img class="vid-poster" loading="lazy" src="'+esc(poster)+'" alt="">' : '')
           + '<div class="vid-play">▶</div>'
           + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div>'
           + '</div>'
           + '<div class="vid-info"><h3>'+esc(r.title)+'</h3>'
           + '<div class="meta"><small>'+fmtSize(r.size)+'</small>'
-          + '<a class="vid-dl" href="'+esc(r.url)+'" target="_blank" rel="noopener" download>Tải xuống</a>'
+          + '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener">Tải xuống</a>'
           + '</div></div></div>';
       }).join('');
     }, function(){ box.innerHTML = '<div class="vid-empty">Không tải được video.</div>'; });
