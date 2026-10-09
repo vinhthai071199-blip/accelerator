@@ -32,6 +32,7 @@ nav.scrolled{background:rgba(17,20,27,.94);border-bottom:1px solid rgba(200,168,
 .btn:hover::after{transform:translateX(280%) skewX(-18deg)}
 .btn.solid{background:linear-gradient(135deg,#e0c078,#b08c46 55%,#8a6d3b);border:none;color:#161005;box-shadow:0 6px 18px rgba(0,0,0,.45)}
 .btn.solid:hover{box-shadow:0 10px 26px rgba(0,0,0,.5)}
+.ic{width:1.05em;height:1.05em;vertical-align:-0.16em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ===== HEADER ===== */
 header{padding:132px 5% 48px;text-align:center;position:relative}
@@ -68,7 +69,8 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 .vid-facade::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45)}
 .vid-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .vid-play{position:relative;z-index:1}
-.vid-play{width:64px;height:64px;border-radius:50%;background:#c8a864;color:#0a0c10;font-size:24px;display:flex;align-items:center;justify-content:center;padding-left:4px}
+.vid-play{width:64px;height:64px;border-radius:50%;background:rgba(10,12,16,.45);border:none;color:#e0c078;display:flex;align-items:center;justify-content:center}
+.vid-play svg{width:26px;height:26px;fill:currentColor;margin-left:3px}
 .vid-note{color:#9a9388;font-size:12px;position:relative;z-index:1}
 .vid-info{padding:18px 20px 22px}
 .vid-info h3{font-size:16px;font-weight:600;margin-bottom:12px;line-height:1.4;word-break:break-word}
@@ -167,7 +169,7 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 
 <!-- ===== MỤC 1: QUẢNG CÁO SHOP ===== -->
 <section id="shop">
-  <div class="sec-title reveal"><div class="bar"></div><h2>🛒 <em>Teyvat</em> Store</h2></div>
+  <div class="sec-title reveal"><div class="bar"></div><h2><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> <em>Teyvat</em> Store</h2></div>
   <div class="shop-card reveal d1">
     <div class="shop-icon"><img src="shop-logo.jpg" alt="Teyvat Store"></div>
     <div>
@@ -175,21 +177,21 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
       <p>Chuyên nạp game WuWa, Genshin, Honkai Star Rail giá rẻ. Nhanh chóng, uy tín. truy cập ngay!</p>
     </div>
     <div class="shop-actions">
-      <a class="btn solid" href="https://teyvatstore.com/" target="_blank">🛒 Vào shop: teyvatstore.com</a>
-      <a class="btn" href="https://www.facebook.com/people/Teyvat-Store/61589322797808/" target="_blank">💬 Liên hệ CSKH</a>
+      <a class="btn solid" href="https://teyvatstore.com/" target="_blank"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Vào shop: teyvatstore.com</a>
+      <a class="btn" href="https://www.facebook.com/people/Teyvat-Store/61589322797808/" target="_blank"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Liên hệ CSKH</a>
     </div>
   </div>
 </section>
 
 <!-- ===== MỤC 2: VIDEO ===== -->
 <section id="videos">
-  <div class="sec-title reveal"><div class="bar"></div><h2>🎬 <em>Video</em></h2></div>
+  <div class="sec-title reveal"><div class="bar"></div><h2><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15 10 9" fill="currentColor" stroke="none"/></svg> <em>Video</em></h2></div>
   <div class="vid-grid reveal d1" id="vidGrid"><div class="vid-empty">Đang tải video...</div></div>
 </section>
 
 <!-- ===== MỤC 3: LINKS & ẢNH ===== -->
 <section id="links">
-  <div class="sec-title reveal"><div class="bar"></div><h2>🔗 <em>Links</em></h2></div>
+  <div class="sec-title reveal"><div class="bar"></div><h2><svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> <em>Links</em></h2></div>
   <div class="link-grid reveal d1" id="linkGrid"><div class="link-empty">Đang tải...</div></div>
 </section>
 
@@ -229,7 +231,7 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
       var d=document.createElement('div');
       d.id='rlLock';
       d.style.cssText='position:fixed;inset:0;z-index:9999;background:#0a0c10;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;text-align:center;padding:20px';
-      d.innerHTML='<div style="font-size:40px">⏳</div><b style="color:#e0c078;font-size:18px">Tải lại quá nhanh!</b><p style="color:#9a9388;font-size:14px">Chờ <span id="rlSec">5</span> giây rồi xem tiếp nhé.</p>';
+      d.innerHTML='<svg style="width:44px;height:44px;stroke:#c8a864;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><b style="color:#e0c078;font-size:18px">Tải lại quá nhanh!</b><p style="color:#9a9388;font-size:14px">Chờ <span id="rlSec">5</span> giây rồi xem tiếp nhé.</p>';
       document.body.appendChild(d);
       var s=5;
       var iv=setInterval(function(){
@@ -309,7 +311,7 @@ async function initVideos(){
         return '<div class="vid-card">'
           + '<div class="vid-facade" data-url="'+esc(r.url)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)">'
           + (poster ? '<img class="vid-poster" loading="lazy" src="'+esc(poster)+'" alt="">' : '')
-          + '<div class="vid-play">▶</div>'
+          + '<div class="vid-play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
           + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div>'
           + '</div>'
           + '<div class="vid-info"><h3>'+esc(r.title)+'</h3>'

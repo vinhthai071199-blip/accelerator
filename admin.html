@@ -20,6 +20,7 @@ input:focus{border-color:rgba(200,168,100,.55)}
 .btn:hover{background:rgba(255,255,255,.06)}
 .btn.solid{background:linear-gradient(135deg,#e0c078,#c8a864);color:#0a0c10;border:none}
 .btn.solid:hover{box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.ic{width:1.05em;height:1.05em;vertical-align:-0.16em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .btn.full{width:100%;justify-content:center;margin-top:20px}
 .err{color:#ff8080;font-size:13px;margin-top:14px;text-align:center;min-height:18px}
 .topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:26px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -49,6 +50,21 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c8a864,#8a6d3b)}
 .live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8fd694}
 .live i{width:8px;height:8px;border-radius:50%;background:#4caf6d;display:inline-block}
+/* ===== THE VIDEO GIONG TRANG CHINH ===== */
+.vid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.vid-card{border-radius:12px;overflow:hidden;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.09)}
+.vid-facade{aspect-ratio:16/9;background:#000;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
+.vid-facade::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.vid-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vid-play{width:56px;height:56px;border-radius:50%;background:rgba(10,12,16,.45);border:none;color:#e0c078;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
+.vid-play svg{width:22px;height:22px;fill:currentColor;margin-left:3px}
+.vid-note{color:#9a9388;font-size:12px;position:relative;z-index:1}
+.vid-card video{width:100%;display:block;aspect-ratio:16/9;background:#000}
+.vid-info{padding:14px 16px 18px}
+.vid-info h3{font-size:14.5px;font-weight:600;margin-bottom:10px;line-height:1.4;word-break:break-word}
+.vid-info .meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.vid-info .meta small{color:#7c7567;font-size:12px}
+.vid-dl{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:999px;background:#c8a864;color:#0a0c10;font-size:12px;font-weight:700;text-decoration:none}
 @media(max-width:600px){.login-wrap{margin-top:8vh}.topbar{flex-direction:column;align-items:flex-start}}
 </style>
 </head>
@@ -62,7 +78,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <input type="email" id="lgEmail" placeholder="admin@gmail.com" required>
     <label>Mật khẩu</label>
     <input type="password" id="lgPass" placeholder="••••••••" required>
-    <button class="btn solid full" type="submit">🔐 Đăng nhập</button>
+    <button class="btn solid full" type="submit"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Đăng nhập</button>
     <div class="err" id="lgErr"></div>
   </form>
 </div>
@@ -70,7 +86,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 <!-- ===== NỘI DUNG QUẢN TRỊ ===== -->
 <div id="adminView" style="display:none">
   <div class="topbar">
-    <div class="brand">🛠️ Quản trị <em>AcceleratorAres</em> <span class="live"><i></i>Real-time</span></div>
+    <div class="brand"><svg class="ic" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Quản trị <em>AcceleratorAres</em> <span class="live"><i></i>Real-time</span></div>
     <div class="actions">
       <button class="btn" onclick="doLogout()">Đăng xuất</button>
       <a class="btn" href="/">← Về trang chủ</a>
@@ -84,13 +100,13 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="stat"><b id="cntLk">0</b><span>Links</span></div>
   </div>
 
-  <h2 class="sec">💬 Phản hồi khách</h2>
+  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Phản hồi khách</h2>
   <div id="fbList"></div>
 
-  <h2 class="sec">📨 Yêu cầu khách</h2>
+  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg> Yêu cầu khách</h2>
   <div id="rqList"></div>
 
-  <h2 class="sec">🎬 Video của tôi</h2>
+  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15 10 9" fill="currentColor" stroke="none"/></svg> Video của tôi</h2>
   <div class="up-wrap">
     <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#e8e4da;margin:0;cursor:pointer">
       <input type="checkbox" id="showVideos" style="width:18px;height:18px;accent-color:#c8a864" onchange="toggleShowVideos(this.checked)">
@@ -102,14 +118,14 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="up-row">
       <input type="text" id="upTitle" placeholder="Tên video...">
       <input type="file" id="upFile" accept="video/*">
-      <button class="btn solid" id="upBtn" onclick="uploadVideo()">⬆️ Tải lên</button>
+      <button class="btn solid" id="upBtn" onclick="uploadVideo()"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Tải lên</button>
     </div>
     <div class="prog" id="upProg"><i id="upBar"></i></div>
     <div class="err" id="upErr" style="text-align:left"></div>
   </div>
   <div id="vdList"></div>
 
-  <h2 class="sec">🔗 Link & ảnh</h2>
+  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Link & ảnh</h2>
   <div class="up-wrap">
     <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#e8e4da;margin:0;cursor:pointer">
       <input type="checkbox" id="showLinks" style="width:18px;height:18px;accent-color:#c8a864" onchange="toggleShowLinks(this.checked)">
@@ -123,7 +139,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
       <input type="text" id="lkUrl" placeholder="Link https://...">
       <input type="text" id="lkImg" placeholder="Link ảnh (nếu có sẵn)...">
       <input type="file" id="lkFile" accept="image/*">
-      <button class="btn solid" id="lkBtn" onclick="addLink()">➕ Thêm</button>
+      <button class="btn solid" id="lkBtn" onclick="addLink()"><svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Thêm</button>
     </div>
     <div class="err" id="lkErr" style="text-align:left"></div>
   </div>
@@ -150,8 +166,11 @@ const db = firebase.database();
 // --- CLOUDINARY (dien thong so cua ban vao) ---
 const CLOUD_NAME = "ck9gvbcq";
 const UPLOAD_PRESET = "web_upload";
+const IC_UP = '<svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>';
+const IC_ADD = '<svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
 let fbUnsub = null, rqUnsub = null, vdUnsub = null, stUnsub = null, lkUnsub = null, slUnsub = null;
+let vdCache = {};
 const MAX_MB = 100;
 
 function fmtTime(t){
@@ -245,17 +264,23 @@ function renderVd(list){
   document.getElementById('cntVd').textContent = list.length;
   const box = document.getElementById('vdList');
   if(!list.length){ box.innerHTML = '<div class="empty">Chưa có video nào. Tải lên video đầu tiên nhé!</div>'; return; }
-  box.innerHTML = list.map(function(v){
-    const k=v[0], r=v[1]||{};
-    return '<div class="item"><div class="head">'
-      + '<div><span class="who">'+esc(r.title)+'</span>'
-      + '<span class="tag">'+fmtSize(r.size)+'</span></div>'
-      + '<div style="display:flex;gap:10px;align-items:center">'
-      + '<span class="when">'+fmtTime(r.time)+'</span>'
-      + '<a class="del" style="text-decoration:none" href="'+esc(r.url)+'" target="_blank" rel="noopener">Mở</a>'
+  vdCache = {};
+  box.innerHTML = '<div class="vid-grid">' + list.map(function(x){
+    const k=x[0], r=x[1]||{};
+    vdCache[k] = r.title || '';
+    const dl = dlUrl(r.url), poster = posterUrl(r.public_id);
+    return '<div class="vid-card">'
+      + '<div class="vid-facade" data-url="'+esc(r.url)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)">'
+      + (poster ? '<img class="vid-poster" loading="lazy" src="'+esc(poster)+'" alt="">' : '')
+      + '<div class="vid-play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
+      + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div></div>'
+      + '<div class="vid-info"><h3>'+esc(r.title)+'</h3>'
+      + '<div class="meta"><small>'+fmtTime(r.time)+'</small>'
+      + '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener">Tải xuống</a>'
+      + '<button class="del" onclick="editVideo(\''+k+'\')">Sửa tên</button>'
       + '<button class="del" onclick="delVideo(\''+k+'\')">Xóa</button>'
       + '</div></div></div>';
-  }).join('');
+  }).join('') + '</div>';
 }
 
 const CHUNK_MB = 6;
@@ -315,18 +340,50 @@ function uploadVideo(){
       document.getElementById('upTitle').value = '';
       fi.value = '';
       prog.style.display = 'none';
-      btn.disabled = false; btn.textContent = '⬆️ Tải lên';
+      btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
     }catch(e){
       err.textContent = 'Rớt mạng giữa chừng, khúc lỗi đã tự thử lại 3 lần. Mạng ổn thì bấm Tải lên lại nhé!';
-      btn.disabled = false; btn.textContent = '⬆️ Tải lên';
+      btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
     }
   })();
+}
+
+function dlUrl(u){
+  u = u||'';
+  if(u.indexOf('fl_attachment')!==-1) return u;
+  return u.replace('/upload/','/upload/fl_attachment/');
+}
+function posterUrl(pid){
+  if(!pid) return '';
+  return 'https://res.cloudinary.com/ck9gvbcq/video/upload/so_0,w_640/'+pid+'.jpg';
+}
+function loadVid(el){
+  var url = el.getAttribute('data-url');
+  if(!url) return;
+  var v = document.createElement('video');
+  v.controls = true; v.preload = 'metadata'; v.src = url;
+  var poster = el.getAttribute('data-poster');
+  if(poster) v.poster = poster;
+  v.style.cssText = 'width:100%;display:block;aspect-ratio:16/9;background:#000';
+  el.parentNode.replaceChild(v, el);
+  var p = v.play(); if(p && p.catch) p.catch(function(){});
 }
 
 function delVideo(key){
   if(!confirm('Gỡ video này khỏi web? (file gốc vẫn còn trong kho Cloudinary)')) return;
   db.ref('videos/'+key).remove()
     .catch(function(e){ alert('Không xóa được: '+e.message); });
+}
+
+function editVideo(key){
+  const cur = (vdCache[key] !== undefined) ? vdCache[key] : '';
+  const name = prompt('Tên video mới:', cur);
+  if(name === null) return;
+  const t = name.trim();
+  if(!t){ alert('Tên không được để trống!'); return; }
+  if(t === cur) return;
+  db.ref('videos/'+key+'/title').set(t)
+    .catch(function(e){ alert('Không sửa được: '+e.message); });
 }
 
 function toggleShowVideos(on){
@@ -389,10 +446,10 @@ function addLink(){
       document.getElementById('lkUrl').value = '';
       document.getElementById('lkImg').value = '';
       fi.value = '';
-      btn.disabled = false; btn.textContent = '➕ Thêm';
+      btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
     }).catch(function(e){
       err.textContent = 'Không lưu được ('+e.code+'). Kiểm tra Rules đã có "links" chưa rồi Publish.';
-      btn.disabled = false; btn.textContent = '➕ Thêm';
+      btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
     });
   }
   if(!f){ save(imgUrl); return; }
@@ -402,7 +459,7 @@ function addLink(){
   fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload', {method:'POST', body:fd})
     .then(function(r){ if(!r.ok) throw new Error('http-'+r.status); return r.json(); })
     .then(function(r){ save(r.secure_url); })
-    .catch(function(){ err.textContent = 'Tải ảnh thất bại! Kiểm tra Cloud name + Preset.'; btn.disabled=false; btn.textContent='➕ Thêm'; });
+    .catch(function(){ err.textContent = 'Tải ảnh thất bại! Kiểm tra Cloud name + Preset.'; btn.disabled=false; btn.innerHTML=IC_ADD+' Thêm'; });
 }
 
 function showLogin(){ document.getElementById('loginView').style.display='block'; document.getElementById('adminView').style.display='none'; stopListeners(); }
