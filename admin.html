@@ -334,27 +334,37 @@ function upCatbox(f,title,btn,prog,bar,err){
     fd.append('reqtype','fileupload');
     fd.append('fileToUpload',f);
     const xhr = new XMLHttpRequest();
+    let settled = false;
+    let last = Date.now();
+    const watchdog = setInterval(function(){
+      if(!settled && Date.now()-last > 45000){ try{ xhr.abort(); }catch(e){} }
+    },5000);
+    function done(ok, resp){
+      if(settled) return;
+      settled = true;
+      clearInterval(watchdog);
+      if(ok){ resp(); return; }
+      if(left>0){ setTimeout(function(){ attempt(left-1); },2000); }
+      else { err.textContent = 'Rớt mạng! Bấm Tải lên lại nhé.'; btn.disabled=false; btn.innerHTML=IC_UP+' Tải lên'; }
+    }
     xhr.open('POST','https://catbox.moe/user/api.php');
     xhr.upload.onprogress = function(e){
+      last = Date.now();
       if(e.lengthComputable) bar.style.width = Math.round(e.loaded/e.total*100)+'%';
     };
     xhr.onload = function(){
       if(xhr.status===200 && xhr.responseText.indexOf('https://')===0){
-        db.ref('videos').push({title:title, url:xhr.responseText.trim(), public_id:'', host:'catbox', size:f.size, time:Date.now()}).then(function(){
-          document.getElementById('upTitle').value = '';
-          prog.style.display = 'none';
-          btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
+        done(true, function(){
+          db.ref('videos').push({title:title, url:xhr.responseText.trim(), public_id:'', host:'catbox', size:f.size, time:Date.now()}).then(function(){
+            document.getElementById('upTitle').value = '';
+            prog.style.display = 'none';
+            btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
+          });
         });
-      } else if(left>0){ setTimeout(function(){ attempt(left-1); },2000); }
-      else {
-        err.textContent = 'Catbox từ chối (mã '+xhr.status+'). File quá 200MB hoặc sai định dạng!';
-        btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
-      }
+      } else done(false);
     };
-    xhr.onerror = function(){
-      if(left>0){ setTimeout(function(){ attempt(left-1); },2000); }
-      else { err.textContent = 'Rớt mạng! Bấm Tải lên lại nhé.'; btn.disabled=false; btn.innerHTML=IC_UP+' Tải lên'; }
-    };
+    xhr.onerror = function(){ done(false); };
+    xhr.onabort = function(){ done(false); };
     xhr.send(fd);
   }
   attempt(2);
