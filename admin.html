@@ -189,6 +189,7 @@ const IC_ADD = '<svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12"
 
 let fbUnsub = null, rqUnsub = null, vdUnsub = null, stUnsub = null, lkUnsub = null, slUnsub = null, phUnsub = null, spUnsub = null;
 let vdCache = {};
+let phCache = {};
 const MAX_MB = 200;
 const CL_MAX = 100*1024*1024;
 
@@ -292,7 +293,7 @@ function renderVd(list){
   vdCache = {};
   box.innerHTML = '<div class="vid-grid">' + list.map(function(x){
     const k=x[0], r=x[1]||{};
-    vdCache[k] = r.title || '';
+    vdCache[k] = {title: r.title||'', del: r.del||''};
     const dl = dlUrl(r.url), poster = posterUrl(r.public_id);
     return '<div class="vid-card">'
       + '<div class="vid-facade" data-url="'+esc(r.url)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)">'
@@ -373,6 +374,7 @@ function uploadVideo(){
     const fd = new FormData();
     fd.append('file', f);
     fd.append('upload_preset', UPLOAD_PRESET);
+    fd.append('return_delete_token', 'true');
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/video/upload');
     xhr.upload.onprogress = function(e){
@@ -383,7 +385,7 @@ function uploadVideo(){
         let r = {};
         try{ r = JSON.parse(xhr.responseText); }catch(e){}
         if(!r.secure_url && tries<3){ setTimeout(function(){ upOne(); },1500); return; }
-        db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', size:f.size, time:Date.now()}).then(function(){
+        db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', del:r.delete_token||'', size:f.size, time:Date.now()}).then(function(){
           document.getElementById('upTitle').value = '';
           prog.style.display = 'none';
           btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
@@ -423,14 +425,24 @@ function loadVid(el){
   var p = v.play(); if(p && p.catch) p.catch(function(){});
 }
 
+function cloudDelete(token){
+  if(!token) return Promise.resolve();
+  const fd = new FormData();
+  fd.append('token', token);
+  return fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/delete_by_token', {method:'POST', body:fd}).catch(function(){}).then(function(){});
+}
+
 function delVideo(key){
-  if(!confirm('Gỡ video này khỏi web? (file gốc vẫn còn trong kho Cloudinary)')) return;
-  db.ref('videos/'+key).remove()
-    .catch(function(e){ alert('Không xóa được: '+e.message); });
+  if(!confirm('Xóa video này khỏi web VÀ khỏi kho Cloudinary?')) return;
+  const rec = vdCache[key] || {};
+  cloudDelete(rec.del).then(function(){
+    db.ref('videos/'+key).remove()
+      .catch(function(e){ alert('Không xóa được: '+e.message); });
+  });
 }
 
 function editVideo(key){
-  const cur = (vdCache[key] !== undefined) ? vdCache[key] : '';
+  const cur = (vdCache[key] && vdCache[key].title) || '';
   const name = prompt('Tên video mới:', cur);
   if(name === null) return;
   const t = name.trim();
@@ -505,19 +517,35 @@ function renderPh(list){
   if(!list.length){ box.innerHTML = '<div class="empty">Chưa có ảnh nào. Thêm ảnh đầu tiên nhé!</div>'; return; }
   box.innerHTML = '<div class="vid-grid">' + list.map(function(x){
     const k=x[0], r=x[1]||{};
+    phCache[k] = {title: r.title||'', del: r.del||''};
     return '<div class="vid-card">'
       + '<a href="'+esc(r.img)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+esc(r.img)+'" alt="" style="width:100%;display:block;aspect-ratio:16/10;object-fit:cover;background:#000"></a>'
       + '<div class="vid-info"><h3>'+esc(r.title)+'</h3>'
       + '<div class="meta"><small>'+fmtTime(r.time)+'</small>'
+      + '<button class="del" onclick="editPhoto(\''+k+'\')">Sửa tên</button>'
       + '<button class="del" onclick="delPhoto(\''+k+'\')">Xóa</button>'
       + '</div></div></div>';
   }).join('') + '</div>';
 }
 
 function delPhoto(key){
-  if(!confirm('Xóa ảnh này khỏi web? (file gốc vẫn còn trong kho Cloudinary)')) return;
-  db.ref('photos/'+key).remove()
-    .catch(function(e){ alert('Không xóa được: '+e.message); });
+  if(!confirm('Xóa ảnh này khỏi web VÀ khỏi kho Cloudinary?')) return;
+  const rec = phCache[key] || {};
+  cloudDelete(rec.del || '').then(function(){
+    db.ref('photos/'+key).remove()
+      .catch(function(e){ alert('Không xóa được: '+e.message); });
+  });
+}
+
+function editPhoto(key){
+  const cur = (phCache[key] && phCache[key].title) || '';
+  const name = prompt('Tên ảnh mới:', cur);
+  if(name === null) return;
+  const t = name.trim();
+  if(!t){ alert('Tên không được để trống!'); return; }
+  if(t === cur) return;
+  db.ref('photos/'+key+'/title').set(t)
+    .catch(function(e){ alert('Không sửa được: '+e.message); });
 }
 
 function toggleShowPhotos(on){
@@ -542,8 +570,8 @@ function addPhoto(){
   if(f && f.size > PH_MAX_MB*1024*1024){ err.textContent = 'Ảnh quá lớn! Tối đa '+PH_MAX_MB+'MB'; return; }
   const btn = document.getElementById('phBtn');
   btn.disabled = true; btn.textContent = 'Đang thêm...';
-  function save(img){
-    db.ref('photos').push({title:title, img:img, time:Date.now()}).then(function(){
+  function save(img, del){
+    db.ref('photos').push({title:title, img:img, del:del||'', time:Date.now()}).then(function(){
       document.getElementById('phTitle').value = '';
       document.getElementById('phImg').value = '';
       fi.value = '';
@@ -553,13 +581,14 @@ function addPhoto(){
       btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
     });
   }
-  if(!f){ save(imgUrl); return; }
+  if(!f){ save(imgUrl,''); return; }
   const fd = new FormData();
   fd.append('file', f);
   fd.append('upload_preset', UPLOAD_PRESET);
+  fd.append('return_delete_token', 'true');
   fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload', {method:'POST', body:fd})
     .then(function(r){ if(!r.ok) throw new Error('http-'+r.status); return r.json(); })
-    .then(function(r){ save(r.secure_url); })
+    .then(function(r){ save(r.secure_url, r.delete_token||''); })
     .catch(function(){ err.textContent = 'Tải ảnh thất bại! Kiểm tra Cloud name + Preset.'; btn.disabled=false; btn.innerHTML=IC_ADD+' Thêm'; });
 }
 
