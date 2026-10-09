@@ -6,7 +6,6 @@ dist_app/
 *.spec
 *.mp4
 backups/
-My website/
 serviceAccount.json
 deploy_config.json
 __pycache__/

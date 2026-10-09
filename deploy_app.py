@@ -20,7 +20,7 @@ REPO_DIR = r"D:\Opencode Project"
 SITE_URL = "https://acceleratorares.vercel.app/"
 EXTRA_FILES = ["admin.html", "avatar.jpg", "shop-logo.jpg"]
 SRC_DIR = os.path.dirname(DEFAULT_HTML)
-VERSION = "v3.0"
+VERSION = "v3.2"
 CONFIG = os.path.join(REPO_DIR, "deploy_config.json")
 FB_API_KEY = "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw"
 FB_DB_URL = "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app"
@@ -149,6 +149,16 @@ class App:
                              relief="flat", pady=12, cursor="hand2",
                              command=self.start)
         self.btn.pack(fill="x", padx=14, pady=(8, 4))
+        fr2 = tk.Frame(tab1, bg=BG)
+        fr2.pack(fill="x", padx=14, pady=(0, 4))
+        tk.Button(fr2, text="DEPLOY TRANG CHÍNH", font=("Segoe UI", 10, "bold"),
+                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
+                  relief="flat", padx=10, pady=8, cursor="hand2",
+                  command=lambda: self.start_one("Acceleratorares.html", "trang chính")).pack(side="left", fill="x", expand=True, padx=(0, 4))
+        tk.Button(fr2, text="DEPLOY TRANG ADMIN", font=("Segoe UI", 10, "bold"),
+                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
+                  relief="flat", padx=10, pady=8, cursor="hand2",
+                  command=lambda: self.start_one("admin.html", "trang admin")).pack(side="left", fill="x", expand=True, padx=(4, 0))
         tk.Checkbutton(tab1, text="Tự động sao lưu trước khi deploy / khôi phục",
                        variable=self.auto_var, command=self.save_auto,
                        font=("Segoe UI", 10), bg=BG, fg=TXT,
@@ -420,8 +430,41 @@ class App:
         self.log.configure(state="disabled")
         threading.Thread(target=self.deploy, daemon=True).start()
 
-    def push_and_deploy(self, note):
-        code, out = run("git add -A", REPO_DIR)
+    def start_one(self, fname, label):
+        if self.busy:
+            return
+        if not os.path.exists(os.path.join(REPO_DIR, fname)):
+            messagebox.showerror("Loi", "Khong tim thay file:\n" + fname)
+            return
+        self.set_state(True, "Đang deploy " + label + "...", GOLD)
+        self.set_prog(5)
+        self.log.configure(state="normal")
+        self.log.delete("1.0", "end")
+        self.log.configure(state="disabled")
+        threading.Thread(target=self.deploy_one, args=(fname, label), daemon=True).start()
+
+    def deploy_one(self, fname, label):
+        try:
+            self.maybe_auto_backup()
+            self.write("[1/2] Chi deploy " + label + " (" + fname + "), khong copy de file...")
+            self.set_prog(30)
+            self.write("[2/2] Luu GitHub...")
+            if not self.push_and_deploy((self.msg.get().strip() or "Cap nhat ") + label, [fname]):
+                return self.done(False)
+            self.write("[4/4] XONG! Web da cap nhat:")
+            self.write("  " + SITE_URL)
+            webbrowser.open(SITE_URL + "?v=new")
+            self.done(True)
+            threading.Thread(target=self.load_hist, daemon=True).start()
+        except Exception as e:
+            self.write("LOI: " + str(e))
+            self.done(False)
+
+    def push_and_deploy(self, note, files=None):
+        if files:
+            code, out = run("git add " + " ".join(files), REPO_DIR)
+        else:
+            code, out = run("git add -A", REPO_DIR)
         code, out = run('git commit -m "' + note.replace('"', '') + '"', REPO_DIR)
         line = out.strip().splitlines()
         self.write("  " + (line[0] if line else "khong co gi moi"))
@@ -445,13 +488,19 @@ class App:
             self.maybe_auto_backup()
             self.write("[1/4] Copy file...")
             _dst = os.path.join(REPO_DIR, "Acceleratorares.html")
-            if os.path.abspath(self.html_file) != os.path.abspath(_dst):
-                shutil.copy2(self.html_file, _dst)
-            self.write("  + " + os.path.basename(self.html_file) + "  →  Acceleratorares.html")
+            try:
+                if os.path.normcase(os.path.abspath(self.html_file)) != os.path.normcase(os.path.abspath(_dst)):
+                    shutil.copy2(self.html_file, _dst)
+                    self.write("  + " + os.path.basename(self.html_file) + "  →  Acceleratorares.html")
+                else:
+                    self.write("  (file nguồn chính là file web, bỏ qua copy)")
+            except OSError as e:
+                self.write("  (bỏ qua copy: " + str(e) + ")")
             for f in EXTRA_FILES:
                 src = os.path.join(SRC_DIR, f)
-                if os.path.exists(src):
-                    shutil.copy2(src, os.path.join(REPO_DIR, f))
+                dst = os.path.join(REPO_DIR, f)
+                if os.path.exists(src) and os.path.normcase(os.path.abspath(src)) != os.path.normcase(os.path.abspath(dst)):
+                    shutil.copy2(src, dst)
                     self.write("  + " + f)
             self.set_prog(30)
             self.write("[2/4] Luu GitHub...")
