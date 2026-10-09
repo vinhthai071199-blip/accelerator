@@ -474,7 +474,6 @@ function uploadVideo(){
     const fd = new FormData();
     fd.append('file', f);
     fd.append('upload_preset', UPLOAD_PRESET);
-    fd.append('return_delete_token', 'true');
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/video/upload');
     xhr.upload.onprogress = function(e){
@@ -492,7 +491,9 @@ function uploadVideo(){
         });
       } else if(tries<3){ setTimeout(function(){ upOne(); },1500); }
       else {
-        err.textContent = 'Tải thất bại (mã '+xhr.status+'). Kiểm tra Cloud name + Preset!';
+        let msg = 'mã '+xhr.status;
+        try{ const b = JSON.parse(xhr.responseText); if(b && b.error && b.error.message) msg = b.error.message; }catch(e){}
+        err.textContent = 'Tải thất bại ('+msg+')!';
         btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
       }
     };
@@ -689,10 +690,9 @@ function addPhoto(){
   const fd = new FormData();
   fd.append('file', f);
   fd.append('upload_preset', UPLOAD_PRESET);
-  fd.append('return_delete_token', 'true');
   fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload', {method:'POST', body:fd})
     .then(function(r){ if(!r.ok) throw new Error('http-'+r.status); return r.json(); })
-    .then(function(r){ save(r.secure_url, r.delete_token||''); })
+    .then(function(r){ save(r.secure_url, (r.delete_token||'')); })
     .catch(function(){ err.textContent = 'Tải ảnh thất bại! Kiểm tra Cloud name + Preset.'; btn.disabled=false; btn.innerHTML=IC_ADD+' Thêm'; });
 }
 
