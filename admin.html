@@ -128,7 +128,6 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   <div class="up-wrap">
     <div class="up-row">
       <input type="text" id="upTitle" placeholder="Tên video...">
-      <select id="vidCat" data-sec="videos"><option value="">— Không nhóm —</option></select>
       <input type="file" id="upFile" accept="video/*" style="display:none" onchange="if(this.files[0])uploadVideo()">
       <button class="btn solid" id="upBtn" onclick="document.getElementById('upFile').click()"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Tải lên</button>
     </div>
@@ -157,7 +156,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="up-row">
       <input type="text" id="lkTitle" placeholder="Tên link...">
       <input type="text" id="lkUrl" placeholder="Link https://...">
-      <select id="lkCat" data-sec="links"><option value="">— Không nhóm —</option></select>
+      <button class="btn solid" id="lkBtn" onclick="addLink()">
       <button class="btn solid" id="lkBtn" onclick="addLink()"><svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Thêm</button>
     </div>
     <div class="err" id="lkErr" style="text-align:left"></div>
@@ -184,7 +183,6 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="up-row">
       <input type="text" id="phTitle" placeholder="Tên ảnh...">
       <input type="text" id="phImg" placeholder="Link ảnh (nếu có sẵn)...">
-      <select id="phCat" data-sec="photos"><option value="">— Không nhóm —</option></select>
       <input type="file" id="phFile" accept="image/*" style="display:none" onchange="if(this.files[0])addPhoto()">
       <button class="btn solid" id="phBtn" onclick="addPhoto()"><svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Thêm</button>
     </div>
@@ -436,7 +434,7 @@ function upCatbox(f,title,btn,prog,bar,err){
     xhr.onload = function(){
       if(xhr.status===200 && xhr.responseText.indexOf('https://')===0){
         done(true, function(){
-          db.ref('videos').push({title:title, url:xhr.responseText.trim(), public_id:'', host:'catbox', cat:document.getElementById('vidCat').value, size:f.size, time:Date.now()}).then(function(){
+          db.ref('videos').push({title:title, url:xhr.responseText.trim(), public_id:'', host:'catbox', cat:document.getElementById('vidCatSel').value, size:f.size, time:Date.now()}).then(function(){
             document.getElementById('upTitle').value = '';
             prog.style.display = 'none';
             btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
@@ -484,7 +482,7 @@ function uploadVideo(){
         let r = {};
         try{ r = JSON.parse(xhr.responseText); }catch(e){}
         if(!r.secure_url && tries<3){ setTimeout(function(){ upOne(); },1500); return; }
-        db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', del:r.delete_token||'', cat:document.getElementById('vidCat').value, size:f.size, time:Date.now()}).then(function(){
+        db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', del:r.delete_token||'', cat:document.getElementById('vidCatSel').value, size:f.size, time:Date.now()}).then(function(){
           document.getElementById('upTitle').value = '';
           prog.style.display = 'none';
           btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
@@ -603,7 +601,7 @@ function addLink(){
   if(!url || !/^https?:\/\//i.test(url)){ err.textContent = 'Link phải bắt đầu bằng http:// hoặc https://'; return; }
   const btn = document.getElementById('lkBtn');
   btn.disabled = true; btn.textContent = 'Đang thêm...';
-  db.ref('links').push({title:title, url:url, cat:document.getElementById('lkCat').value, time:Date.now()}).then(function(){
+  db.ref('links').push({title:title, url:url, cat:document.getElementById('lkCatSel').value, time:Date.now()}).then(function(){
     document.getElementById('lkTitle').value = '';
     document.getElementById('lkUrl').value = '';
     btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
@@ -676,7 +674,7 @@ function addPhoto(){
   const btn = document.getElementById('phBtn');
   btn.disabled = true; btn.textContent = 'Đang thêm...';
   function save(img, del){
-    db.ref('photos').push({title:title, img:img, del:del||'', cat:document.getElementById('phCat').value, time:Date.now()}).then(function(){
+    db.ref('photos').push({title:title, img:img, del:del||'', cat:document.getElementById('phCatSel').value, time:Date.now()}).then(function(){
       document.getElementById('phTitle').value = '';
       document.getElementById('phImg').value = '';
       fi.value = '';
