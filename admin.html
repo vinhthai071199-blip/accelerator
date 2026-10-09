@@ -16,6 +16,8 @@ a{color:inherit}
 label{display:block;font-size:12px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#c9c9d1;margin:14px 0 7px}
 input{width:100%;padding:13px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#fff;font-size:14px;outline:none}
 input:focus{border-color:rgba(255,255,255,.55)}
+select{width:100%;padding:13px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.14);background:#10131a;color:#fff;font-size:14px;outline:none}
+.up-row select{flex:1;min-width:180px;width:auto}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:6px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none}
 .btn:hover{background:rgba(255,255,255,.06)}
 .btn.solid{background:#e9e9f0;color:#0d0a14;border:none}
@@ -117,7 +119,16 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   </div>
   <div class="up-wrap">
     <div class="up-row">
+      <select id="vidCatSel" data-sec="videos"></select>
+      <button class="btn" onclick="addCat('videos','vidCatSel')">Tạo nhóm</button>
+      <button class="btn" onclick="renameCat('videos','vidCatSel','videos')">Đổi tên</button>
+      <button class="btn" onclick="delCat('videos','vidCatSel','videos')">Xóa nhóm</button>
+    </div>
+  </div>
+  <div class="up-wrap">
+    <div class="up-row">
       <input type="text" id="upTitle" placeholder="Tên video...">
+      <select id="vidCat" data-sec="videos"><option value="">— Không nhóm —</option></select>
       <input type="file" id="upFile" accept="video/*" style="display:none" onchange="if(this.files[0])uploadVideo()">
       <button class="btn solid" id="upBtn" onclick="document.getElementById('upFile').click()"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Tải lên</button>
     </div>
@@ -136,8 +147,17 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   </div>
   <div class="up-wrap">
     <div class="up-row">
+      <select id="lkCatSel" data-sec="links"></select>
+      <button class="btn" onclick="addCat('links','lkCatSel')">Tạo nhóm</button>
+      <button class="btn" onclick="renameCat('links','lkCatSel','links')">Đổi tên</button>
+      <button class="btn" onclick="delCat('links','lkCatSel','links')">Xóa nhóm</button>
+    </div>
+  </div>
+  <div class="up-wrap">
+    <div class="up-row">
       <input type="text" id="lkTitle" placeholder="Tên link...">
       <input type="text" id="lkUrl" placeholder="Link https://...">
+      <select id="lkCat" data-sec="links"><option value="">— Không nhóm —</option></select>
       <button class="btn solid" id="lkBtn" onclick="addLink()"><svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Thêm</button>
     </div>
     <div class="err" id="lkErr" style="text-align:left"></div>
@@ -154,8 +174,17 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   </div>
   <div class="up-wrap">
     <div class="up-row">
+      <select id="phCatSel" data-sec="photos"></select>
+      <button class="btn" onclick="addCat('photos','phCatSel')">Tạo nhóm</button>
+      <button class="btn" onclick="renameCat('photos','phCatSel','photos')">Đổi tên</button>
+      <button class="btn" onclick="delCat('photos','phCatSel','photos')">Xóa nhóm</button>
+    </div>
+  </div>
+  <div class="up-wrap">
+    <div class="up-row">
       <input type="text" id="phTitle" placeholder="Tên ảnh...">
       <input type="text" id="phImg" placeholder="Link ảnh (nếu có sẵn)...">
+      <select id="phCat" data-sec="photos"><option value="">— Không nhóm —</option></select>
       <input type="file" id="phFile" accept="image/*" style="display:none" onchange="if(this.files[0])addPhoto()">
       <button class="btn solid" id="phBtn" onclick="addPhoto()"><svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Thêm</button>
     </div>
@@ -190,6 +219,69 @@ const IC_ADD = '<svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12"
 let fbUnsub = null, rqUnsub = null, vdUnsub = null, stUnsub = null, lkUnsub = null, slUnsub = null, phUnsub = null, spUnsub = null;
 let vdCache = {};
 let phCache = {};
+let catCache = {videos:{}, links:{}, photos:{}};
+let catUnsub = {};
+
+function catNameOf(r){ return (typeof r==='string') ? (r||'') : ((r&&r.name)||''); }
+function fillCatSels(sec, v){
+  catCache[sec] = v || {};
+  const names = Object.values(catCache[sec]).map(catNameOf).filter(function(n){ return n; }).sort();
+  document.querySelectorAll('select[data-sec="'+sec+'"]').forEach(function(sel){
+    const cur = sel.value;
+    const pick = sel.getAttribute('data-pick');
+    sel.innerHTML = '<option value="">— Không nhóm —</option>' + names.map(function(n){ return '<option value="'+esc(n)+'">'+esc(n)+'</option>'; }).join('');
+    let want = '';
+    if(pick && names.indexOf(pick)!==-1){ want = pick; sel.removeAttribute('data-pick'); }
+    else if(names.indexOf(cur)!==-1){ want = cur; }
+    sel.value = want;
+  });
+}
+function findCatId(sec, name){
+  const all = catCache[sec] || {};
+  for(const id of Object.keys(all)){ if(catNameOf(all[id])===name) return id; }
+  return null;
+}
+function addCat(sec, selId){
+  const name = (prompt('Tên nhóm mới:','')||'').trim();
+  if(!name) return;
+  if(findCatId(sec, name)){ alert('Nhóm này đã có!'); return; }
+  document.getElementById(selId).setAttribute('data-pick', name);
+  db.ref('cats/'+sec).push({name:name})
+    .catch(function(e){ alert('Không tạo được: '+e.message); });
+}
+function renameCat(sec, selId, node){
+  const old = document.getElementById(selId).value;
+  if(!old){ alert('Chọn nhóm cần đổi tên!'); return; }
+  const name = (prompt('Tên mới cho "'+old+'":', old)||'').trim();
+  if(!name || name===old) return;
+  if(findCatId(sec, name)){ alert('Tên này đã có!'); return; }
+  const id = findCatId(sec, old);
+  if(!id){ alert('Không tìm thấy nhóm!'); return; }
+  document.getElementById(selId).setAttribute('data-pick', name);
+  db.ref('cats/'+sec+'/'+id).set({name:name}).then(function(){
+    return db.ref(node).once('value');
+  }).then(function(s){
+    const up = {};
+    Object.entries(s.val()||{}).forEach(function([k,r]){ if(((r||{}).cat||'')===old) up[k+'/cat'] = name; });
+    if(Object.keys(up).length) return db.ref(node).update(up);
+  }).catch(function(e){ alert('Không đổi được: '+e.message); });
+}
+function delCat(sec, selId, node){
+  const old = document.getElementById(selId).value;
+  if(!old){ alert('Chọn nhóm cần xóa!'); return; }
+  if(!confirm('Xóa nhóm "'+old+'"? Các mục trong nhóm sẽ về Không nhóm.')) return;
+  const id = findCatId(sec, old);
+  const go = function(){
+    return db.ref(node).once('value').then(function(s){
+      const up = {};
+      Object.entries(s.val()||{}).forEach(function([k,r]){ if(((r||{}).cat||'')===old) up[k+'/cat'] = ''; });
+      const p = Object.keys(up).length ? db.ref(node).update(up) : Promise.resolve();
+      return p.then(function(){ document.getElementById(selId).value = ''; });
+    });
+  };
+  if(id){ db.ref('cats/'+sec+'/'+id).remove().then(go).catch(function(e){ alert('Không xóa được: '+e.message); }); }
+  else go().catch(function(e){ alert('Không xóa được: '+e.message); });
+}
 const MAX_MB = 200;
 const CL_MAX = 100*1024*1024;
 
@@ -261,6 +353,9 @@ function startListeners(){
   spUnsub = db.ref('settings/showPhotos').on('value',
     s => { document.getElementById('showPhotos').checked = s.val() !== false; },
     () => { document.getElementById('showPhotos').checked = true; });
+  ['videos','links','photos'].forEach(function(sec){
+    catUnsub[sec] = db.ref('cats/'+sec).on('value', function(s){ fillCatSels(sec, s.val()); });
+  });
 }
 function stopListeners(){
   if(fbUnsub){ db.ref('feedback').off('value', fbUnsub); fbUnsub=null; }
@@ -271,6 +366,9 @@ function stopListeners(){
   if(slUnsub){ db.ref('settings/showLinks').off('value', slUnsub); slUnsub=null; }
   if(phUnsub){ db.ref('photos').off('value', phUnsub); phUnsub=null; }
   if(spUnsub){ db.ref('settings/showPhotos').off('value', spUnsub); spUnsub=null; }
+  ['videos','links','photos'].forEach(function(sec){
+    if(catUnsub[sec]){ db.ref('cats/'+sec).off('value', catUnsub[sec]); catUnsub[sec]=null; }
+  });
 }
 function delItem(node, key){
   if(!confirm('Xóa mục này vĩnh viễn?')) return;
@@ -300,9 +398,11 @@ function renderVd(list){
       + (poster ? '<img class="vid-poster" loading="lazy" src="'+esc(poster)+'" alt="">' : '')
       + '<div class="vid-play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
       + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div></div>'
-      + '<div class="vid-info"><h3>'+esc(r.title)+'</h3>'
-      + '<div class="meta"><small>'+fmtTime(r.time)+'</small>'
-      + '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener">Tải xuống</a>'
+          + '<div class="vid-info">'
+          + (r.cat?'<span class="tag">'+esc(r.cat)+'</span> ':'')
+          + '<h3>'+esc(r.title)+'</h3>'
+          + '<div class="meta"><small>'+fmtTime(r.time)+'</small>'
+          + '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener">Tải xuống</a>'
       + '<button class="del" onclick="editVideo(\''+k+'\')">Sửa tên</button>'
       + '<button class="del" onclick="delVideo(\''+k+'\')">Xóa</button>'
       + '</div></div></div>';
@@ -336,7 +436,7 @@ function upCatbox(f,title,btn,prog,bar,err){
     xhr.onload = function(){
       if(xhr.status===200 && xhr.responseText.indexOf('https://')===0){
         done(true, function(){
-          db.ref('videos').push({title:title, url:xhr.responseText.trim(), public_id:'', host:'catbox', size:f.size, time:Date.now()}).then(function(){
+          db.ref('videos').push({title:title, url:xhr.responseText.trim(), public_id:'', host:'catbox', cat:document.getElementById('vidCat').value, size:f.size, time:Date.now()}).then(function(){
             document.getElementById('upTitle').value = '';
             prog.style.display = 'none';
             btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
@@ -385,7 +485,7 @@ function uploadVideo(){
         let r = {};
         try{ r = JSON.parse(xhr.responseText); }catch(e){}
         if(!r.secure_url && tries<3){ setTimeout(function(){ upOne(); },1500); return; }
-        db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', del:r.delete_token||'', size:f.size, time:Date.now()}).then(function(){
+        db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', del:r.delete_token||'', cat:document.getElementById('vidCat').value, size:f.size, time:Date.now()}).then(function(){
           document.getElementById('upTitle').value = '';
           prog.style.display = 'none';
           btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
@@ -477,7 +577,9 @@ function renderLk(list){
   box.innerHTML = list.map(function(x){
     const k=x[0], r=x[1]||{};
     return '<div class="item"><div class="head">'
-      + '<div><span class="who">'+esc(r.title)+'</span></div>'
+      + '<div><span class="who">'+esc(r.title)+'</span>'
+      + (r.cat?'<span class="tag">'+esc(r.cat)+'</span>':'')
+      + '</div>'
       + '<div style="display:flex;gap:10px;align-items:center">'
       + '<a class="del" style="text-decoration:none" href="'+esc(r.url)+'" target="_blank" rel="noopener">Mở</a>'
       + '<button class="del" onclick="delLink(\''+k+'\')">Xóa</button>'
@@ -500,7 +602,7 @@ function addLink(){
   if(!url || !/^https?:\/\//i.test(url)){ err.textContent = 'Link phải bắt đầu bằng http:// hoặc https://'; return; }
   const btn = document.getElementById('lkBtn');
   btn.disabled = true; btn.textContent = 'Đang thêm...';
-  db.ref('links').push({title:title, url:url, time:Date.now()}).then(function(){
+  db.ref('links').push({title:title, url:url, cat:document.getElementById('lkCat').value, time:Date.now()}).then(function(){
     document.getElementById('lkTitle').value = '';
     document.getElementById('lkUrl').value = '';
     btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
@@ -520,7 +622,9 @@ function renderPh(list){
     phCache[k] = {title: r.title||'', del: r.del||''};
     return '<div class="vid-card">'
       + '<a href="'+esc(r.img)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+esc(r.img)+'" alt="" style="width:100%;display:block;aspect-ratio:16/10;object-fit:cover;background:#000"></a>'
-      + '<div class="vid-info"><h3>'+esc(r.title)+'</h3>'
+      + '<div class="vid-info">'
+      + (r.cat?'<span class="tag">'+esc(r.cat)+'</span> ':'')
+      + '<h3>'+esc(r.title)+'</h3>'
       + '<div class="meta"><small>'+fmtTime(r.time)+'</small>'
       + '<button class="del" onclick="editPhoto(\''+k+'\')">Sửa tên</button>'
       + '<button class="del" onclick="delPhoto(\''+k+'\')">Xóa</button>'
@@ -571,7 +675,7 @@ function addPhoto(){
   const btn = document.getElementById('phBtn');
   btn.disabled = true; btn.textContent = 'Đang thêm...';
   function save(img, del){
-    db.ref('photos').push({title:title, img:img, del:del||'', time:Date.now()}).then(function(){
+    db.ref('photos').push({title:title, img:img, del:del||'', cat:document.getElementById('phCat').value, time:Date.now()}).then(function(){
       document.getElementById('phTitle').value = '';
       document.getElementById('phImg').value = '';
       fi.value = '';
