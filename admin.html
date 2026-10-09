@@ -8,46 +8,46 @@
 <link rel="icon" type="image/jpeg" href="avatar.jpg">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0c10;color:#e8e4da;min-height:100vh;padding:24px 5% 60px}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#000;color:#fff;min-height:100vh;padding:24px 5% 60px}
 a{color:inherit}
 .login-wrap{max-width:380px;margin:12vh auto 0;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:34px 28px}
 .login-wrap h1{font-size:20px;margin-bottom:22px;text-align:center;letter-spacing:1px}
-.login-wrap h1 em{color:#c8a864;font-style:normal}
-label{display:block;font-size:12px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#9a937f;margin:14px 0 7px}
+.login-wrap h1 em{color:#ffffff;font-style:normal}
+label{display:block;font-size:12px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#c9c9d1;margin:14px 0 7px}
 input{width:100%;padding:13px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#fff;font-size:14px;outline:none}
-input:focus{border-color:rgba(200,168,100,.55)}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:6px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#e8e4da;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none}
+input:focus{border-color:rgba(255,255,255,.55)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:6px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none}
 .btn:hover{background:rgba(255,255,255,.06)}
-.btn.solid{background:linear-gradient(135deg,#e0c078,#c8a864);color:#0a0c10;border:none}
+.btn.solid{background:#e9e9f0;color:#0d0a14;border:none}
 .btn.solid:hover{box-shadow:0 6px 18px rgba(0,0,0,.5)}
 .ic{width:1.05em;height:1.05em;vertical-align:-0.16em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .btn.full{width:100%;justify-content:center;margin-top:20px}
-.err{color:#ff8080;font-size:13px;margin-top:14px;text-align:center;min-height:18px}
+.err{color:#f87171;font-size:13px;margin-top:14px;text-align:center;min-height:18px}
 .topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:26px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.08)}
 .topbar .brand{font-size:17px;font-weight:700;letter-spacing:.5px}
-.topbar .brand em{color:#c8a864;font-style:normal}
+.topbar .brand em{color:#ffffff;font-style:normal}
 .topbar .actions{display:flex;gap:10px}
 .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:26px}
 .stat{flex:1;min-width:140px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px 18px}
-.stat b{display:block;font-size:26px;color:#c8a864}
-.stat span{font-size:12.5px;color:#9a937f;letter-spacing:.5px}
+.stat b{display:block;font-size:26px;color:#ffffff}
+.stat span{font-size:12.5px;color:#c9c9d1;letter-spacing:.5px}
 h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px}
 .item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:15px 18px;margin-bottom:11px}
 .item .head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
 .item .who{font-weight:600;font-size:14.5px}
-.item .when{color:#7c7567;font-size:12px}
-.stars{color:#c8a864;font-size:14px;letter-spacing:2px}
-.item p{margin-top:8px;font-size:13.5px;line-height:1.65;color:#cfc9bb;word-break:break-word}
-.item .tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:3px;background:rgba(200,168,100,.14);color:#c8a864;margin-left:8px;vertical-align:middle}
-.del{padding:6px 13px;border-radius:5px;border:1px solid rgba(255,120,120,.35);background:transparent;color:#ff9090;font-size:12.5px;cursor:pointer}
-.del:hover{background:rgba(255,120,120,.12)}
-.empty{color:#5c574c;font-size:13.5px;padding:22px 0;text-align:center}
+.item .when{color:#a9a9b2;font-size:12px}
+.stars{color:#ffffff;font-size:14px;letter-spacing:2px}
+.item p{margin-top:8px;font-size:13.5px;line-height:1.65;color:#e6e6ea;word-break:break-word}
+.item .tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:3px;background:rgba(255,255,255,.14);color:#ffffff;margin-left:8px;vertical-align:middle}
+.del{padding:6px 13px;border-radius:5px;border:1px solid rgba(248,113,113,.35);background:transparent;color:#f87171;font-size:12.5px;cursor:pointer}
+.del:hover{background:rgba(248,113,113,.12)}
+.empty{color:#8a8a93;font-size:13.5px;padding:22px 0;text-align:center}
 .up-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:20px;margin-bottom:16px}
 .up-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .up-row input[type=text]{flex:1;min-width:180px}
 .up-row input[type=file]{padding:10px;font-size:12.5px}
 .prog{height:8px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:12px;overflow:hidden;display:none}
-.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c8a864,#8a6d3b)}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffffff,#8b5cf6)}
 .live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8fd694}
 .live i{width:8px;height:8px;border-radius:50%;background:#4caf6d;display:inline-block}
 /* ===== THE VIDEO GIONG TRANG CHINH ===== */
@@ -56,15 +56,15 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 .vid-facade{aspect-ratio:16/9;background:#000;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
 .vid-facade::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45)}
 .vid-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.vid-play{width:56px;height:56px;border-radius:50%;background:rgba(10,12,16,.45);border:none;color:#e0c078;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
+.vid-play{width:56px;height:56px;border-radius:50%;background:rgba(10,12,16,.45);border:none;color:#ffffff;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
 .vid-play svg{width:22px;height:22px;fill:currentColor;margin-left:3px}
-.vid-note{color:#9a9388;font-size:12px;position:relative;z-index:1}
+.vid-note{color:#c9c9d1;font-size:12px;position:relative;z-index:1}
 .vid-card video{width:100%;display:block;aspect-ratio:16/9;background:#000}
 .vid-info{padding:14px 16px 18px}
 .vid-info h3{font-size:14.5px;font-weight:600;margin-bottom:10px;line-height:1.4;word-break:break-word}
 .vid-info .meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.vid-info .meta small{color:#7c7567;font-size:12px}
-.vid-dl{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:999px;background:#c8a864;color:#0a0c10;font-size:12px;font-weight:700;text-decoration:none}
+.vid-info .meta small{color:#a9a9b2;font-size:12px}
+.vid-dl{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:999px;background:#e9e9f0;color:#0d0a14;font-size:12px;font-weight:700;text-decoration:none}
 @media(max-width:600px){.login-wrap{margin-top:8vh}.topbar{flex-direction:column;align-items:flex-start}}
 </style>
 </head>
@@ -108,8 +108,8 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 
   <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15 10 9" fill="currentColor" stroke="none"/></svg> Video của tôi</h2>
   <div class="up-wrap">
-    <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#e8e4da;margin:0;cursor:pointer">
-      <input type="checkbox" id="showVideos" style="width:18px;height:18px;accent-color:#c8a864" onchange="toggleShowVideos(this.checked)">
+    <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
+      <input type="checkbox" id="showVideos" style="width:18px;height:18px;accent-color:#ffffff" onchange="toggleShowVideos(this.checked)">
       Hiện mục Video trên trang chính
     </label>
     <div class="err" id="showErr" style="text-align:left"></div>
@@ -127,8 +127,8 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 
   <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Link & ảnh</h2>
   <div class="up-wrap">
-    <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#e8e4da;margin:0;cursor:pointer">
-      <input type="checkbox" id="showLinks" style="width:18px;height:18px;accent-color:#c8a864" onchange="toggleShowLinks(this.checked)">
+    <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
+      <input type="checkbox" id="showLinks" style="width:18px;height:18px;accent-color:#ffffff" onchange="toggleShowLinks(this.checked)">
       Hiện mục Links trên trang chính
     </label>
     <div class="err" id="showLkErr" style="text-align:left"></div>
