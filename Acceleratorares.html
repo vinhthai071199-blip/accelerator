@@ -3,9 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AcceleratorAres</title>
+<title>AcceleratorAres — Bio &amp; Nạp game WuWa, Genshin, Honkai Star Rail</title>
+<meta name="description" content="Bio chính thức của Ares. Nạp game WuWa, Genshin Impact, Honkai Star Rail giá rẻ — nhanh chóng, uy tín. Xem video, liên kết và hình ảnh.">
+<meta name="theme-color" content="#000000">
+<link rel="canonical" href="https://acceleratorares.vercel.app/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AcceleratorAres">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:title" content="AcceleratorAres — Bio &amp; Nạp game giá rẻ">
+<meta property="og:description" content="Nạp game WuWa, Genshin Impact, Honkai Star Rail giá rẻ — nhanh chóng, uy tín.">
+<meta property="og:url" content="https://acceleratorares.vercel.app/">
+<meta property="og:image" content="https://acceleratorares.vercel.app/avatar.jpg">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:image:alt" content="Avatar AcceleratorAres">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AcceleratorAres — Bio &amp; Nạp game giá rẻ">
+<meta name="twitter:description" content="Nạp game WuWa, Genshin Impact, Honkai Star Rail giá rẻ — nhanh chóng, uy tín.">
+<meta name="twitter:image" content="https://acceleratorares.vercel.app/avatar.jpg">
+
 <link rel="icon" type="image/jpeg" href="avatar.jpg">
 <link rel="apple-touch-icon" href="avatar.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+<link rel="dns-prefetch" href="https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -21,11 +46,10 @@ body{background:#000;color:#fff;font-family:'Poppins',sans-serif;overflow-x:hidd
 
 /* ===== NAV ===== */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:16px;padding:20px 6%;transition:.45s cubic-bezier(.22,1,.36,1)}
-.nav-links{margin-left:auto}
 nav.scrolled{background:rgba(17,20,27,.94);border-bottom:1px solid rgba(255,255,255,.22);padding:12px 6%;box-shadow:0 14px 44px rgba(0,0,0,.45)}
 .logo{display:flex;align-items:center}
 .logo .logo-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;display:block;border:2px solid rgba(255,255,255,.75);box-shadow:0 0 0 4px rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.5)}
-.nav-links{display:flex;gap:10px}
+.nav-links{margin-left:auto;display:flex;gap:10px}
 .btn{padding:11px 24px;border-radius:999px;border:1px solid rgba(255,255,255,.45);background:transparent;color:#d8d8e0;font-size:12px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:.35s cubic-bezier(.22,1,.36,1);display:inline-flex;align-items:center;gap:7px;position:relative;overflow:hidden}
 .btn::after{content:'';position:absolute;top:0;left:0;width:55%;height:100%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.25),transparent);transform:translateX(-180%) skewX(-18deg);transition:transform .75s cubic-bezier(.22,1,.36,1);pointer-events:none}
 .btn:hover{background:rgba(255,255,255,.12);transform:translateY(-2px);border-color:rgba(255,255,255,.85);box-shadow:0 8px 20px rgba(0,0,0,.45)}
@@ -65,12 +89,13 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 .vid-card{border-radius:16px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.09);box-shadow:0 14px 40px rgba(0,0,0,.4);transition:.45s cubic-bezier(.22,1,.36,1)}
 .vid-card:hover{transform:translateY(-8px);border-color:rgba(255,255,255,.5);box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.18)}
 .vid-card video{width:100%;display:block;aspect-ratio:16/9;background:#000}
-.vid-facade{aspect-ratio:16/9;background:#000;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
+.vid-facade{aspect-ratio:16/9;background:#000;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;width:100%;border:0;padding:0;font:inherit;color:inherit}
 .vid-facade::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45)}
 .vid-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.vid-play{position:relative;z-index:1}
-.vid-play{width:64px;height:64px;border-radius:50%;background:rgba(10,12,16,.45);border:none;color:#ffffff;display:flex;align-items:center;justify-content:center}
+.vid-play{position:relative;z-index:1;width:64px;height:64px;border-radius:50%;background:rgba(10,12,16,.45);border:none;color:#ffffff;display:flex;align-items:center;justify-content:center}
 .vid-play svg{width:26px;height:26px;fill:currentColor;margin-left:3px}
+.vid-facade:focus-visible{outline:3px solid #fff;outline-offset:-3px}
+.menu-btn:focus-visible,.mp-x:focus-visible,.chip:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .vid-note{color:#c9c9d1;font-size:12px;position:relative;z-index:1}
 .vid-info{padding:18px 20px 22px}
 .vid-info h3{font-size:16px;font-weight:600;margin-bottom:12px;line-height:1.4;word-break:break-word}
@@ -78,7 +103,7 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 .vid-info .meta small{color:#a9a9b2;font-size:12px}
 .vid-dl{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:999px;background:#e9e9f0;color:#0d0a14;font-size:12px;font-weight:700;text-decoration:none;transition:.3s;box-shadow:0 4px 14px rgba(0,0,0,.45)}
 .vid-dl:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.5)}
-.vid-empty{grid-column:1/-1;text-align:center;color:#8a8a93;padding:40px 0;font-size:14px}
+.vid-empty{grid-column:1/-1;text-align:center;color:#a5a5b0;padding:40px 0;font-size:14px}
 
 /* ===== LINKS & ẢNH ===== */
 .link-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:24px}
@@ -88,7 +113,7 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 .link-info{padding:14px 16px 18px}
 .link-info h3{font-size:14.5px;font-weight:600;margin-bottom:12px;line-height:1.4;word-break:break-word}
 .link-info .meta{display:flex;justify-content:flex-end}
-.link-empty{grid-column:1/-1;text-align:center;color:#8a8a93;padding:40px 0;font-size:14px}
+.link-empty{grid-column:1/-1;text-align:center;color:#a5a5b0;padding:40px 0;font-size:14px}
 
 /* ===== NHOM CON (LOC) ===== */
 .cat-bar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:-14px auto 30px;max-width:1200px}
@@ -139,12 +164,23 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
   section{padding:60px 4%}
   .sec-title h2{font-size:21px}
   .vid-grid{grid-template-columns:1fr;gap:18px}
-}
-@media(max-width:760px){
   html,body{overflow-x:hidden}
   body{width:100%;max-width:100vw}
   img{max-width:100%}
 }
+
+/* ===== FOOTER ===== */
+footer{max-width:1200px;margin:0 auto;padding:44px 5% 56px;text-align:center;border-top:1px solid rgba(255,255,255,.1)}
+footer .ft-logo{display:flex;justify-content:center;margin-bottom:14px}
+footer .ft-logo img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.7)}
+footer .ft-name{font-family:'Playfair Display',serif;font-size:19px;letter-spacing:1px;margin-bottom:12px}
+footer .ft-name em{font-style:normal;color:#ffffff}
+footer .ft-links{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px;font-size:13px}
+footer .ft-links a{color:#c9c9d1;text-decoration:none;transition:.3s}
+footer .ft-links a:hover{color:#fff;text-decoration:underline}
+footer .ft-links span{color:#5a5a66}
+footer .ft-copy{color:#8a8a93;font-size:12px}
+@media(max-width:760px){footer{padding:34px 4% 44px}}
 </style>
 </head>
 <body>
@@ -153,8 +189,8 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 
 <!-- NAV -->
 <nav id="navbar">
-  <button class="menu-btn" id="menuBtn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
-  <div class="logo"><img class="logo-avatar" src="avatar.jpg" alt="avatar"></div>
+  <button class="menu-btn" id="menuBtn" onclick="toggleMenu()" aria-label="Menu" aria-expanded="false" aria-controls="menuPanel"><span></span><span></span><span></span></button>
+  <div class="logo"><img class="logo-avatar" src="avatar.jpg" width="42" height="42" alt="Avatar AcceleratorAres"></div>
   <div class="nav-links">
     <a class="btn" href="#shop">Shop</a>
     <a class="btn" href="#videos">Video</a>
@@ -163,8 +199,8 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
   </div>
 </nav>
 <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu(false)"></div>
-<div class="menu-panel" id="menuPanel">
-  <div class="mp-head"><img src="avatar.jpg" alt=""><b>Accelerator<em>Ares</em></b><button class="mp-x" onclick="toggleMenu(false)">✕</button></div>
+<div class="menu-panel" id="menuPanel" role="dialog" aria-label="Menu" aria-modal="true">
+  <div class="mp-head"><img src="avatar.jpg" width="46" height="46" alt="Avatar AcceleratorAres"><b>Accelerator<em>Ares</em></b><button class="mp-x" onclick="toggleMenu(false)">✕</button></div>
   <a href="#shop" onclick="toggleMenu(false)">Shop</a>
   <a href="#videos" onclick="toggleMenu(false)">Video</a>
   <a href="#links" onclick="toggleMenu(false)">Links</a>
@@ -173,7 +209,7 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 
 <!-- HEADER -->
 <header>
-  <h1><img class="head-avatar" src="avatar.jpg" alt=""><em>AcceleratorAres</em></h1>
+  <h1><img class="head-avatar" src="avatar.jpg" width="86" height="86" alt="Avatar AcceleratorAres"><em>AcceleratorAres</em></h1>
   <p class="welcome">✦ Chào mừng đến với Bio của Ares ✦</p>
 </header>
 
@@ -181,14 +217,14 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 <section id="shop">
   <div class="sec-title reveal"><div class="bar"></div><h2><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> <em>Teyvat</em> Store</h2></div>
   <div class="shop-card reveal d1">
-    <div class="shop-icon"><img src="shop-logo.jpg" alt="Teyvat Store"></div>
+    <div class="shop-icon"><img src="shop-logo.jpg" width="104" height="104" alt="Logo Teyvat Store"></div>
     <div>
       <h3>Shop WuWa + Mihoyo — Nạp game giá rẻ</h3>
-      <p>Chuyên nạp game WuWa, Genshin, Honkai Star Rail giá rẻ. Nhanh chóng, uy tín. truy cập ngay!</p>
+      <p>Chuyên nạp game WuWa, Genshin, Honkai Star Rail giá rẻ. Nhanh chóng, uy tín — truy cập ngay!</p>
     </div>
     <div class="shop-actions">
-      <a class="btn solid" href="https://teyvatstore.com/" target="_blank"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Vào shop: teyvatstore.com</a>
-      <a class="btn" href="https://www.facebook.com/people/Teyvat-Store/61589322797808/" target="_blank"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Liên hệ CSKH</a>
+      <a class="btn solid" href="https://teyvatstore.com/" target="_blank" rel="noopener noreferrer"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Vào shop: teyvatstore.com</a>
+      <a class="btn" href="https://www.facebook.com/people/Teyvat-Store/61589322797808/" target="_blank" rel="noopener noreferrer"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Liên hệ CSKH</a>
     </div>
   </div>
 </section>
@@ -197,22 +233,38 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 <section id="videos">
   <div class="sec-title reveal"><div class="bar"></div><h2><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15 10 9" fill="currentColor" stroke="none"/></svg> <em>Video</em></h2></div>
   <div class="cat-bar" id="vidCats"></div>
-  <div class="vid-grid reveal d1" id="vidGrid"><div class="vid-empty">Đang tải video...</div></div>
+  <div class="vid-grid reveal d1" id="vidGrid"><div class="vid-empty">Video sẽ tải ở đây. Tải lại trang nếu chưa hiện.</div></div>
 </section>
 
 <!-- ===== MỤC 3: LINKS & ẢNH ===== -->
 <section id="links">
   <div class="sec-title reveal"><div class="bar"></div><h2><svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> <em>Links</em></h2></div>
   <div class="cat-bar" id="linkCats"></div>
-  <div class="link-grid reveal d1" id="linkGrid"><div class="link-empty">Đang tải...</div></div>
+  <div class="link-grid reveal d1" id="linkGrid"><div class="link-empty">Các liên kết sẽ tải ở đây.</div></div>
 </section>
 
 <!-- ===== MỤC 4: ẢNH ===== -->
 <section id="photos">
   <div class="sec-title reveal"><div class="bar"></div><h2><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg> <em>Ảnh</em></h2></div>
   <div class="cat-bar" id="photoCats"></div>
-  <div class="link-grid reveal d1" id="photoGrid"><div class="link-empty">Đang tải...</div></div>
+  <div class="link-grid reveal d1" id="photoGrid"><div class="link-empty">Hình ảnh sẽ tải ở đây.</div></div>
 </section>
+
+<noscript><style>.vid-empty,.link-empty{display:none!important}
+/* ===== FOOTER ===== */
+footer{max-width:1200px;margin:0 auto;padding:44px 5% 56px;text-align:center;border-top:1px solid rgba(255,255,255,.1)}
+footer .ft-logo{display:flex;justify-content:center;margin-bottom:14px}
+footer .ft-logo img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.7)}
+footer .ft-name{font-family:'Playfair Display',serif;font-size:19px;letter-spacing:1px;margin-bottom:12px}
+footer .ft-name em{font-style:normal;color:#ffffff}
+footer .ft-links{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px;font-size:13px}
+footer .ft-links a{color:#c9c9d1;text-decoration:none;transition:.3s}
+footer .ft-links a:hover{color:#fff;text-decoration:underline}
+footer .ft-links span{color:#5a5a66}
+footer .ft-copy{color:#8a8a93;font-size:12px}
+@media(max-width:760px){footer{padding:34px 4% 44px}}
+</style>
+<p style="text-align:center;color:#c9c9d1;font-size:14px;padding:20px 5%">Vui long bat JavaScript de xem muc Video, Links va Anh.</p></noscript>
 
 <script>
 /* ============ NAV SCROLL ============ */
@@ -229,7 +281,18 @@ function toggleMenu(force){
   p.classList.toggle('open', open);
   b.classList.toggle('open', open);
   o.classList.toggle('open', open);
+  b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if(open){
+    const first = p.querySelector('a,button');
+    if(first) first.focus();
+  } else if(document.activeElement && p.contains(document.activeElement)){
+    b.focus();
+  }
 }
+document.addEventListener('keydown', function(e){
+  const p = document.getElementById('menuPanel');
+  if(e.key === 'Escape' && p.classList.contains('open')) toggleMenu(false);
+});
 
 /* ============ REVEAL ============ */
 const io = new IntersectionObserver(es=>{
@@ -278,12 +341,26 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "732539981440",
   appId: "1:732539981440:web:84403c072905d8afcd6065"
 };
-function fbLoad(src){
+/* Cloudinary cloud name — phai trung voi admin.html de poster hoat dong.
+   Do lai o day khi doi tai khoan luu video. */
+const CLOUD_NAME = "ck9gvbcq";
+/* Load Firebase 1 lan duy nhat, dung chung cho moi muc.
+   Trc day moi ham init* tu goi fbLoad => inject trung script nhieu lan. */
+let fbReady = null;
+function loadScript(src){
   return new Promise((res,rej)=>{
     const s = document.createElement('script');
     s.src = src; s.onload = res; s.onerror = rej;
     document.head.appendChild(s);
   });
+}
+function ensureFb(){
+  if(!fbReady) fbReady = (async ()=>{
+    await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  })();
+  return fbReady;
 }
 function esc(s){ const d=document.createElement('div'); d.textContent=(s==null?'':String(s)); return d.innerHTML; }
 function fmtSize(b){
@@ -297,9 +374,12 @@ function dlUrl(u){
   if(u.indexOf('fl_attachment')!==-1) return u;
   return u.replace('/upload/','/upload/fl_attachment/');
 }
-function posterUrl(pid){
-  if(!pid) return '';
-  return 'https://res.cloudinary.com/ck9gvbcq/video/upload/so_0,w_640/'+pid+'.jpg';
+function posterUrl(r){
+  if(!r) return '';
+  /* uu tien poster luu san trong DB, khong co moi suy tu public_id */
+  if(r.poster) return r.poster;
+  if(!r.public_id) return '';
+  return 'https://res.cloudinary.com/'+CLOUD_NAME+'/video/upload/so_0,w_640/'+r.public_id+'.jpg';
 }
 function loadVid(el){
   var url = el.getAttribute('data-url');
@@ -310,38 +390,38 @@ function loadVid(el){
   if(poster) v.poster = poster;
   v.style.cssText = 'width:100%;display:block;aspect-ratio:16/9;background:#000';
   el.parentNode.replaceChild(v, el);
+  v.muted = true; /* trinh duyet chan autoplay neu video co tieng */
   var p = v.play(); if(p && p.catch) p.catch(function(){});
 }
 async function initVideos(){
   const box = document.getElementById('vidGrid');
   if(!box) return; // muc video dang an
   try{
-    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
-    if(!firebase.apps.length){ firebase.initializeApp(FIREBASE_CONFIG); }
+    await ensureFb();
     firebase.database().ref('videos').on('value', function(s){
       const v = s.val();
       if(!v){ box.innerHTML = '<div class="vid-empty">Chưa có video nào.</div>'; renderCatBar('vidCats','videos',[]); return; }
       const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
-      box.innerHTML = list.map(function(v){
+      const vis = list.filter(function(o){ return !((o[1]||{}).hidden); });
+      box.innerHTML = vis.map(function(v){
         const r = v[1]||{};
         const dl = dlUrl(r.url);
-        const poster = posterUrl(r.public_id);
+        const poster = posterUrl(r);
         const cat = ((r.cat||'').trim());
         return '<div class="vid-card" data-cat="'+esc(cat)+'">'
-          + '<div class="vid-facade" data-url="'+esc(r.url)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)">'
-          + (poster ? '<img class="vid-poster" loading="lazy" src="'+esc(poster)+'" alt="">' : '')
+          + '<button type="button" class="vid-facade" data-url="'+esc(r.url)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)" aria-label="Phat video: '+esc(r.title)+'">'
+          + (poster ? '<img class="vid-poster" loading="lazy" src="'+esc(poster)+'" alt="'+esc(r.title)+'">' : '')
           + '<div class="vid-play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
           + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div>'
-          + '</div>'
+          + '</button>'
           + '<div class="vid-info">'
           + (cat?'<span class="cat-tag">'+esc(cat)+'</span>':'')
           + '<h3>'+esc(r.title)+'</h3>'
           + '<div class="meta"><small>'+fmtSize(r.size)+'</small>'
-          + '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener">Tải xuống</a>'
+          + '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener noreferrer">Tải xuống</a>'
           + '</div></div></div>';
       }).join('');
-        renderCatBar('vidCats','videos',list); applyCatFilter('videos');
+        renderCatBar('vidCats','videos',vis); applyCatFilter('videos');
     }, function(){ box.innerHTML = '<div class="vid-empty">Không tải được video.</div>'; });
   }catch(e){ box.innerHTML = '<div class="vid-empty">Không tải được video.</div>'; }
 }
@@ -354,13 +434,7 @@ function applyVideoVisibility(show){
 }
 async function initVideoVisibility(){
   try{
-    if(typeof firebase === 'undefined'){
-      await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-      await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
-      firebase.initializeApp(FIREBASE_CONFIG);
-    } else if(!firebase.apps.length){
-      firebase.initializeApp(FIREBASE_CONFIG);
-    }
+    await ensureFb();
     firebase.database().ref('settings/showVideos').on('value', function(s){
       applyVideoVisibility(s.val() !== false);
     });
@@ -375,13 +449,6 @@ function applyLinksVisibility(show){
     .concat(Array.from(document.querySelectorAll('a[href="#links"]')));
   els.forEach(function(el){ if(el) el.style.display = show ? '' : 'none'; });
 }
-async function ensureFb(){
-  if(typeof firebase === 'undefined'){
-    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-    await fbLoad('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
-  }
-  if(!firebase.apps.length){ firebase.initializeApp(FIREBASE_CONFIG); }
-}
 async function initLinks(){
   const box = document.getElementById('linkGrid');
   if(!box) return;
@@ -391,17 +458,18 @@ async function initLinks(){
       const v = s.val();
       if(!v){ box.innerHTML = '<div class="link-empty">Chưa có link nào.</div>'; renderCatBar('linkCats','links',[]); return; }
       const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
-      box.innerHTML = list.map(function(x){
+      const visL = list.filter(function(o){ return !((o[1]||{}).hidden); });
+      box.innerHTML = visL.map(function(x){
         const r = x[1]||{};
         const cat = ((r.cat||'').trim());
         return '<div class="link-card" data-cat="'+esc(cat)+'">'
           + '<div class="link-info"><div class="link-ic"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>'
           + (cat?'<span class="cat-tag">'+esc(cat)+'</span>':'')
           + '<h3>'+esc(r.title)+'</h3>'
-          + '<div class="meta"><a class="vid-dl" href="'+esc(r.url)+'" target="_blank" rel="noopener">Mở link</a></div>'
+          + '<div class="meta"><a class="vid-dl" href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer">Mở link</a></div>'
           + '</div></div>';
       }).join('');
-      renderCatBar('linkCats','links',list); applyCatFilter('links');
+        renderCatBar('linkCats','links',visL); applyCatFilter('links');
     }, function(){ box.innerHTML = '<div class="link-empty">Không tải được.</div>'; });
   }catch(e){ box.innerHTML = '<div class="link-empty">Không tải được.</div>'; }
 }
@@ -425,17 +493,18 @@ async function initPhotos(){
       const v = s.val();
       if(!v){ box.innerHTML = '<div class="link-empty">Chưa có ảnh nào.</div>'; renderCatBar('photoCats','photos',[]); return; }
       const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
-      box.innerHTML = list.map(function(x){
+      const visP = list.filter(function(o){ return !((o[1]||{}).hidden); });
+      box.innerHTML = visP.map(function(x){
         const r = x[1]||{};
         const cat = ((r.cat||'').trim());
         return '<div class="link-card" data-cat="'+esc(cat)+'">'
-          + '<a href="'+esc(r.img)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+esc(r.img)+'" alt=""></a>'
+          + '<a href="'+esc(r.img)+'" target="_blank" rel="noopener noreferrer"><img loading="lazy" src="'+esc(r.img)+'" width="400" height="250" alt="'+esc(r.title)+'"></a>'
           + '<div class="link-info">'
           + (cat?'<span class="cat-tag">'+esc(cat)+'</span>':'')
           + '<h3>'+esc(r.title)+'</h3></div>'
           + '</div>';
       }).join('');
-      renderCatBar('photoCats','photos',list); applyCatFilter('photos');
+      renderCatBar('photoCats','photos',visP); applyCatFilter('photos');
     }, function(){ box.innerHTML = '<div class="link-empty">Không tải được.</div>'; });
   }catch(e){ box.innerHTML = '<div class="link-empty">Không tải được.</div>'; }
 }
@@ -482,6 +551,26 @@ function applyCatFilter(sec){
     card.style.display = (!catFilter[sec] || (card.getAttribute('data-cat')||'')===catFilter[sec]) ? '' : 'none';
   });
 }
+/* ============ FOOTER NAM ============ */
+(function(){
+  var y = document.getElementById('ftYear');
+  if(y) y.textContent = new Date().getFullYear();
+})();
 </script>
+
+<footer>
+  <div class="ft-logo"><img src="avatar.jpg" width="42" height="42" alt="Avatar AcceleratorAres"></div>
+  <p class="ft-name">Accelerator<em>Ares</em></p>
+  <p class="ft-links">
+    <a href="https://teyvatstore.com/" target="_blank" rel="noopener noreferrer">Teyvat Store</a>
+    <span aria-hidden="true">&middot;</span>
+    <a href="#videos">Video</a>
+    <span aria-hidden="true">&middot;</span>
+    <a href="#links">Links</a>
+    <span aria-hidden="true">&middot;</span>
+    <a href="#photos">Anh</a>
+  </p>
+  <p class="ft-copy">&copy; <span id="ftYear"></span> AcceleratorAres. All rights reserved.</p>
+</footer>
 </body>
 </html>
