@@ -1,0 +1,102 @@
+/* YT local server — chay tren may nha, admin.html goi sang.
+   GET  /ping          -> {ok:true} (admin dung de biet may co bat khong)
+   POST /dl {url, token} -> tai YouTube bang yt-dlp, up Cloudinary,
+                            tra ve {url, public_id, del, bytes}
+   Chi nghe 127.0.0.1 (may nha), co token chong nguoi la bam nut. */
+const http = require('http');
+const { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
+const ROOT = __dirname;
+const CFG_PATH = path.join(ROOT, 'config.json');
+const DL_DIR = path.join(ROOT, 'dl');
+if (!fs.existsSync(DL_DIR)) fs.mkdirSync(DL_DIR, { recursive: true });
+
+let cfg = {};
+try { cfg = JSON.parse(fs.readFileSync(CFG_PATH, 'utf8')); } catch (e) { cfg = {}; }
+if (!cfg.token) cfg.token = crypto.randomBytes(24).toString('hex');
+cfg.port = cfg.port || 8799;
+cfg.ytdlp = cfg.ytdlp || path.join(ROOT, '..', 'tools', 'yt-dlp.exe');
+cfg.ffmpeg = cfg.ffmpeg || path.join(ROOT, '..', 'tools', 'ffmpeg.exe');
+cfg.cloud = cfg.cloud || 'ck9gvbcq';
+cfg.preset = cfg.preset || 'web_upload';
+fs.writeFileSync(CFG_PATH, JSON.stringify(cfg, null, 2));
+
+function cors(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Private-Network', 'true');
+}
+function send(res, code, obj) {
+  cors(res);
+  res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify(obj));
+}
+function run(cmd, args) {
+  return new Promise((resolve, reject) => {
+    const p = spawn(cmd, args, { windowsHide: true });
+    let out = '', err = '';
+    p.stdout.on('data', d => { out += d; });
+    p.stderr.on('data', d => { err += d; });
+    p.on('error', reject);
+    p.on('close', code => code === 0 ? resolve({ out, err }) : reject(new Error(err.slice(-2000) || ('exit ' + code))));
+  });
+}
+
+let busy = false;
+const server = http.createServer((req, res) => {
+  if (req.method === 'OPTIONS') { cors(res); res.writeHead(204); res.end(); return; }
+  const u = new URL(req.url, 'http://x');
+  if (req.method === 'GET' && u.pathname === '/ping') return send(res, 200, { ok: true, busy });
+  if (req.method === 'POST' && u.pathname === '/dl') {
+    let body = '';
+    req.on('data', c => { body += c; if (body.length > 1e6) req.destroy(); });
+    req.on('end', async () => {
+      try {
+        const j = JSON.parse(body || '{}');
+        if (j.token !== cfg.token) return send(res, 403, { error: 'sai token (mo start-yt.bat xem token moi)' });
+        if (busy) return send(res, 409, { error: 'may dang tai video khac, doi chut roi bam lai' });
+        const url = String(j.url || '');
+        if (!/^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(url)) return send(res, 400, { error: 'khong phai link youtube' });
+        busy = true;
+        try {
+          const fmt = (/^[A-Za-z0-9_*+\/()[\].\-=,:? ]{1,120}$/.test(String(j.format || '')) && j.format) || 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b';
+          const tpl = path.join(DL_DIR, Date.now() + '.%(title).60s [%(id)s].%(ext)s');
+          const baseArgs = ['-f', fmt, '--merge-output-format', 'mp4',
+            '--ffmpeg-location', cfg.ffmpeg, '-o', tpl, '--no-playlist', '--retries', '3',
+            '--print', 'after_move:filepath', url];
+          let r1;
+          try { r1 = await run(cfg.ytdlp, baseArgs); }
+          catch (e1) {
+            /* Luot 2: doi sang android client (vuot kiem tra bot / SABR) */
+            r1 = await run(cfg.ytdlp, ['--extractor-args', 'youtube:player_client=android'].concat(baseArgs));
+          }
+          const fp = r1.out.trim().split(/\r?\n/).pop();
+          const st = fs.statSync(fp);
+          if (st.size > 100 * 1024 * 1024) {
+            busy = false;
+            return send(res, 413, { error: 'file ' + Math.round(st.size / 1048576) + 'MB vuot 100MB Cloudinary! File nam o yt-server/dl, up tay Drive/Catbox nhe' });
+          }
+          const r2 = await run('curl.exe', ['-sS', '-X', 'POST',
+            'https://api.cloudinary.com/v1_1/' + cfg.cloud + '/video/upload',
+            '-F', 'file=@' + fp, '-F', 'upload_preset=' + cfg.preset]);
+          let up = {};
+          try { up = JSON.parse(r2.out); } catch (e) { throw new Error('cloudinary tra ve la: ' + r2.out.slice(0, 200)); }
+          if (!up.secure_url) throw new Error((up.error && up.error.message) || 'cloudinary tu choi');
+          try { fs.unlinkSync(fp); } catch (e) {}
+          busy = false;
+          return send(res, 200, { ok: true, url: up.secure_url, public_id: up.public_id || '', del: up.delete_token || '', bytes: up.bytes || st.size });
+        } catch (e) { busy = false; return send(res, 500, { error: String((e && e.message) || e).slice(0, 300) }); }
+      } catch (e) { return send(res, 400, { error: 'sai du lieu' }); }
+    });
+    return;
+  }
+  send(res, 404, { error: 'not found' });
+});
+server.listen(cfg.port, '127.0.0.1', () => {
+  console.log('YT server chay o http://127.0.0.1:' + cfg.port + ' (tat cua so nay = tat server)');
+  console.log('TOKEN nhap 1 lan trong admin: ' + cfg.token);
+});

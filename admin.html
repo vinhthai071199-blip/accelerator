@@ -530,6 +530,7 @@ function ytRender(){
     + (ytInfo.dur?'<span class="tag">'+esc(ytDur(ytInfo.dur))+'</span>':'')
     + '</div><div style="display:flex;gap:10px;align-items:center">'
     + '<a class="del" style="text-decoration:none" href="'+esc(watch)+'" target="_blank" rel="noopener">Mở</a>'
+    + '<button class="del" id="ytSrvBtn" style="display:none" onclick="ytServer()">Tải bằng máy nhà</button>'
     + '<button class="del" onclick="ytSaveLink()">Lưu link</button>'
     + '</div></div>'
     + '<p><a href="'+esc(watch)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+esc(ytInfo.thumb)+'" alt="" style="width:100%;max-width:420px;display:block;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:6px"></a></p>';
@@ -552,8 +553,9 @@ function ytRender(){
   } else {
     h += '<p>Cầu nối file YouTube đang bận nên chưa tải trực tiếp được — bấm Lưu link để giữ lại, lúc khác quay lại lấy file sau.</p>';
   }
-  h += '</div>';
+  h += '<p id="ytSrvNote" style="color:#a9a9b2;font-size:12.5px"></p></div>';
   prev.innerHTML = h;
+  ytPing();
 }
 function ytDl(i){
   const f = ytMuxed[i];
@@ -603,6 +605,53 @@ function ytSaveLink(){
   }).catch(function(e){
     err.textContent = 'Không lưu được ('+(e.code||'')+'). Kiểm tra Rules rồi Publish.';
   });
+}
+
+/* ============ YOUTUBE QUA MAY NHA (yt-server) ============
+   Admin goi http://127.0.0.1:8799 tren chinh may cua ban: tai bang
+   yt-dlp + ffmpeg, up Cloudinary, tra link ve de admin tu ghi Firebase.
+   May nha tat thi nut tu an (ytPing), khong bao gio treo. */
+const YT_SRV = 'http://127.0.0.1:8799';
+let ytSrvOn = false;
+async function ytPing(){
+  try{
+    const r = await fetch(YT_SRV+'/ping');
+    ytSrvOn = !!(r.ok && (await r.json()).ok);
+  }catch(e){ ytSrvOn = false; }
+  const b = document.getElementById('ytSrvBtn');
+  if(b) b.style.display = ytSrvOn ? '' : 'none';
+  const n = document.getElementById('ytSrvNote');
+  if(n) n.textContent = ytSrvOn ? 'Máy nhà đang bật — bấm "Tải bằng máy nhà" để tải chất lượng cao, tự up Cloudinary + đăng Video.'
+    : 'Muốn tải chất lượng cao không phụ thuộc cầu nối: chạy yt-server/start-yt.bat trên máy nhà rồi bấm Lấy thông tin lại.';
+}
+async function ytServer(){
+  const err = document.getElementById('ytErr');
+  err.textContent = '';
+  if(!ytInfo) return;
+  let tok = '';
+  try{ tok = localStorage.getItem('ytSrvToken') || ''; }catch(e){}
+  if(!tok){
+    tok = (prompt('Nhập TOKEN hiện trong cửa sổ start-yt.bat (chỉ hỏi 1 lần):','')||'').trim();
+    if(!tok) return;
+    try{ localStorage.setItem('ytSrvToken', tok); }catch(e){}
+  }
+  if(!confirm('Tải "'+ytInfo.title+'" bằng máy nhà (chất lượng cao, có tiếng) rồi up Cloudinary + đăng vào mục Video?')) return;
+  err.textContent = 'Máy nhà đang tải... (giữ cửa sổ server mở, video dài chờ vài phút)';
+  try{
+    const r = await (await fetch(YT_SRV+'/dl', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:'https://www.youtube.com/watch?v='+ytInfo.id, token:tok})})).json();
+    if(r.error){
+      if(/token/i.test(r.error)){ try{ localStorage.removeItem('ytSrvToken'); }catch(e){} }
+      throw new Error(r.error);
+    }
+    await db.ref('videos').push({title:ytInfo.title, url:r.url, public_id:r.public_id||'', del:r.del||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
+    document.getElementById('ytUrl').value = '';
+    document.getElementById('ytPrev').innerHTML = '';
+    ytInfo = null; ytMuxed = []; ytVidOnly = []; ytAud = [];
+    err.textContent = 'Xong! Video đã vào mục Video.';
+  }catch(e){
+    err.textContent = 'Máy nhà báo lỗi: '+(e.message||'không nối được — kiểm tra start-yt.bat có đang chạy không');
+  }
 }
 
 function dlUrl(u){
