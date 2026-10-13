@@ -466,6 +466,8 @@ function uploadVideo(){
 const YT_BRIDGE = 'https://invidious.f5.si';
 let ytInfo = null;
 let ytMuxed = [];
+let ytVidOnly = [];
+let ytAud = [];
 function ytId(u){
   u = (u||'').trim();
   let m = u.match(/[?&]v=([A-Za-z0-9_-]{11})/);
@@ -487,7 +489,7 @@ async function ytFetch(){
   const prev = document.getElementById('ytPrev');
   const btn = document.getElementById('ytBtn');
   err.textContent = '';
-  ytInfo = null; ytMuxed = [];
+  ytInfo = null; ytMuxed = []; ytVidOnly = []; ytAud = [];
   const id = ytId(document.getElementById('ytUrl').value);
   if(!id){ err.textContent = 'Link YouTube không hợp lệ! Dán link watch / youtu.be / shorts.'; return; }
   const watch = 'https://www.youtube.com/watch?v='+id;
@@ -499,6 +501,10 @@ async function ytFetch(){
     const th = (r.videoThumbnails||[]).find(function(t){ return t.quality==='sddefault'; })||{};
     ytInfo = {id:id, title:r.title||id, author:r.author||'', dur:r.lengthSeconds||0, thumb:th.url||('https://i.ytimg.com/vi/'+id+'/hqdefault.jpg')};
     ytMuxed = (r.formatStreams||[]).filter(function(f){ return f && f.url; });
+    const ad = r.adaptiveFormats||[];
+    ytVidOnly = ad.filter(function(f){ return f && f.url && (f.type||'').indexOf('video/mp4')===0; }).slice(0,3);
+    ytAud = ad.filter(function(f){ return f && f.url && (f.type||'').indexOf('audio/mp4')===0; }).slice(0,1);
+    if(!ytAud.length) ytAud = ad.filter(function(f){ return f && f.url && (f.type||'').indexOf('audio/')===0; }).slice(0,1);
   }catch(e){
     try{
       const n = await (await fetch('https://noembed.com/embed?url='+encodeURIComponent(watch))).json();
@@ -533,6 +539,16 @@ function ytRender(){
         + '<button class="del" onclick="ytDl('+i+')">Tải về máy</button>'
         + '<button class="del" onclick="ytCloud('+i+')">Up lên Cloudinary</button></p>';
     }).join('');
+  } else if(ytVidOnly.length || ytAud.length){
+    h += '<p style="margin-top:10px">YouTube không cho file gộp lúc này — tải bản lẻ (về ghép lại hoặc up riêng):</p>'
+    + ytVidOnly.map(function(f,i){
+      return '<p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag">'+esc(String(f.qualityLabel||f.itag||''))+' (chỉ hình, không tiếng)</span>'
+        + '<button class="del" onclick="ytSplit(\'v\','+i+')">Tải bản hình</button></p>';
+    }).join('')
+    + ytAud.map(function(f,i){
+      return '<p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag">Tiếng (.m4a)</span>'
+        + '<button class="del" onclick="ytSplit(\'a\','+i+')">Tải bản tiếng</button></p>';
+    }).join('');
   } else {
     h += '<p>Cầu nối file YouTube đang bận nên chưa tải trực tiếp được — bấm Lưu link để giữ lại, lúc khác quay lại lấy file sau.</p>';
   }
@@ -541,6 +557,13 @@ function ytRender(){
 }
 function ytDl(i){
   const f = ytMuxed[i];
+  if(!f || !f.url) return;
+  const a = document.createElement('a');
+  a.href = f.url; a.target = '_blank'; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function ytSplit(kind, i){
+  const f = (kind==='a' ? ytAud : ytVidOnly)[i];
   if(!f || !f.url) return;
   const a = document.createElement('a');
   a.href = f.url; a.target = '_blank'; a.rel = 'noopener';
@@ -562,7 +585,7 @@ async function ytCloud(i){
     await db.ref('videos').push({title:ytInfo.title, url:r.secure_url, public_id:r.public_id||'', del:r.delete_token||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
     document.getElementById('ytUrl').value = '';
     document.getElementById('ytPrev').innerHTML = '';
-    ytInfo = null; ytMuxed = [];
+    ytInfo = null; ytMuxed = []; ytVidOnly = []; ytAud = [];
     err.textContent = 'Xong! Video đã vào mục Video.';
   }catch(e){
     err.textContent = 'Cloudinary không tải được link này ('+(e.message||'lỗi mạng')+'). Bấm "Tải về máy" rồi dùng nút Tải lên ở trên nhé!';
@@ -575,7 +598,7 @@ function ytSaveLink(){
   db.ref('links').push({title:ytInfo.title, url:'https://www.youtube.com/watch?v='+ytInfo.id, cat:(document.getElementById('lkCatSel')||{}).value||'', time:Date.now()}).then(function(){
     document.getElementById('ytUrl').value = '';
     document.getElementById('ytPrev').innerHTML = '';
-    ytInfo = null; ytMuxed = [];
+    ytInfo = null; ytMuxed = []; ytVidOnly = []; ytAud = [];
     err.textContent = 'Đã lưu vào mục Links.';
   }).catch(function(e){
     err.textContent = 'Không lưu được ('+(e.code||'')+'). Kiểm tra Rules rồi Publish.';
