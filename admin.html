@@ -469,9 +469,6 @@ function uploadVideo(){
    tai ngay, khong thi bao ro chu khong treo. */
 const YT_BRIDGE = 'https://invidious.f5.si';
 let ytInfo = null;
-let ytMuxed = [];
-let ytVidOnly = [];
-let ytAud = [];
 function ytId(u){
   u = (u||'').trim();
   let m = u.match(/[?&]v=([A-Za-z0-9_-]{11})/);
@@ -493,7 +490,7 @@ async function ytFetch(){
   const prev = document.getElementById('ytPrev');
   const btn = document.getElementById('ytBtn');
   err.textContent = '';
-  ytInfo = null; ytMuxed = []; ytVidOnly = []; ytAud = [];
+  ytInfo = null;
   const id = ytId(document.getElementById('ytUrl').value);
   if(!id){ err.textContent = 'Link YouTube không hợp lệ! Dán link watch / youtu.be / shorts.'; return; }
   const watch = 'https://www.youtube.com/watch?v='+id;
@@ -504,17 +501,11 @@ async function ytFetch(){
     if(!r || !r.title) throw new Error('noinfo');
     const th = (r.videoThumbnails||[]).find(function(t){ return t.quality==='sddefault'; })||{};
     ytInfo = {id:id, title:r.title||id, author:r.author||'', dur:r.lengthSeconds||0, thumb:th.url||('https://i.ytimg.com/vi/'+id+'/hqdefault.jpg')};
-    ytMuxed = (r.formatStreams||[]).filter(function(f){ return f && f.url; });
-    const ad = r.adaptiveFormats||[];
-    ytVidOnly = ad.filter(function(f){ return f && f.url && (f.type||'').indexOf('video/mp4')===0; }).slice(0,3);
-    ytAud = ad.filter(function(f){ return f && f.url && (f.type||'').indexOf('audio/mp4')===0; }).slice(0,1);
-    if(!ytAud.length) ytAud = ad.filter(function(f){ return f && f.url && (f.type||'').indexOf('audio/')===0; }).slice(0,1);
   }catch(e){
     try{
       const n = await (await fetch('https://noembed.com/embed?url='+encodeURIComponent(watch))).json();
       if(!n || !n.title) throw new Error('noinfo');
       ytInfo = {id:id, title:n.title, author:n.author_name||'', dur:0, thumb:n.thumbnail_url||('https://i.ytimg.com/vi/'+id+'/hqdefault.jpg')};
-      ytMuxed = [];
     }catch(e2){
       err.textContent = 'Không lấy được thông tin. Kiểm tra lại link hoặc mạng rồi thử lại.';
       prev.innerHTML = '';
@@ -535,80 +526,11 @@ function ytRender(){
     + '</div><div style="display:flex;gap:10px;align-items:center">'
     + '<a class="del" style="text-decoration:none" href="'+esc(watch)+'" target="_blank" rel="noopener">Mở</a>'
     + '<button class="del" id="ytSrvBtn" style="display:none" onclick="ytServer()">Tải bằng máy nhà</button>'
-    + '<button class="del" onclick="ytSaveLink()">Lưu link</button>'
     + '</div></div>'
     + '<p><a href="'+esc(watch)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+esc(ytInfo.thumb)+'" alt="" style="width:100%;max-width:420px;display:block;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:6px"></a></p>';
-  if(ytMuxed.length){
-    h += '<p style="margin-top:10px">File tải ('+ytMuxed.length+' bản, có cả hình + tiếng):</p>' + ytMuxed.map(function(f,i){
-      return '<p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag">'+esc(String(f.qualityLabel||f.itag||''))+'</span>'
-        + '<button class="del" onclick="ytDl('+i+')">Tải về máy</button>'
-        + '<button class="del" onclick="ytCloud('+i+')">Up lên Cloudinary</button></p>';
-    }).join('');
-  } else if(ytVidOnly.length || ytAud.length){
-    h += '<p style="margin-top:10px">YouTube không cho file gộp lúc này — tải bản lẻ (về ghép lại hoặc up riêng):</p>'
-    + ytVidOnly.map(function(f,i){
-      return '<p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag">'+esc(String(f.qualityLabel||f.itag||''))+' (chỉ hình, không tiếng)</span>'
-        + '<button class="del" onclick="ytSplit(\'v\','+i+')">Tải bản hình</button></p>';
-    }).join('')
-    + ytAud.map(function(f,i){
-      return '<p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag">Tiếng (.m4a)</span>'
-        + '<button class="del" onclick="ytSplit(\'a\','+i+')">Tải bản tiếng</button></p>';
-    }).join('');
-  } else {
-    h += '<p>Cầu nối file YouTube đang bận nên chưa tải trực tiếp được — bấm Lưu link để giữ lại, lúc khác quay lại lấy file sau.</p>';
-  }
   h += '<p id="ytSrvNote" style="color:#a9a9b2;font-size:12.5px"></p></div>';
   prev.innerHTML = h;
   ytPing();
-}
-function ytDl(i){
-  const f = ytMuxed[i];
-  if(!f || !f.url) return;
-  const a = document.createElement('a');
-  a.href = f.url; a.target = '_blank'; a.rel = 'noopener';
-  document.body.appendChild(a); a.click(); a.remove();
-}
-function ytSplit(kind, i){
-  const f = (kind==='a' ? ytAud : ytVidOnly)[i];
-  if(!f || !f.url) return;
-  const a = document.createElement('a');
-  a.href = f.url; a.target = '_blank'; a.rel = 'noopener';
-  document.body.appendChild(a); a.click(); a.remove();
-}
-async function ytCloud(i){
-  const err = document.getElementById('ytErr');
-  err.textContent = '';
-  const f = ytMuxed[i];
-  if(!f || !f.url || !ytInfo) return;
-  if(!confirm('Up bản "'+String(f.qualityLabel||f.itag||'')+'" lên Cloudinary rồi đăng vào mục Video? (quá 100MB sẽ bị từ chối)')) return;
-  err.textContent = 'Đang nhờ Cloudinary tải về... (video dài có thể mất vài phút)';
-  try{
-    const fd = new FormData();
-    fd.append('file', f.url);
-    fd.append('upload_preset', UPLOAD_PRESET);
-    const r = await (await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/video/upload', {method:'POST', body:fd})).json();
-    if(!r.secure_url) throw new Error((r.error&&r.error.message)||'unknown');
-    await db.ref('videos').push({title:ytInfo.title, url:r.secure_url, public_id:r.public_id||'', del:r.delete_token||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
-    document.getElementById('ytUrl').value = '';
-    document.getElementById('ytPrev').innerHTML = '';
-    ytInfo = null; ytMuxed = []; ytVidOnly = []; ytAud = [];
-    err.textContent = 'Xong! Video đã vào mục Video.';
-  }catch(e){
-    err.textContent = 'Cloudinary không tải được link này ('+(e.message||'lỗi mạng')+'). Bấm "Tải về máy" rồi dùng nút Tải lên ở trên nhé!';
-  }
-}
-function ytSaveLink(){
-  const err = document.getElementById('ytErr');
-  err.textContent = '';
-  if(!ytInfo) return;
-  db.ref('links').push({title:ytInfo.title, url:'https://www.youtube.com/watch?v='+ytInfo.id, cat:(document.getElementById('lkCatSel')||{}).value||'', time:Date.now()}).then(function(){
-    document.getElementById('ytUrl').value = '';
-    document.getElementById('ytPrev').innerHTML = '';
-    ytInfo = null; ytMuxed = []; ytVidOnly = []; ytAud = [];
-    err.textContent = 'Đã lưu vào mục Links.';
-  }).catch(function(e){
-    err.textContent = 'Không lưu được ('+(e.code||'')+'). Kiểm tra Rules rồi Publish.';
-  });
 }
 
 /* ============ YOUTUBE QUA MAY NHA (yt-server) ============
@@ -650,26 +572,32 @@ async function ytServer(){
   const err = document.getElementById('ytErr');
   err.textContent = '';
   if(!ytInfo) return;
-  let tok = '';
-  try{ tok = localStorage.getItem('ytSrvToken') || ''; }catch(e){}
-  if(!tok){
-    tok = (prompt('Nhập TOKEN hiện trong cửa sổ start-yt.bat (chỉ hỏi 1 lần):','')||'').trim();
-    if(!tok) return;
-    try{ localStorage.setItem('ytSrvToken', tok); }catch(e){}
-  }
   if(!confirm('Tải "'+ytInfo.title+'" bằng máy nhà (chất lượng cao, có tiếng) rồi up Cloudinary + đăng vào mục Video?')) return;
   err.textContent = 'Máy nhà đang tải... (giữ cửa sổ server mở, video dài chờ vài phút)';
-  try{
+  async function callSrv(tok){
     const r = await (await fetch(ytBaseCur+'/dl', {method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({url:'https://www.youtube.com/watch?v='+ytInfo.id, token:tok})})).json();
-    if(r.error){
-      if(/token/i.test(r.error)){ try{ localStorage.removeItem('ytSrvToken'); }catch(e){} }
-      throw new Error(r.error);
+      body:JSON.stringify({url:'https://www.youtube.com/watch?v='+ytInfo.id, token:tok||''})})).json();
+    if(r.error) throw new Error(r.error);
+    return r;
+  }
+  try{
+    let tok = '';
+    try{ tok = localStorage.getItem('ytSrvToken') || ''; }catch(e){}
+    let r;
+    try { r = await callSrv(tok); }
+    catch(e){
+      if(!/token/i.test(e.message||'')) throw e;
+      try{ localStorage.removeItem('ytSrvToken'); }catch(e2){}
+      tok = (prompt('Máy chủ chung cần TOKEN (chỉ hỏi 1 lần — xin chủ máy qua chat rồi dán vào):','')||'').trim();
+      if(!tok) return;
+      try{ localStorage.setItem('ytSrvToken', tok); }catch(e2){}
+      err.textContent = 'Máy nhà đang tải... (giữ cửa sổ server mở, video dài chờ vài phút)';
+      r = await callSrv(tok);
     }
     await db.ref('videos').push({title:ytInfo.title, url:r.url, public_id:r.public_id||'', del:r.del||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
     document.getElementById('ytUrl').value = '';
     document.getElementById('ytPrev').innerHTML = '';
-    ytInfo = null; ytMuxed = []; ytVidOnly = []; ytAud = [];
+    ytInfo = null;
     err.textContent = 'Xong! Video đã vào mục Video.';
   }catch(e){
     err.textContent = 'Máy nhà báo lỗi: '+(e.message||'không nối được — kiểm tra start-yt.bat có đang chạy không');

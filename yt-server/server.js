@@ -22,6 +22,8 @@ cfg.ytdlp = cfg.ytdlp || path.join(ROOT, '..', 'tools', 'yt-dlp.exe');
 cfg.ffmpeg = cfg.ffmpeg || path.join(ROOT, '..', 'tools', 'ffmpeg.exe');
 cfg.cloud = cfg.cloud || 'ck9gvbcq';
 cfg.preset = cfg.preset || 'web_upload';
+cfg.site = cfg.site || 'https://acceleratorares.vercel.app';
+const PORT = process.env.YT_PORT || cfg.port || 8799;
 fs.writeFileSync(CFG_PATH, JSON.stringify(cfg, null, 2));
 
 function cors(res) {
@@ -66,7 +68,16 @@ const server = http.createServer((req, res) => {
     req.on('end', async () => {
       try {
         const j = JSON.parse(body || '{}');
-        if (j.token !== cfg.token) return send(res, 403, { error: 'sai token (mo start-yt.bat xem token moi)' });
+        const viaTunnel = !!(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for']);
+        const origin = String(req.headers.origin || '');
+        const siteOk = origin === '' || origin === cfg.site;
+        /* Tu internet (qua tunnel) bat buoc token. May nha goi thang:
+           token dung, hoac trinh duyet tu trang chinh (Origin), hoac curl tay. */
+        if (viaTunnel) {
+          if (j.token !== cfg.token) return send(res, 403, { error: 'sai token (xin token tu chu may qua chat)' });
+        } else if (j.token !== cfg.token && !siteOk) {
+          return send(res, 403, { error: 'sai token' });
+        }
         if (busy) return send(res, 409, { error: 'may dang tai video khac, doi chut roi bam lai' });
         if (overLimit()) return send(res, 429, { error: 'may nha qua tai (toi da 20 video/gio), doi chut roi bam lai' });
         const url = String(j.url || '');
@@ -117,7 +128,7 @@ const server = http.createServer((req, res) => {
   }
   send(res, 404, { error: 'not found' });
 });
-server.listen(cfg.port, '127.0.0.1', () => {
-  console.log('YT server chay o http://127.0.0.1:' + cfg.port + ' (tat cua so nay = tat server)');
+server.listen(PORT, '127.0.0.1', () => {
+  console.log('YT server chay o http://127.0.0.1:' + PORT + ' (tat cua so nay = tat server)');
   console.log('TOKEN nhap 1 lan trong admin: ' + cfg.token);
 });
