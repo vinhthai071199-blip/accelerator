@@ -133,6 +133,10 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     </div>
     <div class="err" id="ytErr" style="text-align:left"></div>
     <div id="ytPrev"></div>
+    <div class="up-row" style="margin-top:12px">
+      <input type="text" id="ytBase" placeholder="Địa chỉ máy chủ chung (vd https://xxx.trycloudflare.com, để trống = chỉ máy mình)...">
+      <button class="btn" onclick="ytBaseSave()">Lưu máy chủ</button>
+    </div>
   </div>
   <div class="up-wrap" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
@@ -613,16 +617,34 @@ function ytSaveLink(){
    May nha tat thi nut tu an (ytPing), khong bao gio treo. */
 const YT_SRV = 'http://127.0.0.1:8799';
 let ytSrvOn = false;
+let ytBaseCur = YT_SRV;
 async function ytPing(){
+  let base = YT_SRV;
   try{
-    const r = await fetch(YT_SRV+'/ping');
+    const s = await db.ref('settings/ytServerBase').once('value');
+    if(s.val()) base = String(s.val()).replace(/\/+$/,'');
+  }catch(e){}
+  ytBaseCur = base;
+  const bi = document.getElementById('ytBase');
+  if(bi && document.activeElement !== bi) bi.value = (base === YT_SRV ? '' : base);
+  try{
+    const r = await fetch(base+'/ping');
     ytSrvOn = !!(r.ok && (await r.json()).ok);
   }catch(e){ ytSrvOn = false; }
   const b = document.getElementById('ytSrvBtn');
   if(b) b.style.display = ytSrvOn ? '' : 'none';
+  const remote = base !== YT_SRV;
   const n = document.getElementById('ytSrvNote');
-  if(n) n.textContent = ytSrvOn ? 'Máy nhà đang bật — bấm "Tải bằng máy nhà" để tải chất lượng cao, tự up Cloudinary + đăng Video.'
-    : 'Muốn tải chất lượng cao không phụ thuộc cầu nối: chạy yt-server/start-yt.bat trên máy nhà rồi bấm Lấy thông tin lại.';
+  if(n) n.textContent = ytSrvOn ? ('Máy chủ đang bật' + (remote ? ' (máy chủ chung)' : ' (máy này)') + ' — bấm "Tải bằng máy nhà" để tải chất lượng cao, tự up Cloudinary + đăng Video.')
+    : (remote ? 'Không nối được máy chủ chung — kiểm tra địa chỉ + máy chủ có đang chạy không.'
+      : 'Muốn tải chất lượng cao không phụ thuộc cầu nối: chạy yt-server/start-yt.bat trên máy nhà rồi bấm Lấy thông tin lại.');
+}
+function ytBaseSave(){
+  const v = (document.getElementById('ytBase').value || '').trim().replace(/\/+$/,'');
+  if(v && !/^https?:\/\//i.test(v)){ document.getElementById('ytErr').textContent = 'Địa chỉ phải bắt đầu bằng http:// hoặc https://'; return; }
+  document.getElementById('ytErr').textContent = '';
+  db.ref('settings/ytServerBase').set(v).then(function(){ ytPing(); })
+    .catch(function(e){ document.getElementById('ytErr').textContent = 'Không lưu được ('+(e.code||'')+'). Kiểm tra Rules rồi Publish.'; });
 }
 async function ytServer(){
   const err = document.getElementById('ytErr');
@@ -638,7 +660,7 @@ async function ytServer(){
   if(!confirm('Tải "'+ytInfo.title+'" bằng máy nhà (chất lượng cao, có tiếng) rồi up Cloudinary + đăng vào mục Video?')) return;
   err.textContent = 'Máy nhà đang tải... (giữ cửa sổ server mở, video dài chờ vài phút)';
   try{
-    const r = await (await fetch(YT_SRV+'/dl', {method:'POST', headers:{'Content-Type':'application/json'},
+    const r = await (await fetch(ytBaseCur+'/dl', {method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({url:'https://www.youtube.com/watch?v='+ytInfo.id, token:tok})})).json();
     if(r.error){
       if(/token/i.test(r.error)){ try{ localStorage.removeItem('ytSrvToken'); }catch(e){} }

@@ -50,6 +50,12 @@ function run(cmd, args) {
 }
 
 let busy = false;
+const hits = [];
+function overLimit(){
+  const now = Date.now();
+  while (hits.length && now - hits[0] > 3600 * 1000) hits.shift();
+  return hits.length >= 20;
+}
 const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') { cors(res); res.writeHead(204); res.end(); return; }
   const u = new URL(req.url, 'http://x');
@@ -62,9 +68,10 @@ const server = http.createServer((req, res) => {
         const j = JSON.parse(body || '{}');
         if (j.token !== cfg.token) return send(res, 403, { error: 'sai token (mo start-yt.bat xem token moi)' });
         if (busy) return send(res, 409, { error: 'may dang tai video khac, doi chut roi bam lai' });
+        if (overLimit()) return send(res, 429, { error: 'may nha qua tai (toi da 20 video/gio), doi chut roi bam lai' });
         const url = String(j.url || '');
         if (!/^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(url)) return send(res, 400, { error: 'khong phai link youtube' });
-        busy = true;
+        busy = true; hits.push(Date.now());
         try {
           const fmt = (/^[A-Za-z0-9_*+\/()[\].\-=,:? ]{1,120}$/.test(String(j.format || '')) && j.format) || 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b';
           const tpl = path.join(DL_DIR, Date.now() + '.%(title).60s [%(id)s].%(ext)s');
