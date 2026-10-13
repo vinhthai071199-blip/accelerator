@@ -37,7 +37,10 @@ function send(res, code, obj) {
 }
 function run(cmd, args) {
   return new Promise((resolve, reject) => {
-    const p = spawn(cmd, args, { windowsHide: true });
+    /* PYTHONIOENCODING=utf-8: ep yt-dlp in duong dan Unicode ra pipe,
+       khong thi ten co dau/la (vd em dash) se lech -> stat ENOENT */
+    const p = spawn(cmd, args, { windowsHide: true,
+      env: Object.assign({}, process.env, { PYTHONIOENCODING: 'utf-8', PYTHONUTF8: '1' }) });
     let out = '', err = '';
     p.stdout.on('data', d => { out += d; });
     p.stderr.on('data', d => { err += d; });
@@ -74,8 +77,19 @@ const server = http.createServer((req, res) => {
             /* Luot 2: doi sang android client (vuot kiem tra bot / SABR) */
             r1 = await run(cfg.ytdlp, ['--extractor-args', 'youtube:player_client=android'].concat(baseArgs));
           }
-          const fp = r1.out.trim().split(/\r?\n/).pop();
-          const st = fs.statSync(fp);
+          const fp0 = r1.out.trim().split(/\r?\n/).pop();
+          let fp = fp0, st = null;
+          try { st = fs.statSync(fp); } catch (e) { st = null; }
+          if (!st) {
+            /* Du phong: ten in ra lech encoding thi lay file mp4 moi nhat trong dl/ */
+            const cands = fs.readdirSync(DL_DIR).map(function (n) {
+              const p = path.join(DL_DIR, n);
+              try { return { p, m: fs.statSync(p).mtimeMs }; } catch (e) { return null; }
+            }).filter(Boolean).sort((a, b) => b.m - a.m);
+            if (!cands.length || Date.now() - cands[0].m > 15 * 60 * 1000) throw new Error('tai xong nhung khong thay file (bam lai lan nua)');
+            fp = cands[0].p;
+            st = fs.statSync(fp);
+          }
           if (st.size > 100 * 1024 * 1024) {
             busy = false;
             return send(res, 413, { error: 'file ' + Math.round(st.size / 1048576) + 'MB vuot 100MB Cloudinary! File nam o yt-server/dl, up tay Drive/Catbox nhe' });
