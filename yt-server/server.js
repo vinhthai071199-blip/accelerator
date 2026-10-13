@@ -130,5 +130,5 @@ const server = http.createServer((req, res) => {
 });
 server.listen(PORT, '127.0.0.1', () => {
   console.log('YT server chay o http://127.0.0.1:' + PORT + ' (tat cua so nay = tat server)');
-  console.log('TOKEN nhap 1 lan trong admin: ' + cfg.token);
+  console.log('TOKEN gui cho admin O XA nhap 1 lan (may nay dung khong can nhap): ' + cfg.token);
 });
