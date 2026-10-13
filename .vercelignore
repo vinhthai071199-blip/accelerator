@@ -1,0 +1,27 @@
+# Chi upload file web tinh len Vercel.
+# Tools + server chay local + file dev nam local, khong duoc len web.
+tools/
+yt-server/
+node_modules/
+backups/
+build/
+dist_app/
+__pycache__/
+.git/
+.vscode/
+admin1.html
+scan.js
+read_requests.js
+deploy.bat
+deploy_app.py
+deploy_config.json
+package.json
+package-lock.json
+DeployWeb.spec
+*.spec
+*.mp4
+*.exe
+*.zip
+*.rar
+*.7z
+.env*
