@@ -77,7 +77,7 @@ section{padding:64px 5% 92px;scroll-margin-top:90px}
 .shop-card{max-width:1200px;margin:0 auto;border-radius:18px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.35);background:linear-gradient(140deg,rgba(255,255,255,.09),rgba(255,255,255,.03) 42%,rgba(96,116,180,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 24px 70px rgba(0,0,0,.45);display:grid;grid-template-columns:auto 1fr auto;gap:30px;align-items:center;padding:38px;transition:.45s cubic-bezier(.22,1,.36,1)}
 .shop-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#ffffff,transparent)}
 .shop-card:hover{transform:translateY(-5px);box-shadow:0 34px 90px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.3)}
-.shop-card .shop-icon{width:104px;height:104px;border-radius:22px;background:linear-gradient(135deg,#ffffff,#8b5cf6);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.5);overflow:hidden;border:2px solid rgba(255,255,255,.5)}
+.shop-card .shop-icon{width:104px;height:104px;border-radius:22px;background:linear-gradient(135deg,#ffffff,#8e8e96);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.5);overflow:hidden;border:2px solid rgba(255,255,255,.5)}
 .shop-card .shop-icon img{width:100%;height:100%;object-fit:cover;display:block}
 .shop-card h3{font-family:'Playfair Display',serif;font-size:25px;letter-spacing:1px;margin-bottom:7px}
 .shop-card p{color:#c9c9d1;font-size:14px;font-weight:300}
@@ -300,20 +300,22 @@ const io = new IntersectionObserver(es=>{
 },{threshold:.1});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
-/* ============ CHONG RELOAD SPAM: >5 lan/10 giay -> khoa 5 giay ============ */
-(function(){
+/* ============ CHONG SPAM: >8 lan click link ngoai/10 giay -> khoa 5 giay ============
+   Chi dem khi user click link ra ngoai. Truoc day chay ngay khi mo trang,
+   nen chi can mo 6 tab la bi khoa o nghien. */
+function rlGuard(){
   try{
     var KEY='ares_rl', now=Date.now(), arr=[];
     try{ arr=JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ arr=[]; }
     arr=arr.filter(function(t){ return now-t<10000; });
     arr.push(now);
     try{ localStorage.setItem(KEY,JSON.stringify(arr)); }catch(e){}
-    if(arr.length>5){
+    if(arr.length>8){
       document.documentElement.style.overflow='hidden';
       var d=document.createElement('div');
       d.id='rlLock';
       d.style.cssText='position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;text-align:center;padding:20px';
-      d.innerHTML='<svg style="width:44px;height:44px;stroke:#ffffff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><b style="color:#ffffff;font-size:18px">Tải lại quá nhanh!</b><p style="color:#c9c9d1;font-size:14px">Chờ <span id="rlSec">5</span> giây rồi xem tiếp nhé.</p>';
+      d.innerHTML='<svg style="width:44px;height:44px;stroke:#ffffff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><b style="color:#ffffff;font-size:18px">Bạn mở link quá nhanh!</b><p style="color:#c9c9d1;font-size:14px">Chờ <span id="rlSec">5</span> giây rồi thử lại nhé.</p>';
       document.body.appendChild(d);
       var s=5;
       var iv=setInterval(function(){
@@ -329,7 +331,17 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
       },1000);
     }
   }catch(e){}
-})();
+}
+
+/* Chi khoa khi click link ra ngoai (khong phai khi mo trang) */
+document.addEventListener('click', function(e){
+  const a = e.target.closest && e.target.closest('a[href]');
+  if(!a) return;
+  const h = a.getAttribute('href') || '';
+  if(h.charAt(0) === '#') return; // lien ket noi trong
+  if(h.indexOf('javascript:') === 0) return;
+  rlGuard();
+}, true);
 
 /* ============ VIDEO (FIREBASE, ĐỌC CÔNG KHAI) ============ */
 const FIREBASE_CONFIG = {

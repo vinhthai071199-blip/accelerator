@@ -37,8 +37,6 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 .item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:15px 18px;margin-bottom:11px}
 .item .head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
 .item .who{font-weight:600;font-size:14.5px}
-.item .when{color:#a9a9b2;font-size:12px}
-.stars{color:#ffffff;font-size:14px;letter-spacing:2px}
 .item p{margin-top:8px;font-size:13.5px;line-height:1.65;color:#e6e6ea;word-break:break-word}
 .item .tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:3px;background:rgba(255,255,255,.14);color:#ffffff;margin-left:8px;vertical-align:middle}
 .del{padding:6px 13px;border-radius:5px;border:1px solid rgba(248,113,113,.35);background:transparent;color:#f87171;font-size:12.5px;cursor:pointer}
@@ -49,7 +47,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 .up-row input[type=text]{flex:1;min-width:180px}
 .up-row input[type=file]{padding:10px;font-size:12.5px}
 .prog{height:8px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:12px;overflow:hidden;display:none}
-.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffffff,#8b5cf6)}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffffff,#8e8e96)}
 .live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8fd694}
 .live i{width:8px;height:8px;border-radius:50%;background:#4caf6d;display:inline-block}
 /* ===== THE VIDEO GIONG TRANG CHINH ===== */
@@ -90,24 +88,17 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   <div class="topbar">
     <div class="brand"><svg class="ic" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Quản trị <em>AcceleratorAres</em> <span class="live"><i></i>Real-time</span></div>
     <div class="actions">
+      <button class="btn" onclick="changePass()">Đổi mật khẩu</button>
       <button class="btn" onclick="doLogout()">Đăng xuất</button>
       <a class="btn" href="/">← Về trang chủ</a>
     </div>
   </div>
 
   <div class="stats">
-    <div class="stat"><b id="cntFb">0</b><span>Phản hồi</span></div>
-    <div class="stat"><b id="cntRq">0</b><span>Yêu cầu</span></div>
     <div class="stat"><b id="cntVd">0</b><span>Video</span></div>
     <div class="stat"><b id="cntLk">0</b><span>Links</span></div>
     <div class="stat"><b id="cntPh">0</b><span>Ảnh</span></div>
   </div>
-
-  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Phản hồi khách</h2>
-  <div id="fbList"></div>
-
-  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg> Yêu cầu khách</h2>
-  <div id="rqList"></div>
 
   <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15 10 9" fill="currentColor" stroke="none"/></svg> Video của tôi</h2>
   <div class="up-wrap">
@@ -128,11 +119,27 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   <div class="up-wrap">
     <div class="up-row">
       <input type="text" id="upTitle" placeholder="Tên video...">
+      <select id="upHost"><option value="auto">Kho: Tự động</option><option value="cloudinary">Kho: Cloudinary</option><option value="catbox">Kho: Catbox (nhờ up hộ)</option><option value="mediafire">Kho: MediaFire (up tay)</option></select>
       <input type="file" id="upFile" accept="video/*" style="display:none" onchange="if(this.files[0])uploadVideo()">
       <button class="btn solid" id="upBtn" onclick="document.getElementById('upFile').click()"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Tải lên</button>
     </div>
     <div class="prog" id="upProg"><i id="upBar"></i></div>
     <div class="err" id="upErr" style="text-align:left"></div>
+  </div>
+  <div class="up-wrap">
+    <div class="up-row">
+      <input type="text" id="ytUrl" placeholder="Dán link YouTube (watch / youtu.be / shorts)...">
+      <button class="btn solid" id="ytBtn" onclick="ytFetch()">Lấy thông tin</button>
+    </div>
+    <div class="err" id="ytErr" style="text-align:left"></div>
+    <div id="ytPrev"></div>
+  </div>
+  <div class="up-wrap" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
+      <input type="checkbox" id="prevHiddenVd" checked style="width:16px;height:16px;accent-color:#ffffff" onchange="renderVd(vdLast)">
+      Hiện các mục ĐÃ ẨN (bỏ tick để xem như trang chính)
+    </label>
+    <span id="vdHiddenCnt" style="font-size:12.5px;color:#a9a9b2"></span>
   </div>
   <div id="vdList"></div>
 
@@ -155,18 +162,26 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   <div class="up-wrap">
     <div class="up-row">
       <input type="text" id="lkTitle" placeholder="Tên link...">
-      <input type="text" id="lkUrl" placeholder="Link https://...">
-      <button class="btn solid" id="lkBtn" onclick="addLink()">
+      <input type="text" id="lkUrl" placeholder="Link https:// (nếu có sẵn)...">
+      <input type="file" id="lkFile" style="display:none" onchange="if(this.files[0])addLink()">
+      <select id="lkHost"><option value="auto">Kho: Tự động</option><option value="cloudinary">Kho: Cloudinary</option><option value="catbox">Kho: Catbox (nhờ up hộ)</option><option value="mediafire">Kho: MediaFire (up tay)</option></select>
       <button class="btn solid" id="lkBtn" onclick="addLink()"><svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Thêm</button>
     </div>
     <div class="err" id="lkErr" style="text-align:left"></div>
+  </div>
+  <div class="up-wrap" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
+      <input type="checkbox" id="prevHiddenLk" checked style="width:16px;height:16px;accent-color:#ffffff" onchange="renderLk(lkLast)">
+      Hiện các mục ĐÃ ẨN (bỏ tick để xem như trang chính)
+    </label>
+    <span id="lkHiddenCnt" style="font-size:12.5px;color:#a9a9b2"></span>
   </div>
   <div id="lkList"></div>
 
   <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg> Ảnh</h2>
   <div class="up-wrap">
     <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
-      <input type="checkbox" id="showPhotos" style="width:18px;height:18px;accent-color:#c4b5fd" onchange="toggleShowPhotos(this.checked)">
+      <input type="checkbox" id="showPhotos" style="width:18px;height:18px;accent-color:#ffffff" onchange="toggleShowPhotos(this.checked)">
       Hiện mục Ảnh trên trang chính
     </label>
     <div class="err" id="showPhErr" style="text-align:left"></div>
@@ -187,6 +202,13 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
       <button class="btn solid" id="phBtn" onclick="addPhoto()"><svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Thêm</button>
     </div>
     <div class="err" id="phErr" style="text-align:left"></div>
+  </div>
+  <div class="up-wrap" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
+      <input type="checkbox" id="prevHiddenPh" checked style="width:16px;height:16px;accent-color:#ffffff" onchange="renderPh(phLast)">
+      Hiện các mục ĐÃ ẨN (bỏ tick để xem như trang chính)
+    </label>
+    <span id="phHiddenCnt" style="font-size:12.5px;color:#a9a9b2"></span>
   </div>
   <div id="phList"></div>
 </div>
@@ -214,8 +236,10 @@ const UPLOAD_PRESET = "web_upload";
 const IC_UP = '<svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>';
 const IC_ADD = '<svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
-let fbUnsub = null, rqUnsub = null, vdUnsub = null, stUnsub = null, lkUnsub = null, slUnsub = null, phUnsub = null, spUnsub = null;
+let vdUnsub = null, stUnsub = null, lkUnsub = null, slUnsub = null, phUnsub = null, spUnsub = null;
+let vdLast = [], lkLast = [], phLast = [];
 let vdCache = {};
+let lkCache = {};
 let phCache = {};
 let catCache = {videos:{}, links:{}, photos:{}};
 let catUnsub = {};
@@ -290,64 +314,20 @@ function fmtTime(t){
   return d.toLocaleString('vi-VN');
 }
 function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
-function stars(n){ n=Math.max(0,Math.min(5,n||0)); return '★'.repeat(n)+'☆'.repeat(5-n); }
-
-function renderFb(list){
-  document.getElementById('cntFb').textContent = list.length;
-  const box = document.getElementById('fbList');
-  if(!list.length){ box.innerHTML = '<div class="empty">Chưa có phản hồi nào.</div>'; return; }
-  box.innerHTML = list.map(([k,r])=>`
-    <div class="item">
-      <div class="head">
-        <div>
-          <span class="who">${esc(r.name)||'Khách ẩn danh'}</span>
-          <span class="stars">${stars(r.rating)}</span>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <span class="when">${fmtTime(r.time)}</span>
-          <button class="del" onclick="delItem('feedback','${k}')">Xóa</button>
-        </div>
-      </div>
-      <p>${esc(r.content)}</p>
-    </div>`).join('');
-}
-
-function renderRq(list){
-  document.getElementById('cntRq').textContent = list.length;
-  const box = document.getElementById('rqList');
-  if(!list.length){ box.innerHTML = '<div class="empty">Chưa có yêu cầu nào.</div>'; return; }
-  const typeNames = {khung:'Yêu cầu khung mới',sua:'Sửa / xóa khung',download:'Link tải bị lỗi',shop:'Yêu cầu nạp game',khac:'Khác'};
-  box.innerHTML = list.map(([k,r])=>`
-    <div class="item">
-      <div class="head">
-        <div>
-          <span class="who">${esc(r.name)||'Khách ẩn danh'}</span>
-          <span class="tag">${typeNames[r.type]||esc(r.type)||'Khác'}</span>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <span class="when">${fmtTime(r.time)}</span>
-          <button class="del" onclick="delItem('requests','${k}')">Xóa</button>
-        </div>
-      </div>
-      <p>${esc(r.content || r.message)}</p>
-    </div>`).join('');
-}
 
 function toList(v){ return v ? Object.entries(v).sort((a,b)=>(b[1].time||b[1].ts||0)-(a[1].time||a[1].ts||0)) : []; }
 
 function startListeners(){
   stopListeners();
-  fbUnsub = db.ref('feedback').on('value', s => renderFb(toList(s.val())));
-  rqUnsub = db.ref('requests').on('value', s => renderRq(toList(s.val())));
-  vdUnsub = db.ref('videos').on('value', s => renderVd(toList(s.val())));
+  vdUnsub = db.ref('videos').on('value', s => { vdLast = toList(s.val()); renderVd(vdLast); });
   stUnsub = db.ref('settings/showVideos').on('value',
     s => { document.getElementById('showVideos').checked = s.val() !== false; },
     () => { document.getElementById('showVideos').checked = true; });
-  lkUnsub = db.ref('links').on('value', s => renderLk(toList(s.val())));
+  lkUnsub = db.ref('links').on('value', s => { lkLast = toList(s.val()); renderLk(lkLast); });
   slUnsub = db.ref('settings/showLinks').on('value',
     s => { document.getElementById('showLinks').checked = s.val() !== false; },
     () => { document.getElementById('showLinks').checked = true; });
-  phUnsub = db.ref('photos').on('value', s => renderPh(toList(s.val())));
+  phUnsub = db.ref('photos').on('value', s => { phLast = toList(s.val()); renderPh(phLast); });
   spUnsub = db.ref('settings/showPhotos').on('value',
     s => { document.getElementById('showPhotos').checked = s.val() !== false; },
     () => { document.getElementById('showPhotos').checked = true; });
@@ -356,8 +336,6 @@ function startListeners(){
   });
 }
 function stopListeners(){
-  if(fbUnsub){ db.ref('feedback').off('value', fbUnsub); fbUnsub=null; }
-  if(rqUnsub){ db.ref('requests').off('value', rqUnsub); rqUnsub=null; }
   if(vdUnsub){ db.ref('videos').off('value', vdUnsub); vdUnsub=null; }
   if(stUnsub){ db.ref('settings/showVideos').off('value', stUnsub); stUnsub=null; }
   if(lkUnsub){ db.ref('links').off('value', lkUnsub); lkUnsub=null; }
@@ -368,13 +346,6 @@ function stopListeners(){
     if(catUnsub[sec]){ db.ref('cats/'+sec).off('value', catUnsub[sec]); catUnsub[sec]=null; }
   });
 }
-function delItem(node, key){
-  if(!confirm('Xóa mục này vĩnh viễn?')) return;
-  db.ref(node+'/'+key).remove()
-    .then(()=>console.log('deleted'))
-    .catch(e=>alert('Không xóa được: '+e.message));
-}
-
 function fmtSize(b){
   if(!b && b!==0) return '';
   const u=['B','KB','MB','GB']; let i=0;
@@ -383,70 +354,43 @@ function fmtSize(b){
 }
 
 function renderVd(list){
+  list = list || vdLast || [];
   document.getElementById('cntVd').textContent = list.length;
+  const hidN = list.filter(function(x){ return !!((x[1]||{}).hidden); }).length;
+  const hc = document.getElementById('vdHiddenCnt');
+  if(hc) hc.textContent = hidN ? '('+hidN+' đang ẩn)' : '';
+  const showH = (document.getElementById('prevHiddenVd')||{}).checked !== false;
+  const view = showH ? list : list.filter(function(x){ return !((x[1]||{}).hidden); });
   const box = document.getElementById('vdList');
-  if(!list.length){ box.innerHTML = '<div class="empty">Chưa có video nào. Tải lên video đầu tiên nhé!</div>'; return; }
+  if(!view.length){ box.innerHTML = '<div class="empty">'+(list.length ? 'Tất cả đang ẩn. Tick "Hiện các mục ĐÃ ẨN" để xem.' : 'Chưa có video nào. Tải lên video đầu tiên nhé!')+'</div>'; return; }
   vdCache = {};
-  box.innerHTML = '<div class="vid-grid">' + list.map(function(x){
+  box.innerHTML = '<div class="vid-grid">' + view.map(function(x){
     const k=x[0], r=x[1]||{};
     vdCache[k] = {title: r.title||'', del: r.del||''};
-    const dl = dlUrl(r.url), poster = posterUrl(r.public_id);
-    return '<div class="vid-card">'
+    const dl = dlUrl(r.url), poster = posterUrl(r);
+    const hd = !!r.hidden;
+    return '<div class="vid-card"'+(hd?' style="opacity:.55"':'')+'>'
       + '<div class="vid-facade" data-url="'+esc(r.url)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)">'
       + (poster ? '<img class="vid-poster" loading="lazy" src="'+esc(poster)+'" alt="">' : '')
       + '<div class="vid-play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
       + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div></div>'
           + '<div class="vid-info">'
           + (r.cat?'<span class="tag">'+esc(r.cat)+'</span> ':'')
+          + (hd?'<span class="tag">ĐÃ ẨN</span> ':'')
           + '<h3>'+esc(r.title)+'</h3>'
           + '<div class="meta"><small>'+fmtTime(r.time)+'</small>'
           + '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener">Tải xuống</a>'
       + '<button class="del" onclick="editVideo(\''+k+'\')">Sửa tên</button>'
+      + '<button class="del" onclick="toggleHide(\'videos\',\''+k+'\','+(hd?'true':'false')+')">'+(hd?'Hiện':'Ẩn')+'</button>'
       + '<button class="del" onclick="delVideo(\''+k+'\')">Xóa</button>'
       + '</div></div></div>';
   }).join('') + '</div>';
 }
 
 function upCatbox(f,title,btn,prog,bar,err){
-  function attempt(left){
-    const fd = new FormData();
-    fd.append('reqtype','fileupload');
-    fd.append('fileToUpload',f);
-    const xhr = new XMLHttpRequest();
-    let settled = false;
-    let last = Date.now();
-    const watchdog = setInterval(function(){
-      if(!settled && Date.now()-last > 45000){ try{ xhr.abort(); }catch(e){} }
-    },5000);
-    function done(ok, resp){
-      if(settled) return;
-      settled = true;
-      clearInterval(watchdog);
-      if(ok){ resp(); return; }
-      if(left>0){ setTimeout(function(){ attempt(left-1); },2000); }
-      else { err.textContent = 'Rớt mạng! Bấm Tải lên lại nhé.'; btn.disabled=false; btn.innerHTML=IC_UP+' Tải lên'; }
-    }
-    xhr.open('POST','https://catbox.moe/user/api.php');
-    xhr.upload.onprogress = function(e){
-      last = Date.now();
-      if(e.lengthComputable) bar.style.width = Math.round(e.loaded/e.total*100)+'%';
-    };
-    xhr.onload = function(){
-      if(xhr.status===200 && xhr.responseText.indexOf('https://')===0){
-        done(true, function(){
-          db.ref('videos').push({title:title, url:xhr.responseText.trim(), public_id:'', host:'catbox', cat:document.getElementById('vidCatSel').value, size:f.size, time:Date.now()}).then(function(){
-            document.getElementById('upTitle').value = '';
-            prog.style.display = 'none';
-            btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
-          });
-        });
-      } else done(false);
-    };
-    xhr.onerror = function(){ done(false); };
-    xhr.onabort = function(){ done(false); };
-    xhr.send(fd);
-  }
-  attempt(2);
+  prog.style.display = 'none';
+  btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
+  err.textContent = 'Catbox chặn trình duyệt đọc kết quả nên không tự up được (file ' + fmtSize(f.size) + '). Gửi đường dẫn file cho admin up hộ nhé!';
 }
 
 function uploadVideo(){
@@ -464,7 +408,18 @@ function uploadVideo(){
   const prog = document.getElementById('upProg');
   const bar = document.getElementById('upBar');
   prog.style.display = 'block'; bar.style.width = '0';
-  if(f.size > CL_MAX){ btn.textContent = 'Đang tải lên Catbox...'; upCatbox(f,title,btn,prog,bar,err); return; }
+  const host = document.getElementById('upHost').value;
+  if(host === 'mediafire'){
+    err.textContent = '';
+    prog.style.display = 'none'; btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
+    alert('Up file trên mediafire.com rồi lấy link dán vào mục Links (nút Thêm) nhé! Mục Video chỉ nhận Cloudinary/Catbox.');
+    return;
+  }
+  if(host === 'cloudinary' && f.size > CL_MAX){
+    err.textContent = 'Cloudinary free chỉ nhận tối đa 100MB! Chọn Catbox hoặc nén video lại.';
+    prog.style.display = 'none'; btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên'; return;
+  }
+  if(host === 'catbox' || f.size > CL_MAX){ btn.textContent = 'Đang tải lên Catbox...'; upCatbox(f,title,btn,prog,bar,err); return; }
   let tries = 0;
   (function upOne(){
     tries++;
@@ -503,14 +458,140 @@ function uploadVideo(){
   })();
 }
 
+/* ============ YOUTUBE: DAN LINK -> XEM TRUOC / TAI FILE / LUU LINK ============
+   Luong lay tin: Invidious (co ten + tac gia + do dai + file tron
+   hinh+tieng) -> rot xuong noembed (chi ten + tac gia + thumbnail).
+   Nut Tai/Up phu thuoc cau noi ben thu ba, luc mo luc dong: duoc thi
+   tai ngay, khong thi bao ro chu khong treo. */
+const YT_BRIDGE = 'https://invidious.f5.si';
+let ytInfo = null;
+let ytMuxed = [];
+function ytId(u){
+  u = (u||'').trim();
+  let m = u.match(/[?&]v=([A-Za-z0-9_-]{11})/);
+  if(m) return m[1];
+  m = u.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);
+  if(m) return m[1];
+  m = u.match(/youtube\.com\/(shorts|embed|live)\/([A-Za-z0-9_-]{11})/);
+  if(m) return m[2];
+  if(/^[A-Za-z0-9_-]{11}$/.test(u)) return u;
+  return '';
+}
+function ytDur(s){
+  s = Math.floor(+s||0);
+  const h = Math.floor(s/3600), m = Math.floor(s%3600/60), r = s%60;
+  return (h?h+':':'')+(h?(m<10?'0':''):'')+m+':'+(r<10?'0':'')+r;
+}
+async function ytFetch(){
+  const err = document.getElementById('ytErr');
+  const prev = document.getElementById('ytPrev');
+  const btn = document.getElementById('ytBtn');
+  err.textContent = '';
+  ytInfo = null; ytMuxed = [];
+  const id = ytId(document.getElementById('ytUrl').value);
+  if(!id){ err.textContent = 'Link YouTube không hợp lệ! Dán link watch / youtu.be / shorts.'; return; }
+  const watch = 'https://www.youtube.com/watch?v='+id;
+  btn.disabled = true; btn.textContent = 'Đang lấy...';
+  prev.innerHTML = '<div class="empty">Đang lấy thông tin...</div>';
+  try{
+    const r = await (await fetch(YT_BRIDGE+'/api/v1/videos/'+id+'?hl=vi')).json();
+    if(!r || !r.title) throw new Error('noinfo');
+    const th = (r.videoThumbnails||[]).find(function(t){ return t.quality==='sddefault'; })||{};
+    ytInfo = {id:id, title:r.title||id, author:r.author||'', dur:r.lengthSeconds||0, thumb:th.url||('https://i.ytimg.com/vi/'+id+'/hqdefault.jpg')};
+    ytMuxed = (r.formatStreams||[]).filter(function(f){ return f && f.url; });
+  }catch(e){
+    try{
+      const n = await (await fetch('https://noembed.com/embed?url='+encodeURIComponent(watch))).json();
+      if(!n || !n.title) throw new Error('noinfo');
+      ytInfo = {id:id, title:n.title, author:n.author_name||'', dur:0, thumb:n.thumbnail_url||('https://i.ytimg.com/vi/'+id+'/hqdefault.jpg')};
+      ytMuxed = [];
+    }catch(e2){
+      err.textContent = 'Không lấy được thông tin. Kiểm tra lại link hoặc mạng rồi thử lại.';
+      prev.innerHTML = '';
+      btn.disabled = false; btn.textContent = 'Lấy thông tin';
+      return;
+    }
+  }
+  btn.disabled = false; btn.textContent = 'Lấy thông tin';
+  ytRender();
+}
+function ytRender(){
+  const prev = document.getElementById('ytPrev');
+  if(!ytInfo){ prev.innerHTML = ''; return; }
+  const watch = 'https://www.youtube.com/watch?v='+ytInfo.id;
+  let h = '<div class="item"><div class="head"><div><span class="who">'+esc(ytInfo.title)+'</span>'
+    + (ytInfo.author?'<span class="tag">'+esc(ytInfo.author)+'</span>':'')
+    + (ytInfo.dur?'<span class="tag">'+esc(ytDur(ytInfo.dur))+'</span>':'')
+    + '</div><div style="display:flex;gap:10px;align-items:center">'
+    + '<a class="del" style="text-decoration:none" href="'+esc(watch)+'" target="_blank" rel="noopener">Mở</a>'
+    + '<button class="del" onclick="ytSaveLink()">Lưu link</button>'
+    + '</div></div>'
+    + '<p><a href="'+esc(watch)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+esc(ytInfo.thumb)+'" alt="" style="width:100%;max-width:420px;display:block;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:6px"></a></p>';
+  if(ytMuxed.length){
+    h += '<p style="margin-top:10px">File tải ('+ytMuxed.length+' bản, có cả hình + tiếng):</p>' + ytMuxed.map(function(f,i){
+      return '<p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag">'+esc(String(f.qualityLabel||f.itag||''))+'</span>'
+        + '<button class="del" onclick="ytDl('+i+')">Tải về máy</button>'
+        + '<button class="del" onclick="ytCloud('+i+')">Up lên Cloudinary</button></p>';
+    }).join('');
+  } else {
+    h += '<p>Cầu nối file YouTube đang bận nên chưa tải trực tiếp được — bấm Lưu link để giữ lại, lúc khác quay lại lấy file sau.</p>';
+  }
+  h += '</div>';
+  prev.innerHTML = h;
+}
+function ytDl(i){
+  const f = ytMuxed[i];
+  if(!f || !f.url) return;
+  const a = document.createElement('a');
+  a.href = f.url; a.target = '_blank'; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+async function ytCloud(i){
+  const err = document.getElementById('ytErr');
+  err.textContent = '';
+  const f = ytMuxed[i];
+  if(!f || !f.url || !ytInfo) return;
+  if(!confirm('Up bản "'+String(f.qualityLabel||f.itag||'')+'" lên Cloudinary rồi đăng vào mục Video? (quá 100MB sẽ bị từ chối)')) return;
+  err.textContent = 'Đang nhờ Cloudinary tải về... (video dài có thể mất vài phút)';
+  try{
+    const fd = new FormData();
+    fd.append('file', f.url);
+    fd.append('upload_preset', UPLOAD_PRESET);
+    const r = await (await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/video/upload', {method:'POST', body:fd})).json();
+    if(!r.secure_url) throw new Error((r.error&&r.error.message)||'unknown');
+    await db.ref('videos').push({title:ytInfo.title, url:r.secure_url, public_id:r.public_id||'', del:r.delete_token||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
+    document.getElementById('ytUrl').value = '';
+    document.getElementById('ytPrev').innerHTML = '';
+    ytInfo = null; ytMuxed = [];
+    err.textContent = 'Xong! Video đã vào mục Video.';
+  }catch(e){
+    err.textContent = 'Cloudinary không tải được link này ('+(e.message||'lỗi mạng')+'). Bấm "Tải về máy" rồi dùng nút Tải lên ở trên nhé!';
+  }
+}
+function ytSaveLink(){
+  const err = document.getElementById('ytErr');
+  err.textContent = '';
+  if(!ytInfo) return;
+  db.ref('links').push({title:ytInfo.title, url:'https://www.youtube.com/watch?v='+ytInfo.id, cat:(document.getElementById('lkCatSel')||{}).value||'', time:Date.now()}).then(function(){
+    document.getElementById('ytUrl').value = '';
+    document.getElementById('ytPrev').innerHTML = '';
+    ytInfo = null; ytMuxed = [];
+    err.textContent = 'Đã lưu vào mục Links.';
+  }).catch(function(e){
+    err.textContent = 'Không lưu được ('+(e.code||'')+'). Kiểm tra Rules rồi Publish.';
+  });
+}
+
 function dlUrl(u){
   u = u||'';
   if(u.indexOf('fl_attachment')!==-1) return u;
   return u.replace('/upload/','/upload/fl_attachment/');
 }
-function posterUrl(pid){
-  if(!pid) return '';
-  return 'https://res.cloudinary.com/ck9gvbcq/video/upload/so_0,w_640/'+pid+'.jpg';
+function posterUrl(r){
+  if(!r) return '';
+  if(r.poster) return r.poster;
+  if(!r.public_id) return '';
+  return 'https://res.cloudinary.com/'+CLOUD_NAME+'/video/upload/so_0,w_640/'+r.public_id+'.jpg';
 }
 function loadVid(el){
   var url = el.getAttribute('data-url');
@@ -551,6 +632,11 @@ function editVideo(key){
     .catch(function(e){ alert('Không sửa được: '+e.message); });
 }
 
+function toggleHide(node, key, cur){
+  db.ref(node+'/'+key+'/hidden').set(!cur)
+    .catch(function(e){ alert('Không lưu được: '+e.message); });
+}
+
 function toggleShowVideos(on){
   const err = document.getElementById('showErr');
   err.textContent = '';
@@ -569,21 +655,43 @@ function toggleShowLinks(on){
   });
 }
 
+
 function renderLk(list){
+  list = list || lkLast || [];
   document.getElementById('cntLk').textContent = list.length;
+  const hidN = list.filter(function(x){ return !!((x[1]||{}).hidden); }).length;
+  const hc = document.getElementById('lkHiddenCnt');
+  if(hc) hc.textContent = hidN ? '('+hidN+' đang ẩn)' : '';
+  const showH = (document.getElementById('prevHiddenLk')||{}).checked !== false;
+  const view = showH ? list : list.filter(function(x){ return !((x[1]||{}).hidden); });
   const box = document.getElementById('lkList');
-  if(!list.length){ box.innerHTML = '<div class="empty">Chưa có link nào. Thêm link đầu tiên nhé!</div>'; return; }
-  box.innerHTML = list.map(function(x){
+  if(!view.length){ box.innerHTML = '<div class="empty">'+(list.length ? 'Tất cả đang ẩn. Tick "Hiện các mục ĐÃ ẨN" để xem.' : 'Chưa có link nào. Thêm link đầu tiên nhé!')+'</div>'; return; }
+  box.innerHTML = view.map(function(x){
     const k=x[0], r=x[1]||{};
-    return '<div class="item"><div class="head">'
+    lkCache[k] = r.title || '';
+    return '<div class="item"'+(r.hidden?' style="opacity:.55"':'')+'><div class="head">'
       + '<div><span class="who">'+esc(r.title)+'</span>'
       + (r.cat?'<span class="tag">'+esc(r.cat)+'</span>':'')
+      + (r.hidden?'<span class="tag">ĐÃ ẨN</span>':'')
       + '</div>'
       + '<div style="display:flex;gap:10px;align-items:center">'
       + '<a class="del" style="text-decoration:none" href="'+esc(r.url)+'" target="_blank" rel="noopener">Mở</a>'
+      + '<button class="del" onclick="editLink(\''+k+'\')">Sửa tên</button>'
+      + '<button class="del" onclick="toggleHide(\'links\',\''+k+'\','+(r.hidden?'true':'false')+')">'+(r.hidden?'Hiện':'Ẩn')+'</button>'
       + '<button class="del" onclick="delLink(\''+k+'\')">Xóa</button>'
       + '</div></div></div>';
   }).join('');
+}
+
+function editLink(key){
+  const cur = lkCache[key] || '';
+  const name = prompt('Tên link mới:', cur);
+  if(name === null) return;
+  const t = name.trim();
+  if(!t){ alert('Tên không được để trống!'); return; }
+  if(t === cur) return;
+  db.ref('links/'+key+'/title').set(t)
+    .catch(function(e){ alert('Không sửa được: '+e.message); });
 }
 
 function delLink(key){
@@ -595,37 +703,86 @@ function delLink(key){
 function addLink(){
   const title = document.getElementById('lkTitle').value.trim();
   const url = document.getElementById('lkUrl').value.trim();
+  const fi = document.getElementById('lkFile');
+  const f = fi.files[0];
+  const host = document.getElementById('lkHost').value;
   const err = document.getElementById('lkErr');
   err.textContent = '';
   if(!title){ err.textContent = 'Nhập tên link!'; return; }
-  if(!url || !/^https?:\/\//i.test(url)){ err.textContent = 'Link phải bắt đầu bằng http:// hoặc https://'; return; }
   const btn = document.getElementById('lkBtn');
-  btn.disabled = true; btn.textContent = 'Đang thêm...';
-  db.ref('links').push({title:title, url:url, cat:document.getElementById('lkCatSel').value, time:Date.now()}).then(function(){
-    document.getElementById('lkTitle').value = '';
-    document.getElementById('lkUrl').value = '';
-    btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
-  }).catch(function(e){
-    err.textContent = 'Không lưu được ('+e.code+'). Kiểm tra Rules rồi Publish.';
-    btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
-  });
+  if(!f && !url){
+    if(!url){ fi.click(); return; }
+  }
+  fi.value = '';
+  if(!f){
+    if(!url || !/^https?:\/\//i.test(url)){ err.textContent = 'Link phải bắt đầu bằng http:// hoặc https://'; return; }
+    return saveLink(url);
+  }
+  if(host === 'mediafire'){
+    alert('Up file trên mediafire.com rồi lấy link dán vào ô Link nhé! Mục này chỉ nhận link.');
+    fi.click(); return;
+  }
+  const isImg = f.type.indexOf('image/') === 0;
+  const isVid = f.type.indexOf('video/') === 0;
+  if(host === 'cloudinary' || (host === 'auto' && ((isImg && f.size <= 10*1024*1024) || (isVid && f.size <= CL_MAX)))){
+    if(!isImg && !isVid){ err.textContent = 'Cloudinary chỉ nhận ảnh/video! File này chọn Catbox hoặc MediaFire.'; return; }
+    if(isImg && f.size > 10*1024*1024){ err.textContent = 'Ảnh quá 10MB! Chọn Catbox hoặc MediaFire.'; return; }
+    if(isVid && f.size > CL_MAX){ err.textContent = 'Video quá 100MB! Chọn Catbox hoặc MediaFire.'; return; }
+    return upLinkFile(f, isImg ? 'image' : 'video');
+  }
+  err.textContent = 'File này (' + fmtSize(f.size) + ') trình duyệt không tự up được. Gửi đường dẫn file cho admin up hộ, hoặc up tay lên MediaFire rồi dán link!';
+  function saveLink(u){
+    btn.disabled = true; btn.textContent = 'Đang thêm...';
+    db.ref('links').push({title:title, url:u, cat:document.getElementById('lkCatSel').value, time:Date.now()}).then(function(){
+      document.getElementById('lkTitle').value = '';
+      document.getElementById('lkUrl').value = '';
+      btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
+    }).catch(function(e){
+      err.textContent = 'Không lưu được ('+e.code+'). Kiểm tra Rules rồi Publish.';
+      btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
+    });
+  }
+  function upLinkFile(file, kind){
+    btn.disabled = true; btn.textContent = 'Đang tải...';
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', UPLOAD_PRESET);
+    fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/'+kind+'/upload', {method:'POST', body:fd})
+      .then(function(r){ if(!r.ok) throw new Error('http-'+r.status); return r.json(); })
+      .then(function(r){
+        document.getElementById('lkTitle').value = '';
+        document.getElementById('lkUrl').value = '';
+        btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
+        db.ref('links').push({title:title, url:r.secure_url, cat:document.getElementById('lkCatSel').value, time:Date.now()});
+      })
+      .catch(function(){ err.textContent = 'Tải file thất bại!'; btn.disabled=false; btn.innerHTML=IC_ADD+' Thêm'; });
+  }
 }
 
 const PH_MAX_MB = 10;
 function renderPh(list){
+  list = list || phLast || [];
   document.getElementById('cntPh').textContent = list.length;
+  const hidN = list.filter(function(x){ return !!((x[1]||{}).hidden); }).length;
+  const hc = document.getElementById('phHiddenCnt');
+  if(hc) hc.textContent = hidN ? '('+hidN+' đang ẩn)' : '';
+  const showH = (document.getElementById('prevHiddenPh')||{}).checked !== false;
+  const view = showH ? list : list.filter(function(x){ return !((x[1]||{}).hidden); });
   const box = document.getElementById('phList');
-  if(!list.length){ box.innerHTML = '<div class="empty">Chưa có ảnh nào. Thêm ảnh đầu tiên nhé!</div>'; return; }
-  box.innerHTML = '<div class="vid-grid">' + list.map(function(x){
+  if(!view.length){ box.innerHTML = '<div class="empty">'+(list.length ? 'Tất cả đang ẩn. Tick "Hiện các mục ĐÃ ẨN" để xem.' : 'Chưa có ảnh nào. Thêm ảnh đầu tiên nhé!')+'</div>'; return; }
+  box.innerHTML = '<div class="vid-grid">' + view.map(function(x){
     const k=x[0], r=x[1]||{};
     phCache[k] = {title: r.title||'', del: r.del||''};
-    return '<div class="vid-card">'
+    const hdP = !!r.hidden;
+    return '<div class="vid-card"'+(hdP?' style="opacity:.55"':'')+'>'
       + '<a href="'+esc(r.img)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+esc(r.img)+'" alt="" style="width:100%;display:block;aspect-ratio:16/10;object-fit:cover;background:#000"></a>'
       + '<div class="vid-info">'
       + (r.cat?'<span class="tag">'+esc(r.cat)+'</span> ':'')
+      + (hdP?'<span class="tag">ĐÃ ẨN</span> ':'')
       + '<h3>'+esc(r.title)+'</h3>'
       + '<div class="meta"><small>'+fmtTime(r.time)+'</small>'
       + '<button class="del" onclick="editPhoto(\''+k+'\')">Sửa tên</button>'
+      + '<button class="del" onclick="toggleHide(\'photos\',\''+k+'\','+(hdP?'true':'false')+')">'+(hdP?'Hiện':'Ẩn')+'</button>'
       + '<button class="del" onclick="delPhoto(\''+k+'\')">Xóa</button>'
       + '</div></div></div>';
   }).join('') + '</div>';
@@ -705,6 +862,26 @@ function doLogin(e){
     .catch(ex => { err.textContent = 'Sai email hoặc mật khẩu! ('+ex.code+')'; });
 }
 function doLogout(){ auth.signOut(); }
+
+function changePass(){
+  const user = auth.currentUser;
+  if(!user){ alert('Bạn chưa đăng nhập!'); return; }
+  const cur = prompt('Nhập mật khẩu hiện tại:');
+  if(!cur) return;
+  const nw = prompt('Mật khẩu mới (tối thiểu 6 ký tự):');
+  if(!nw) return;
+  if(nw.length < 6){ alert('Mật khẩu mới phải từ 6 ký tự!'); return; }
+  const cf = prompt('Nhập lại mật khẩu mới:');
+  if(cf !== nw){ alert('Hai mật khẩu mới không khớp!'); return; }
+  const cred = firebase.auth.EmailAuthProvider.credential(user.email, cur);
+  user.reauthenticateWithCredential(cred).then(function(){
+    return user.updatePassword(nw);
+  }).then(function(){
+    alert('Đổi mật khẩu xong! Lần sau đăng nhập bằng pass mới.');
+  }).catch(function(e){
+    alert('Không đổi được (' + (e.code || '') + '): ' + (e.message || 'sai mật khẩu hiện tại?'));
+  });
+}
 
 auth.onAuthStateChanged(u => { u ? showAdmin() : showLogin(); });
 </script>
