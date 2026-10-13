@@ -55,8 +55,11 @@ let busy = false;
 const hits = [];
 function overLimit(){
   const now = Date.now();
-  while (hits.length && now - hits[0] > 3600 * 1000) hits.shift();
-  return hits.length >= 20;
+  while (hits.length && now - hits[0] > 24 * 3600 * 1000) hits.shift();
+  if (hits.length >= 30) return true;
+  let h = 0;
+  for (let i = hits.length - 1; i >= 0; i--) { if (now - hits[i] <= 3600 * 1000) h++; else break; }
+  return h >= 20;
 }
 const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') { cors(res); res.writeHead(204); res.end(); return; }
@@ -68,18 +71,10 @@ const server = http.createServer((req, res) => {
     req.on('end', async () => {
       try {
         const j = JSON.parse(body || '{}');
-        const viaTunnel = !!(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for']);
-        const origin = String(req.headers.origin || '');
-        const siteOk = origin === '' || origin === cfg.site;
-        /* Tu internet (qua tunnel) bat buoc token. May nha goi thang:
-           token dung, hoac trinh duyet tu trang chinh (Origin), hoac curl tay. */
-        if (viaTunnel) {
-          if (j.token !== cfg.token) return send(res, 403, { error: 'sai token (xin token tu chu may qua chat)' });
-        } else if (j.token !== cfg.token && !siteOk) {
-          return send(res, 403, { error: 'sai token' });
-        }
+        /* Khong dung token (chu nhan chon tien dung thay bao mat).
+           Giu: 1 video/lan + toi da 20 video/gio + 30 video/ngay. */
         if (busy) return send(res, 409, { error: 'may dang tai video khac, doi chut roi bam lai' });
-        if (overLimit()) return send(res, 429, { error: 'may nha qua tai (toi da 20 video/gio), doi chut roi bam lai' });
+        if (overLimit()) return send(res, 429, { error: 'may nha qua tai (toi da 20 video/gio, 30 video/ngay), doi chut roi bam lai' });
         const url = String(j.url || '');
         if (!/^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(url)) return send(res, 400, { error: 'khong phai link youtube' });
         busy = true; hits.push(Date.now());
@@ -130,5 +125,6 @@ const server = http.createServer((req, res) => {
 });
 server.listen(PORT, '127.0.0.1', () => {
   console.log('YT server chay o http://127.0.0.1:' + PORT + ' (tat cua so nay = tat server)');
-  console.log('TOKEN gui cho admin O XA nhap 1 lan (may nay dung khong can nhap): ' + cfg.token);
+  console.log('Che do KHONG token: ai co dia chi tunnel deu bam tai duoc.');
+  console.log('Giu kin dia chi tunnel, chi gui cho admin. Gioi han 20 video/gio + 30 video/ngay.');
 });

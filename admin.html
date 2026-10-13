@@ -574,26 +574,14 @@ async function ytServer(){
   if(!ytInfo) return;
   if(!confirm('Tải "'+ytInfo.title+'" bằng máy nhà (chất lượng cao, có tiếng) rồi up Cloudinary + đăng vào mục Video?')) return;
   err.textContent = 'Máy nhà đang tải... (giữ cửa sổ server mở, video dài chờ vài phút)';
-  async function callSrv(tok){
+  async function callSrv(){
     const r = await (await fetch(ytBaseCur+'/dl', {method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({url:'https://www.youtube.com/watch?v='+ytInfo.id, token:tok||''})})).json();
+      body:JSON.stringify({url:'https://www.youtube.com/watch?v='+ytInfo.id})})).json();
     if(r.error) throw new Error(r.error);
     return r;
   }
   try{
-    let tok = '';
-    try{ tok = localStorage.getItem('ytSrvToken') || ''; }catch(e){}
-    let r;
-    try { r = await callSrv(tok); }
-    catch(e){
-      if(!/token/i.test(e.message||'')) throw e;
-      try{ localStorage.removeItem('ytSrvToken'); }catch(e2){}
-      tok = (prompt('Máy chủ chung cần TOKEN (chỉ hỏi 1 lần — xin chủ máy qua chat rồi dán vào):','')||'').trim();
-      if(!tok) return;
-      try{ localStorage.setItem('ytSrvToken', tok); }catch(e2){}
-      err.textContent = 'Máy nhà đang tải... (giữ cửa sổ server mở, video dài chờ vài phút)';
-      r = await callSrv(tok);
-    }
+    const r = await callSrv();
     await db.ref('videos').push({title:ytInfo.title, url:r.url, public_id:r.public_id||'', del:r.del||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
     document.getElementById('ytUrl').value = '';
     document.getElementById('ytPrev').innerHTML = '';
