@@ -103,9 +103,19 @@ const server = http.createServer((req, res) => {
             fp = cands[0].p;
             st = fs.statSync(fp);
           }
-          if (st.size > 100 * 1024 * 1024) {
+          if (st.size > 200 * 1024 * 1024) {
             busy = false;
-            return send(res, 413, { error: 'file ' + Math.round(st.size / 1048576) + 'MB vuot 100MB Cloudinary! File nam o yt-server/dl, up tay Drive/Catbox nhe' });
+            return send(res, 413, { error: 'file ' + Math.round(st.size / 1048576) + 'MB vuot 200MB! File nam o yt-server/dl, up tay len Drive (toi 2GB) nhe' });
+          }
+          if (st.size > 100 * 1024 * 1024) {
+            /* 100-200MB: Cloudinary free khong nhan -> up Catbox (toi da 200MB) */
+            const r2 = await run('curl.exe', ['-sS', '-F', 'reqtype=fileupload',
+              '-F', 'fileToUpload=@' + fp, 'https://catbox.moe/user/api.php']);
+            const curl = (r2.out || '').trim();
+            if (!/^https:\/\/files\.catbox\.moe\//.test(curl)) throw new Error('catbox tu choi: ' + curl.slice(0, 120));
+            try { fs.unlinkSync(fp); } catch (e) {}
+            busy = false;
+            return send(res, 200, { ok: true, url: curl, host: 'catbox', bytes: st.size });
           }
           const r2 = await run('curl.exe', ['-sS', '-X', 'POST',
             'https://api.cloudinary.com/v1_1/' + cfg.cloud + '/video/upload',
@@ -115,7 +125,7 @@ const server = http.createServer((req, res) => {
           if (!up.secure_url) throw new Error((up.error && up.error.message) || 'cloudinary tu choi');
           try { fs.unlinkSync(fp); } catch (e) {}
           busy = false;
-          return send(res, 200, { ok: true, url: up.secure_url, public_id: up.public_id || '', del: up.delete_token || '', bytes: up.bytes || st.size });
+          return send(res, 200, { ok: true, url: up.secure_url, host: 'cloudinary', public_id: up.public_id || '', del: up.delete_token || '', bytes: up.bytes || st.size });
         } catch (e) { busy = false; return send(res, 500, { error: String((e && e.message) || e).slice(0, 300) }); }
       } catch (e) { return send(res, 400, { error: 'sai du lieu' }); }
     });

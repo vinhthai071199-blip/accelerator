@@ -557,7 +557,7 @@ async function ytPing(){
   if(b) b.style.display = ytSrvOn ? '' : 'none';
   const remote = base !== YT_SRV;
   const n = document.getElementById('ytSrvNote');
-  if(n) n.textContent = ytSrvOn ? ('Máy chủ đang bật' + (remote ? ' (máy chủ chung)' : ' (máy này)') + ' — bấm "Tải bằng máy nhà" để tải chất lượng cao, tự up Cloudinary + đăng Video.')
+  if(n) n.textContent = ytSrvOn ? ('Máy chủ đang bật' + (remote ? ' (máy chủ chung)' : ' (máy này)') + ' — bấm "Tải bằng máy nhà" để tải chất lượng cao (≤200MB), tự up kho + đăng Video.')
     : (remote ? 'Không nối được máy chủ chung — kiểm tra địa chỉ + máy chủ có đang chạy không.'
       : 'Muốn tải chất lượng cao không phụ thuộc cầu nối: chạy yt-server/start-yt.bat trên máy nhà rồi bấm Lấy thông tin lại.');
 }
@@ -572,7 +572,7 @@ async function ytServer(){
   const err = document.getElementById('ytErr');
   err.textContent = '';
   if(!ytInfo) return;
-  if(!confirm('Tải "'+ytInfo.title+'" bằng máy nhà (chất lượng cao, có tiếng) rồi up Cloudinary + đăng vào mục Video?')) return;
+  if(!confirm('Tải "'+ytInfo.title+'" bằng máy nhà (chất lượng cao, có tiếng) rồi up kho + đăng vào mục Video? (≤100MB lên Cloudinary, 100–200MB lên Catbox)')) return;
   err.textContent = 'Máy nhà đang tải... (giữ cửa sổ server mở, video dài chờ vài phút)';
   async function callSrv(){
     const r = await (await fetch(ytBaseCur+'/dl', {method:'POST', headers:{'Content-Type':'application/json'},
@@ -582,11 +582,11 @@ async function ytServer(){
   }
   try{
     const r = await callSrv();
-    await db.ref('videos').push({title:ytInfo.title, url:r.url, public_id:r.public_id||'', del:r.del||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
+    await db.ref('videos').push({title:ytInfo.title, url:r.url, host:r.host||'cloudinary', public_id:r.public_id||'', del:r.del||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
     document.getElementById('ytUrl').value = '';
     document.getElementById('ytPrev').innerHTML = '';
     ytInfo = null;
-    err.textContent = 'Xong! Video đã vào mục Video.';
+    err.textContent = 'Xong! Video đã vào mục Video.' + (r.host === 'catbox' ? ' (Kho Catbox: xem/tải bình thường, không có ảnh bìa trước khi phát.)' : '');
   }catch(e){
     err.textContent = 'Máy nhà báo lỗi: '+(e.message||'không nối được — kiểm tra start-yt.bat có đang chạy không');
   }
