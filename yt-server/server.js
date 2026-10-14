@@ -403,6 +403,25 @@ async function queueTick() {
 setInterval(queueTick, 15000);
 setTimeout(queueTick, 8000);
 
+/* ============ TU XOA VIDEO HET HAN ============
+   Video kho tam (Litterbox) qua 72h thi xoa khoi web (file goc tren
+   Litterbox cung tu huy). Quet 10 phut/lan, moi lan toi da 20 muc. */
+async function sweepExpired() {
+  let v = null;
+  try { v = await fbGet('videos'); } catch (e) { return; }
+  if (!v) return;
+  const now = Date.now();
+  const olds = Object.keys(v).filter(function (k) {
+    const r = v[k] || {};
+    return r.expiresAt && now > r.expiresAt;
+  }).slice(0, 20);
+  for (const k of olds) {
+    try { await fbDel('videos/' + k); console.log('Tu xoa video het han: ' + k); } catch (e) {}
+  }
+}
+setInterval(sweepExpired, 10 * 60 * 1000);
+setTimeout(sweepExpired, 30000);
+
 /* ============ TU NUOI TUNNEL ============
    Bat YT_TUNNEL=1 (hoac config tunnel:true): server tu mo cloudflared,
    chet tu dung lai, doi link tu cap nhat Firebase + file tun-url.txt.
