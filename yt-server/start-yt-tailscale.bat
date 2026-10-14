@@ -1,5 +1,5 @@
 @echo off
-title YT Server - Tailscale (dia chi co dinh, khong doi)
+title YT Server - Tailscale rieng (nhanh, on dinh)
 cd /d "%~dp0"
 powershell -NoProfile -Command "try { $c = New-Object Net.Sockets.TcpClient; $c.Connect('127.0.0.1',8799); $c.Close(); exit 0 } catch { exit 1 }" >nul 2>nul
 if not errorlevel 1 (
@@ -36,10 +36,16 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-echo Mo server + mo cong Tailscale (dia chi CO DINH, khong doi moi lan mo)...
-echo GIU CA 2 CUA SO NAY MO khi muon moi admin dung duoc.
+for /f "tokens=*" %%i in ('tailscale ip -4') do set TSIP=%%i
+echo.
+echo ============================================================
+echo  Dia chi CO DINH de dan vao o may chu tren admin/đien thoai:
+echo      http://%TSIP%:8799
+echo  (Chi dan 1 LAN DUY NHAT, mo tat bao nhieu lan cung khong doi)
+echo  Dien thoai cai Tailscale + dang nhap CUNG tai khoan nay.
+echo ============================================================
+echo.
+echo Giua cua so nay + cua so server mo khi muon dung.
 echo.
 start "YT Server - May chu tai" node server.js
-timeout /t 3 /nobreak >nul
-tailscale funnel 8799
 pause
