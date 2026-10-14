@@ -248,7 +248,7 @@ const UPLOAD_PRESET = "web_upload";
 const IC_UP = '<svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>';
 const IC_ADD = '<svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
-let vdUnsub = null, stUnsub = null, lkUnsub = null, slUnsub = null, phUnsub = null, spUnsub = null, ytQUnsub = null;
+let vdUnsub = null, stUnsub = null, lkUnsub = null, slUnsub = null, phUnsub = null, spUnsub = null, ytQUnsub = null, ytBaseUnsub = null;
 let vdLast = [], lkLast = [], phLast = [], ytQLast = [];
 let vdCache = {};
 let lkCache = {};
@@ -347,6 +347,14 @@ function startListeners(){
     catUnsub[sec] = db.ref('cats/'+sec).on('value', function(s){ fillCatSels(sec, s.val()); });
   });
   ytQUnsub = db.ref('settings/queue').on('value', s => { ytQLast = toList(s.val()); renderQ(ytQLast); });
+  ytBaseUnsub = db.ref('settings/ytServerBase').on('value', function(s){
+    var v = s.val() ? String(s.val()).replace(/\/+$/,'') : '';
+    ytBaseLast = v;
+    ytBaseCur = v || YT_SRV;
+    var bi = document.getElementById('ytBase');
+    if(bi && document.activeElement !== bi) bi.value = v;
+    ytPing();
+  });
 }
 function stopListeners(){
   if(vdUnsub){ db.ref('videos').off('value', vdUnsub); vdUnsub=null; }
@@ -359,6 +367,7 @@ function stopListeners(){
     if(catUnsub[sec]){ db.ref('cats/'+sec).off('value', catUnsub[sec]); catUnsub[sec]=null; }
   });
   if(ytQUnsub){ db.ref('settings/queue').off('value', ytQUnsub); ytQUnsub=null; }
+  if(ytBaseUnsub){ db.ref('settings/ytServerBase').off('value', ytBaseUnsub); ytBaseUnsub=null; }
 }
 function fmtSize(b){
   if(!b && b!==0) return '';
