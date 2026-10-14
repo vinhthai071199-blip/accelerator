@@ -144,7 +144,13 @@ const server = http.createServer((req, res) => {
         busy = true; hits.push(Date.now());
         prog = { stage: 'dl', pct: 0, detail: '' };
         try {
-          const fmt = (/^[A-Za-z0-9_*+\/()[\].\-=,:? ]{1,120}$/.test(String(j.format || '')) && j.format) || 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b';
+          const dest0 = j.dest === 'cloud' ? 'cloud' : 'home';
+          /* Kho o cung: moc 720p cho nhe (xem dien thoai muot, file ~1/3).
+             Kho cloud: lay ban dep nhat roi tu chia theo dung luong. */
+          const fmtDefault = dest0 === 'home'
+            ? 'bv*[height<=720][ext=mp4]+ba[ext=m4a]/b[height<=720]/b'
+            : 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b';
+          const fmt = (/^[A-Za-z0-9_*+\/()[\].\-=,:? ]{1,120}$/.test(String(j.format || '')) && j.format) || fmtDefault;
           const tpl = path.join(DL_DIR, Date.now() + '.%(title).60s [%(id)s].%(ext)s');
           const baseArgs = ['-f', fmt, '--merge-output-format', 'mp4',
             '--ffmpeg-location', cfg.ffmpeg, '-o', tpl, '--no-playlist', '--retries', '3', '--newline',
@@ -170,7 +176,7 @@ const server = http.createServer((req, res) => {
             fp = cands[0].p;
             st = fs.statSync(fp);
           }
-          const dest = j.dest === 'cloud' ? 'cloud' : 'home';
+          const dest = dest0;
           if (dest === 'home') {
             /* Kho o cung E:/videoserver: giu file, tao anh bia, khong gioi han dung luong */
             if (!ensureDir(LIB_DIR)) throw new Error('khong thay o E:/videoserver (kiem tra o E roi bam lai)');
