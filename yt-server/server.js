@@ -155,7 +155,7 @@ const server = http.createServer((req, res) => {
         busy = true; hits.push(Date.now());
         prog = { stage: 'dl', pct: 0, detail: '' };
         try {
-          const dest0 = j.dest === 'cloud' ? 'cloud' : 'home';
+          const dest0 = j.dest === 'cloud' ? 'cloud' : (j.dest === 'litter' ? 'litter' : 'home');
           /* Lay ban dep nhat (1080p-4K 60fps). Kho cloud tu chia theo dung
              luong; kho o cung giu nguyen ban goc. */
           const fmtDefault = 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b';
@@ -186,6 +186,22 @@ const server = http.createServer((req, res) => {
             st = fs.statSync(fp);
           }
           const dest = dest0;
+          if (dest === 'litter') {
+            /* Kho tam Litterbox: toi da 1GB, tu huy sau 72h. Khong luu E:. */
+            if (st.size > 1024 * 1024 * 1024) {
+              busy = false;
+              return send(res, 413, { error: 'File ' + Math.round(st.size / 1048576) + 'MB vượt 1GB! Up tay lên Drive (tới 2GB) nhé' });
+            }
+            prog = { stage: 'up', pct: -1, detail: 'Đang up lên Litterbox (tạm 72h, chờ vài phút)...' };
+            const r2 = await run('curl.exe', ['-sS', '-F', 'reqtype=fileupload', '-F', 'time=72h',
+              '-F', 'fileToUpload=@' + fp, 'https://litterbox.catbox.moe/resources/internals/api.php']);
+            const curl = (r2.out || '').trim();
+            if (!/^https:\/\/litter\.catbox\.moe\//.test(curl)) throw new Error('litterbox từ chối: ' + curl.slice(0, 120));
+            try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e) {}
+            busy = false;
+            prog = { stage: 'done', pct: 100, detail: '' };
+            return send(res, 200, { ok: true, url: curl, host: 'litterbox', bytes: st.size });
+          }
           if (dest === 'home') {
             /* Kho o cung E:/videoserver: giu file, tao anh bia, khong gioi han dung luong */
             if (!ensureDir(LIB_DIR)) throw new Error('Không thấy ổ E:/videoserver (kiểm tra ổ E rồi bấm lại)');
@@ -375,6 +391,7 @@ async function queueTick() {
     } else {
       entry.host = r.host || 'cloudinary'; entry.url = r.url; entry.public_id = r.public_id || ''; entry.del = r.del || ''; entry.size = r.bytes || 0;
     }
+    if (r.host === 'litterbox') entry.expiresAt = Date.now() + 72 * 3600 * 1000;
     await fbPost('videos', entry);
     await fbDel('settings/queue/' + key);
   } catch (e) {

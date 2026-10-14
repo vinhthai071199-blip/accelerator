@@ -437,13 +437,13 @@ function homePoster(r){
 function paintVideos(){
   const box = document.getElementById('vidGrid');
   if(!box || vidLastRaw === null) return;
-  const vis = vidLastRaw.filter(function(o){ return !((o[1]||{}).hidden); });
+  const vis = vidLastRaw.filter(function(o){ const x = o[1]||{}; return !x.hidden && !(x.expiresAt && Date.now() > x.expiresAt); });
   box.innerHTML = vis.map(function(v){
     const r = v[1]||{};
     const src = homeSrc(r);
     const poster = homePoster(r);
     const cloud = (r.host || 'cloudinary') === 'cloudinary';
-    const htag = r.host === 'home' ? 'Ổ cứng' : (r.host === 'catbox' ? 'Catbox' : 'Cloudinary');
+    const htag = r.host === 'home' ? 'Ổ cứng' : (r.host === 'catbox' ? 'Catbox' : (r.host === 'litterbox' ? 'Tạm 72h' : 'Cloudinary'));
     const isHome = r.host === 'home';
     const dl = cloud ? dlUrl(src) : (isHome ? (src ? src + '?download=1' : '') : src);
     const fname = (((r.title || 'video').replace(/[^\w\-. ()À-ỹ]+/g, '_').substring(0, 80)) || 'video') + '.mp4';

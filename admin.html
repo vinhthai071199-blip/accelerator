@@ -128,7 +128,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   </div>
   <div class="up-wrap">
     <div class="up-row">
-      <select id="ytDest"><option value="cloud">Kho: Cloud</option><option value="home">Kho: Ổ cứng nhà</option></select>
+      <select id="ytDest"><option value="cloud">Kho: Cloud</option><option value="home">Kho: Ổ cứng nhà</option><option value="litter">Kho: Tạm 72h (tới 1GB)</option></select>
     </div>
     <div class="up-row">
       <input type="text" id="ytUrl" placeholder="Dán link YouTube (watch / youtu.be / shorts)...">
@@ -399,7 +399,7 @@ function renderVd(list){
     vdCache[k] = {title: r.title||'', del: r.del||''};
     const src = homeSrc(r), poster = homePoster(r);
     const cloud = (r.host || 'cloudinary') === 'cloudinary';
-    const htag = r.host === 'home' ? 'Ổ cứng' : (r.host === 'catbox' ? 'Catbox' : 'Cloudinary');
+    const htag = r.host === 'home' ? 'Ổ cứng' : (r.host === 'catbox' ? 'Catbox' : (r.host === 'litterbox' ? 'Tạm 72h' : 'Cloudinary'));
     const isHome = r.host === 'home';
     const dl = cloud ? dlUrl(src) : (isHome ? (src ? src + '?download=1' : '') : src);
     const fname = (((r.title || 'video').replace(/[^\w\-. ()À-ỹ]+/g, '_').substring(0, 80)) || 'video') + '.mp4';
@@ -412,6 +412,7 @@ function renderVd(list){
           + '<div class="vid-info">'
           + (r.cat?'<span class="tag">'+esc(r.cat)+'</span> ':'')
           + '<span class="tag">'+htag+'</span> '
+          + ((r.expiresAt && Date.now() > r.expiresAt) ? '<span class="tag">HẾT HẠN</span> ' : '')
           + (hd?'<span class="tag">ĐÃ ẨN</span> ':'')
           + '<h3>'+esc(r.title)+'</h3>'
           + '<div class="meta"><small>'+fmtTime(r.time)+(r.size?' • '+fmtSize(r.size):'')+'</small>'
@@ -665,7 +666,7 @@ function renderQ(list){
       : st === 'uploading' ? 'Đang up kho' : st === 'error' ? ('Lỗi: ' + (r.detail || '')) : st;
     const pct = Math.max(0, Math.min(100, Math.round(r.pct || 0)));
     return '<div class="item"><div class="head"><div><span class="who">'+esc(r.title || r.url || k)+'</span>'
-      + '<span class="tag">'+esc(r.dest === 'home' ? 'Ổ cứng' : 'Cloud')+'</span></div>'
+      + '<span class="tag">'+esc(r.dest === 'home' ? 'Ổ cứng' : (r.dest === 'litter' ? 'Tạm' : 'Cloud'))+'</span></div>'
       + '<div style="display:flex;gap:10px;align-items:center"><button class="del" onclick="ytQDel(\''+k+'\')">Hủy</button>'
       + '</div></div><p>'+esc(label)+'</p>'
       + ((st === 'downloading' || st === 'uploading') ? '<div class="prog" style="display:block"><i style="width:'+pct+'%"></i></div>' : '')
