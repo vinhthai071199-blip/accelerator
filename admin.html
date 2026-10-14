@@ -530,25 +530,38 @@ async function ytFetch(){
   const watch = 'https://www.youtube.com/watch?v='+id;
   btn.disabled = true; btn.textContent = 'Đang lấy...';
   prev.innerHTML = '<div class="empty">Đang lấy thông tin...</div>';
+  ytInfo = null;
+  /* noembed truoc (nhanh, ~1s) -> hien ngay; Invidious sau (lay them do dai), timeout 10s */
   try{
-    const r = await (await fetch(YT_BRIDGE+'/api/v1/videos/'+id+'?hl=vi')).json();
-    if(!r || !r.title) throw new Error('noinfo');
-    const th = (r.videoThumbnails||[]).find(function(t){ return t.quality==='sddefault'; })||{};
-    ytInfo = {id:id, title:r.title||id, author:r.author||'', dur:r.lengthSeconds||0, thumb:th.url||('https://i.ytimg.com/vi/'+id+'/hqdefault.jpg')};
-  }catch(e){
-    try{
-      const n = await (await fetch('https://noembed.com/embed?url='+encodeURIComponent(watch))).json();
-      if(!n || !n.title) throw new Error('noinfo');
+    const n = await (await fetch('https://noembed.com/embed?url='+encodeURIComponent(watch))).json();
+    if(n && n.title){
       ytInfo = {id:id, title:n.title, author:n.author_name||'', dur:0, thumb:n.thumbnail_url||('https://i.ytimg.com/vi/'+id+'/hqdefault.jpg')};
-    }catch(e2){
-      err.textContent = 'Không lấy được thông tin. Kiểm tra lại link hoặc mạng rồi thử lại.';
-      prev.innerHTML = '';
       btn.disabled = false; btn.textContent = 'Lấy thông tin';
-      return;
+      ytRender();
     }
-  }
+  }catch(e){}
+  try{
+    const ctl = new AbortController();
+    const to = setTimeout(function(){ try{ ctl.abort(); }catch(e){} }, 10000);
+    const r = await (await fetch(YT_BRIDGE+'/api/v1/videos/'+id+'?hl=vi', {signal:ctl.signal})).json();
+    clearTimeout(to);
+    if(r && r.title){
+      const th = (r.videoThumbnails||[]).find(function(t){ return t.quality==='sddefault'; })||{};
+      if(ytInfo){
+        ytInfo.dur = r.lengthSeconds || ytInfo.dur;
+        if(th.url) ytInfo.thumb = th.url;
+      } else {
+        ytInfo = {id:id, title:r.title||id, author:r.author||'', dur:r.lengthSeconds||0, thumb:th.url||('https://i.ytimg.com/vi/'+id+'/hqdefault.jpg')};
+      }
+      btn.disabled = false; btn.textContent = 'Lấy thông tin';
+      ytRender();
+    }
+  }catch(e){}
   btn.disabled = false; btn.textContent = 'Lấy thông tin';
-  ytRender();
+  if(!ytInfo){
+    err.textContent = 'Không lấy được thông tin. Kiểm tra lại link hoặc mạng rồi thử lại.';
+    prev.innerHTML = '';
+  }
 }
 function ytRender(){
   const prev = document.getElementById('ytPrev');
