@@ -395,11 +395,15 @@ function renderVd(list){
     const src = homeSrc(r), poster = homePoster(r);
     const cloud = (r.host || 'cloudinary') === 'cloudinary';
     const htag = r.host === 'home' ? 'Ổ cứng' : (r.host === 'catbox' ? 'Catbox' : 'Cloudinary');
-    const dl = cloud ? dlUrl(src) : src;
+    const isHome = r.host === 'home';
+    const hb = homeBase();
+    const lite = (isHome && r.light && hb) ? hb + r.light : '';
+    const play = lite || src;
+    const dl = cloud ? dlUrl(src) : (isHome ? (src ? src + '?download=1' : '') : src);
     const fname = (((r.title || 'video').replace(/[^\w\-. ()À-ỹ]+/g, '_').substring(0, 80)) || 'video') + '.mp4';
     const hd = !!r.hidden;
     return '<div class="vid-card"'+(hd?' style="opacity:.55"':'')+'>'
-      + '<div class="vid-facade" data-url="'+esc(src)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)">'
+      + '<div class="vid-facade" data-url="'+esc(play)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)">'
       + (poster ? '<img class="vid-poster" loading="lazy" src="'+esc(poster)+'" alt="">' : '')
       + '<div class="vid-play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
       + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div></div>'
@@ -410,7 +414,8 @@ function renderVd(list){
           + '<h3>'+esc(r.title)+'</h3>'
           + '<div class="meta"><small>'+fmtTime(r.time)+(r.size?' • '+fmtSize(r.size):'')+'</small>'
           + (cloud ? '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener">Tải xuống</a>'
-          : '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener" data-url="'+esc(src)+'" data-name="'+esc(fname)+'" onclick="return dlFile(this)">Tải xuống</a>')
+          : (isHome ? '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener">Tải xuống (bản gốc)</a>'
+          : '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener" data-url="'+esc(src)+'" data-name="'+esc(fname)+'" onclick="return dlFile(this)">Tải xuống</a>'))
       + '<button class="del" onclick="editVideo(\''+k+'\')">Sửa tên</button>'
       + '<button class="del" onclick="toggleHide(\'videos\',\''+k+'\','+(hd?'true':'false')+')">'+(hd?'Hiện':'Ẩn')+'</button>'
       + '<button class="del" onclick="delVideo(\''+k+'\')">Xóa</button>'
@@ -643,7 +648,7 @@ async function ytServer(){
   try{
     const r = await callSrv();
     const homeUrl = (r.host === 'home') ? (ytBaseCur.replace(/\/+$/,'') + (r.path || '')) : '';
-    await db.ref('videos').push({title:ytInfo.title, url:r.host==='home'?homeUrl:r.url, host:r.host||'cloudinary', path:r.path||'', poster:r.poster||'', size:r.bytes||0, public_id:r.public_id||'', del:r.del||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
+    await db.ref('videos').push({title:ytInfo.title, url:r.host==='home'?homeUrl:r.url, host:r.host||'cloudinary', path:r.path||'', poster:r.poster||'', light:r.light||'', size:r.bytes||0, public_id:r.public_id||'', del:r.del||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
     document.getElementById('ytUrl').value = '';
     document.getElementById('ytPrev').innerHTML = '';
     ytInfo = null;

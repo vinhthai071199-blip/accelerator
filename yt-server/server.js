@@ -113,6 +113,10 @@ const server = http.createServer((req, res) => {
       res.setHeader('Accept-Ranges', 'bytes');
       res.setHeader('Content-Type', mime);
       res.setHeader('Cache-Control', 'public, max-age=86400');
+      if (u.searchParams.get('download') === '1') {
+        const dn = path.basename(ffp).replace(/"/g, '');
+        res.setHeader('Content-Disposition', 'attachment; filename="' + dn + '"; filename*=UTF-8\'\'' + encodeURIComponent(dn));
+      }
       const rg = String(req.headers.range || '');
       const m = rg.match(/bytes=(\d*)-(\d*)/);
       if (m) {
@@ -188,9 +192,22 @@ const server = http.createServer((req, res) => {
               await run(cfg.ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', '-ss', '1', '-i', destFp, '-vframes', '1', '-vf', 'scale=640:-1', jpg]);
               posterPath = '/files/' + encodeURIComponent(path.basename(jpg));
             } catch (e) { posterPath = ''; }
+            /* Ban nhe 720p chi de PHAT cho nhanh; ban goc giu nguyen de TAI */
+            let lightPath = '';
+            try {
+              const probe = await run(cfg.ffmpeg, ['-hide_banner', '-i', destFp]);
+              const mm = (probe.err + probe.out).match(/Video:[^\n]*?(\d{3,5})x(\d{3,5})/);
+              const vh = mm ? parseInt(mm[2], 10) : 0;
+              if (vh > 720) {
+                prog = { stage: 'up', pct: -1, detail: 'Dang tao ban nhe 720p de xem nhanh...' };
+                const lite = destFp.replace(/\.[^.]+$/, '.720p.mp4');
+                await run(cfg.ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', '-i', destFp, '-vf', 'scale=-2:720', '-crf', '26', '-preset', 'veryfast', '-c:a', 'aac', '-b:a', '128k', lite]);
+                lightPath = '/files/' + encodeURIComponent(path.basename(lite));
+              }
+            } catch (e) { lightPath = ''; }
             busy = false;
             prog = { stage: 'done', pct: 100, detail: '' };
-            return send(res, 200, { ok: true, url: pub, host: 'home', path: pub, poster: posterPath, bytes: st.size });
+            return send(res, 200, { ok: true, url: pub, host: 'home', path: pub, poster: posterPath, light: lightPath, bytes: st.size });
           }
           if (st.size > 200 * 1024 * 1024) {
             busy = false;
