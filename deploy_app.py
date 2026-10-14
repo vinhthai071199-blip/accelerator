@@ -20,7 +20,7 @@ REPO_DIR = r"D:\Opencode Project"
 SITE_URL = "https://acceleratorares.vercel.app/"
 EXTRA_FILES = ["admin.html", "avatar.jpg", "avatar.ico", "shop-logo.jpg", "robots.txt"]
 SRC_DIR = os.path.dirname(DEFAULT_HTML)
-VERSION = "v3.3"
+VERSION = "v3.4"
 CONFIG = os.path.join(REPO_DIR, "deploy_config.json")
 FB_API_KEY = "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw"
 FB_DB_URL = "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app"
@@ -356,6 +356,9 @@ class App:
                        font=("Segoe UI", 10), bg=PANEL, fg=TXT, selectcolor=CARD,
                        activebackground=PANEL, activeforeground=TXT, cursor="hand2").pack(side="left")
         tk.Radiobutton(mf, text="Mọi admin dùng (mở tunnel)", variable=self.yt_mode, value="public",
+                       font=("Segoe UI", 10), bg=PANEL, fg=TXT, selectcolor=CARD,
+                       activebackground=PANEL, activeforeground=TXT, cursor="hand2").pack(side="left", padx=(16, 0))
+        tk.Radiobutton(mf, text="Tailscale riêng", variable=self.yt_mode, value="tailscale",
                        font=("Segoe UI", 10), bg=PANEL, fg=TXT, selectcolor=CARD,
                        activebackground=PANEL, activeforeground=TXT, cursor="hand2").pack(side="left", padx=(16, 0))
         bf = tk.Frame(yc, bg=PANEL)
@@ -1008,7 +1011,7 @@ class App:
         except Exception:
             pass
 
-    def yt_need(self, public):
+    def yt_need(self, mode):
         missing = []
         if not shutil.which("node"):
             missing.append("Node.js")
@@ -1018,13 +1021,15 @@ class App:
             missing.append("tools/yt-dlp.exe")
         if not os.path.exists(os.path.join(REPO_DIR, "tools", "ffmpeg.exe")):
             missing.append("tools/ffmpeg.exe")
-        if public and not os.path.exists(os.path.join(REPO_DIR, "tools", "cloudflared.exe")):
+        if mode == "public" and not os.path.exists(os.path.join(REPO_DIR, "tools", "cloudflared.exe")):
             missing.append("tools/cloudflared.exe")
+        if mode == "tailscale" and not shutil.which("tailscale"):
+            missing.append("Tailscale (cài ở tailscale.com/download)")
         return missing
 
     def yt_start(self):
-        public = (self.yt_mode.get() == "public")
-        miss = self.yt_need(public)
+        mode = self.yt_mode.get()
+        miss = self.yt_need(mode)
         if miss:
             try:
                 self.yt_msg.configure(text="Thiếu: " + ", ".join(miss))
@@ -1054,7 +1059,7 @@ class App:
             self.yt_url_lbl.configure(text="")
         except Exception:
             pass
-        if public:
+        if mode == "public":
             try:
                 cf = os.path.join(REPO_DIR, "tools", "cloudflared.exe")
                 self.yt_tun = subprocess.Popen(
@@ -1068,7 +1073,47 @@ class App:
                     self.yt_msg.configure(text="Server mở rồi, nhưng tunnel lỗi: " + str(e))
                 except Exception:
                     pass
+        elif mode == "tailscale":
+            threading.Thread(target=self.yt_setup_tailscale, daemon=True).start()
         threading.Thread(target=self.yt_wait_up, daemon=True).start()
+
+    def yt_ts_ip(self):
+        try:
+            code, out = run("tailscale ip -4", REPO_DIR)
+            if code != 0:
+                return ""
+            for line in out.strip().splitlines():
+                ip = line.strip()
+                if re.match(r"^\d+\.\d+\.\d+\.\d+$", ip):
+                    return ip
+            return ""
+        except Exception:
+            return ""
+
+    def yt_setup_tailscale(self):
+        try:
+            self.yt_msg.configure(text="Đang lấy địa chỉ Tailscale...")
+        except Exception:
+            pass
+        ip = self.yt_ts_ip()
+        if not ip:
+            try:
+                self.yt_msg.configure(text="Server mở rồi, nhưng không lấy được IP Tailscale (app đã đăng nhập chưa?). Dùng chế độ 'Máy mình dùng' hoặc mở tunnel.")
+            except Exception:
+                pass
+            return
+        url = "http://%s:%d" % (ip, self.YT_PORT)
+        self.yt_url = url
+        self.yt_pushed = url
+        try:
+            self.yt_url_lbl.configure(text="Địa chỉ cố định: " + url)
+        except Exception:
+            pass
+        msg = self.yt_push_base(url)
+        try:
+            self.yt_msg.configure(text="Địa chỉ cố định: " + url + " — " + msg)
+        except Exception:
+            pass
 
     def yt_wait_up(self):
         for _ in range(20):
@@ -1241,6 +1286,8 @@ class App:
                         ("cloudflared", "tools/cloudflared.exe")]:
             ok = os.path.exists(os.path.join(REPO_DIR, p))
             self.hlog(("✔ " if ok else "○ ") + name + ("" if ok else " (thieu - tab May chu can)"))
+        ts = shutil.which("tailscale")
+        self.hlog(("✔ Tailscale (" + ts + ")" if ts else "○ Tailscale chua cai (can cho che do Tailscale rieng)"))
 
     def rebuild_exe(self):
         if self.busy:
