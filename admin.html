@@ -132,6 +132,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
       <button class="btn solid" id="ytBtn" onclick="ytFetch()">Lấy thông tin</button>
     </div>
     <div class="err" id="ytErr" style="text-align:left"></div>
+    <div class="prog" id="ytProg" style="display:none"><i id="ytBar"></i></div>
     <div id="ytPrev"></div>
     <div class="up-row" style="margin-top:12px">
       <input type="text" id="ytBase" placeholder="Dán địa chỉ máy chủ ( auto save )" oninput="ytBaseAuto()">
@@ -520,15 +521,13 @@ async function ytFetch(){
 function ytRender(){
   const prev = document.getElementById('ytPrev');
   if(!ytInfo){ prev.innerHTML = ''; return; }
-  const watch = 'https://www.youtube.com/watch?v='+ytInfo.id;
   let h = '<div class="item"><div class="head"><div><span class="who">'+esc(ytInfo.title)+'</span>'
     + (ytInfo.author?'<span class="tag">'+esc(ytInfo.author)+'</span>':'')
     + (ytInfo.dur?'<span class="tag">'+esc(ytDur(ytInfo.dur))+'</span>':'')
     + '</div><div style="display:flex;gap:10px;align-items:center">'
-    + '<a class="del" style="text-decoration:none" href="'+esc(watch)+'" target="_blank" rel="noopener">Mở</a>'
     + '<button class="del" id="ytSrvBtn" style="display:none" onclick="ytServer()">Tải bằng máy nhà</button>'
     + '</div></div>'
-    + '<p><a href="'+esc(watch)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+esc(ytInfo.thumb)+'" alt="" style="width:100%;max-width:420px;display:block;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:6px"></a></p>';
+    + '<p><img loading="lazy" src="'+esc(ytInfo.thumb)+'" alt="" style="width:100%;max-width:420px;display:block;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:6px"></p>';
   h += '<p id="ytSrvNote" style="color:#a9a9b2;font-size:12.5px"></p></div>';
   prev.innerHTML = h;
   ytPing();
@@ -604,7 +603,12 @@ async function ytServer(){
   err.textContent = '';
   if(!ytInfo) return;
   if(!confirm('Tải "'+ytInfo.title+'" bằng máy nhà (chất lượng cao, có tiếng) rồi up kho + đăng vào mục Video? (≤100MB lên Cloudinary, 100–200MB lên Catbox)')) return;
-  err.textContent = 'Máy nhà đang tải... (giữ cửa sổ server mở, video dài chờ vài phút)';
+  err.textContent = 'Máy nhà đang tải... (giữ cửa sổ server mở)';
+  document.getElementById('ytProg').style.display = 'block';
+  document.getElementById('ytBar').style.width = '0';
+  clearInterval(ytPollT);
+  ytPollT = setInterval(ytPoll, 1000);
+  ytPoll();
   async function callSrv(){
     const r = await (await fetch(ytBaseCur+'/dl', {method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({url:'https://www.youtube.com/watch?v='+ytInfo.id})})).json();
@@ -617,10 +621,31 @@ async function ytServer(){
     document.getElementById('ytUrl').value = '';
     document.getElementById('ytPrev').innerHTML = '';
     ytInfo = null;
+    clearInterval(ytPollT);
+    document.getElementById('ytProg').style.display = 'none';
     err.textContent = 'Xong! Video đã vào mục Video.' + (r.host === 'catbox' ? ' (Kho Catbox: xem/tải bình thường, không có ảnh bìa trước khi phát.)' : '');
   }catch(e){
+    clearInterval(ytPollT);
+    document.getElementById('ytProg').style.display = 'none';
     err.textContent = 'Máy nhà báo lỗi: '+(e.message||'không nối được — kiểm tra start-yt.bat có đang chạy không');
   }
+}
+let ytPollT = null;
+async function ytPoll(){
+  try{
+    const r = await (await fetch(ytBaseCur+'/progress')).json();
+    const bar = document.getElementById('ytBar');
+    const err = document.getElementById('ytErr');
+    if(!bar || !err) return;
+    if(r.stage === 'dl'){
+      const p = Math.max(0, Math.min(99, Math.round(r.pct || 0)));
+      bar.style.width = p + '%';
+      err.textContent = 'Đang tải về máy nhà... ' + p + '% (giữ cửa sổ server mở)';
+    } else if(r.stage === 'up'){
+      bar.style.width = '100%';
+      err.textContent = r.detail || 'Đang up lên kho... (giữ cửa sổ server mở)';
+    }
+  }catch(e){}
 }
 
 function dlUrl(u){

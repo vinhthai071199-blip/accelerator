@@ -37,6 +37,27 @@ function send(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(obj));
 }
+function runLive(cmd, args, onPct) {
+  return new Promise((resolve, reject) => {
+    const p = spawn(cmd, args, { windowsHide: true,
+      env: Object.assign({}, process.env, { PYTHONIOENCODING: 'utf-8', PYTHONUTF8: '1' }) });
+    let out = '', err = '', buf = '';
+    function feed(d) {
+      buf += d;
+      let k;
+      while ((k = buf.search(/[\r\n]/)) !== -1) {
+        const line = buf.slice(0, k);
+        buf = buf.slice(k + 1);
+        const m = line.match(/(\d+(?:\.\d+)?)%/);
+        if (m && /download/i.test(line)) onPct(Math.min(99, parseFloat(m[1])));
+      }
+    }
+    p.stdout.on('data', d => { out += d; feed(d.toString()); });
+    p.stderr.on('data', d => { err += d; feed(d.toString()); });
+    p.on('error', reject);
+    p.on('close', code => code === 0 ? resolve({ out, err }) : reject(new Error(err.slice(-2000) || ('exit ' + code))));
+  });
+}
 function run(cmd, args) {
   return new Promise((resolve, reject) => {
     /* PYTHONIOENCODING=utf-8: ep yt-dlp in duong dan Unicode ra pipe,
@@ -52,6 +73,7 @@ function run(cmd, args) {
 }
 
 let busy = false;
+let prog = { stage: 'idle', pct: 0, detail: '' };
 const hits = [];
 function overLimit(){
   const now = Date.now();
@@ -65,6 +87,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') { cors(res); res.writeHead(204); res.end(); return; }
   const u = new URL(req.url, 'http://x');
   if (req.method === 'GET' && u.pathname === '/ping') return send(res, 200, { ok: true, busy });
+  if (req.method === 'GET' && u.pathname === '/progress') return send(res, 200, { ok: true, busy, stage: prog.stage, pct: prog.pct, detail: prog.detail });
   if (req.method === 'POST' && u.pathname === '/dl') {
     let body = '';
     req.on('data', c => { body += c; if (body.length > 1e6) req.destroy(); });
@@ -78,19 +101,22 @@ const server = http.createServer((req, res) => {
         const url = String(j.url || '');
         if (!/^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(url)) return send(res, 400, { error: 'khong phai link youtube' });
         busy = true; hits.push(Date.now());
+        prog = { stage: 'dl', pct: 0, detail: '' };
         try {
           const fmt = (/^[A-Za-z0-9_*+\/()[\].\-=,:? ]{1,120}$/.test(String(j.format || '')) && j.format) || 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b';
           const tpl = path.join(DL_DIR, Date.now() + '.%(title).60s [%(id)s].%(ext)s');
           const baseArgs = ['-f', fmt, '--merge-output-format', 'mp4',
-            '--ffmpeg-location', cfg.ffmpeg, '-o', tpl, '--no-playlist', '--retries', '3',
+            '--ffmpeg-location', cfg.ffmpeg, '-o', tpl, '--no-playlist', '--retries', '3', '--newline',
             '--print', 'after_move:filepath', url];
+          const onPct = function(p){ prog.pct = p; };
           let r1;
-          try { r1 = await run(cfg.ytdlp, baseArgs); }
+          try { r1 = await runLive(cfg.ytdlp, baseArgs, onPct); }
           catch (e1) {
             /* Luot 2: doi sang android client (vuot kiem tra bot / SABR) */
-            r1 = await run(cfg.ytdlp, ['--extractor-args', 'youtube:player_client=android'].concat(baseArgs));
+            prog.pct = 0;
+            r1 = await runLive(cfg.ytdlp, ['--extractor-args', 'youtube:player_client=android'].concat(baseArgs), onPct);
           }
-          const fp0 = r1.out.trim().split(/\r?\n/).pop();
+          const fp0 = r1.out.trim().split(/\r?\n/).filter(function(l){ return l && l.indexOf('%') === -1; }).pop() || '';
           let fp = fp0, st = null;
           try { st = fs.statSync(fp); } catch (e) { st = null; }
           if (!st) {
@@ -109,14 +135,17 @@ const server = http.createServer((req, res) => {
           }
           if (st.size > 100 * 1024 * 1024) {
             /* 100-200MB: Cloudinary free khong nhan -> up Catbox (toi da 200MB) */
+            prog = { stage: 'up', pct: -1, detail: 'Dang up len Catbox (file 100-200MB, cho vai phut)...' };
             const r2 = await run('curl.exe', ['-sS', '-F', 'reqtype=fileupload',
               '-F', 'fileToUpload=@' + fp, 'https://catbox.moe/user/api.php']);
             const curl = (r2.out || '').trim();
             if (!/^https:\/\/files\.catbox\.moe\//.test(curl)) throw new Error('catbox tu choi: ' + curl.slice(0, 120));
             try { fs.unlinkSync(fp); } catch (e) {}
             busy = false;
+            prog = { stage: 'done', pct: 100, detail: '' };
             return send(res, 200, { ok: true, url: curl, host: 'catbox', bytes: st.size });
           }
+          prog = { stage: 'up', pct: -1, detail: 'Dang up len Cloudinary (cho vai phut)...' };
           const r2 = await run('curl.exe', ['-sS', '-X', 'POST',
             'https://api.cloudinary.com/v1_1/' + cfg.cloud + '/video/upload',
             '-F', 'file=@' + fp, '-F', 'upload_preset=' + cfg.preset]);
@@ -125,6 +154,7 @@ const server = http.createServer((req, res) => {
           if (!up.secure_url) throw new Error((up.error && up.error.message) || 'cloudinary tu choi');
           try { fs.unlinkSync(fp); } catch (e) {}
           busy = false;
+          prog = { stage: 'done', pct: 100, detail: '' };
           return send(res, 200, { ok: true, url: up.secure_url, host: 'cloudinary', public_id: up.public_id || '', del: up.delete_token || '', bytes: up.bytes || st.size });
         } catch (e) { busy = false; return send(res, 500, { error: String((e && e.message) || e).slice(0, 300) }); }
       } catch (e) { return send(res, 400, { error: 'sai du lieu' }); }
