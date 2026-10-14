@@ -565,6 +565,15 @@ async function ytPing(){
 }
 let ytBaseTimer = null;
 let ytBaseLast = null;
+async function ytBaseLoad(){
+  try{
+    const s = await db.ref('settings/ytServerBase').once('value');
+    const v = s.val() ? String(s.val()).replace(/\/+$/,'') : '';
+    ytBaseLast = v;
+    const bi = document.getElementById('ytBase');
+    if(bi && document.activeElement !== bi) bi.value = v;
+  }catch(e){}
+}
 async function ytBaseAuto(){
   const inp = document.getElementById('ytBase');
   const st = document.getElementById('ytBaseSt');
@@ -884,7 +893,7 @@ function addPhoto(){
 }
 
 function showLogin(){ document.getElementById('loginView').style.display='block'; document.getElementById('adminView').style.display='none'; stopListeners(); }
-function showAdmin(){ document.getElementById('loginView').style.display='none'; document.getElementById('adminView').style.display='block'; startListeners(); }
+function showAdmin(){ document.getElementById('loginView').style.display='none'; document.getElementById('adminView').style.display='block'; startListeners(); ytBaseLoad(); }
 
 function doLogin(e){
   e.preventDefault();
