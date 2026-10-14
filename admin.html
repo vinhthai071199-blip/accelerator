@@ -134,7 +134,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="err" id="ytErr" style="text-align:left"></div>
     <div id="ytPrev"></div>
     <div class="up-row" style="margin-top:12px">
-      <input type="text" id="ytBase" placeholder="Dán địa chỉ máy chủ chung ở đây — tự lưu luôn, bấm Xóa để gỡ..." oninput="ytBaseAuto()">
+      <input type="text" id="ytBase" placeholder="Dán địa chỉ máy chủ ( auto save )" oninput="ytBaseAuto()">
       <button class="btn" onclick="ytBaseDel()">Xóa địa chỉ</button>
     </div>
     <div class="err" id="ytBaseSt" style="text-align:left;color:#8fd694"></div>
@@ -576,7 +576,7 @@ async function ytBaseAuto(){
     try{
       await db.ref('settings/ytServerBase').set(v);
       ytBaseLast = v;
-      if(st) st.textContent = v ? ('Đã tự lưu lúc ' + new Date().toLocaleTimeString('vi-VN') + ' — giữ nguyên cho đến khi bạn bấm Xóa.') : 'Đã xóa địa chỉ máy chủ chung.';
+      if(st) st.textContent = v ? ('Đã tự lưu lúc ' + new Date().toLocaleTimeString('vi-VN')) : 'Đã xóa địa chỉ máy chủ chung.';
       ytPing();
     }catch(e){
       if(st) st.textContent = 'Không lưu được (' + (e.code || '') + '). Kiểm tra Rules rồi Publish.';
