@@ -571,7 +571,7 @@ function ytRender(){
     + (ytInfo.author?'<span class="tag">'+esc(ytInfo.author)+'</span>':'')
     + (ytInfo.dur?'<span class="tag">'+esc(ytDur(ytInfo.dur))+'</span>':'')
     + '</div><div style="display:flex;gap:10px;align-items:center">'
-    + '<button class="del" id="ytSrvBtn" onclick="ytQueue()">Gửi máy nhà tải</button>'
+    + '<button class="btn solid" id="ytSrvBtn" onclick="ytQueue()">Gửi máy nhà tải</button>'
     + '</div></div>'
     + '<p><img loading="lazy" src="'+esc(ytInfo.thumb)+'" alt="" style="width:100%;max-width:420px;display:block;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:6px"></p>';
   h += '<p id="ytSrvNote" style="color:#a9a9b2;font-size:12.5px"></p></div>';
