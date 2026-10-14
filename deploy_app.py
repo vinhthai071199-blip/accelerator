@@ -18,9 +18,9 @@ import webbrowser
 DEFAULT_HTML = r"D:\Opencode Project\Acceleratorares.html"
 REPO_DIR = r"D:\Opencode Project"
 SITE_URL = "https://acceleratorares.vercel.app/"
-EXTRA_FILES = ["admin.html", "avatar.jpg", "shop-logo.jpg"]
+EXTRA_FILES = ["admin.html", "avatar.jpg", "avatar.ico", "shop-logo.jpg", "robots.txt"]
 SRC_DIR = os.path.dirname(DEFAULT_HTML)
-VERSION = "v3.2"
+VERSION = "v3.3"
 CONFIG = os.path.join(REPO_DIR, "deploy_config.json")
 FB_API_KEY = "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw"
 FB_DB_URL = "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app"
@@ -71,6 +71,8 @@ class App:
         self.root = root
         self.html_file = DEFAULT_HTML
         self.busy = False
+        self.yt_proc = None
+        self.yt_tun = None
         self.auto_var = tk.BooleanVar(value=load_cfg().get("auto_backup", True))
         root.title("AcceleratorAres Deploy " + VERSION)
         root.geometry("640x700")
@@ -329,6 +331,49 @@ class App:
                                fg=GOLD, bg=BG, wraplength=560, justify="left")
         self.vd_msg.pack(padx=16, pady=8, anchor="w", fill="x")
 
+        # ---- Tab May chu ----
+        tab8 = ttk.Frame(nb)
+        nb.add(tab8, text="  🖥️  Máy chủ  ")
+
+        tk.Label(tab8, text="Bật/tắt máy chủ tải video (thay cho file .bat). Server chạy thì admin mới bấm 'Tải bằng máy nhà' được.",
+                 font=("Segoe UI", 9), fg=MUTED, bg=BG,
+                 wraplength=560, justify="left").pack(anchor="w", padx=16, pady=(14, 6))
+        yc = ttk.Frame(tab8, style="Card.TFrame", padding=14)
+        yc.pack(fill="x", padx=14, pady=6)
+        srow = tk.Frame(yc, bg=PANEL)
+        srow.pack(fill="x")
+        self.yt_dot = tk.Label(srow, text="●", font=("Segoe UI", 14), fg=MUTED, bg=PANEL)
+        self.yt_dot.pack(side="left")
+        self.yt_lbl = tk.Label(srow, text="Đang kiểm tra...", font=("Segoe UI", 11, "bold"),
+                              fg=TXT, bg=PANEL)
+        self.yt_lbl.pack(side="left", padx=(8, 0))
+        self.yt_mode = tk.StringVar(value="local")
+        mf = tk.Frame(yc, bg=PANEL)
+        mf.pack(fill="x", pady=(10, 0))
+        tk.Radiobutton(mf, text="Máy mình dùng", variable=self.yt_mode, value="local",
+                       font=("Segoe UI", 10), bg=PANEL, fg=TXT, selectcolor=CARD,
+                       activebackground=PANEL, activeforeground=TXT, cursor="hand2").pack(side="left")
+        tk.Radiobutton(mf, text="Mọi admin dùng (mở tunnel)", variable=self.yt_mode, value="public",
+                       font=("Segoe UI", 10), bg=PANEL, fg=TXT, selectcolor=CARD,
+                       activebackground=PANEL, activeforeground=TXT, cursor="hand2").pack(side="left", padx=(16, 0))
+        bf = tk.Frame(yc, bg=PANEL)
+        bf.pack(fill="x", pady=(10, 0))
+        tk.Button(bf, text="▶  BẬT SERVER", font=("Segoe UI", 11, "bold"),
+                  bg=GOLD, fg="#161005", activebackground=GOLD_LT,
+                  relief="flat", padx=14, pady=9, cursor="hand2",
+                  command=self.yt_start).pack(side="left", fill="x", expand=True, padx=(0, 4))
+        tk.Button(bf, text="⏹  TẮT SERVER", font=("Segoe UI", 11, "bold"),
+                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
+                  relief="flat", padx=14, pady=9, cursor="hand2",
+                  command=self.yt_stop).pack(side="left", fill="x", expand=True, padx=(4, 0))
+        self.yt_url_lbl = tk.Label(yc, text="", font=("Segoe UI", 9), fg=GOLD, bg=PANEL,
+                                  wraplength=520, justify="left")
+        self.yt_url_lbl.pack(anchor="w", pady=(8, 0))
+        self.yt_msg = tk.Label(tab8, text="", font=("Segoe UI", 9),
+                               fg=GOLD, bg=BG, wraplength=560, justify="left")
+        self.yt_msg.pack(padx=16, pady=8, anchor="w", fill="x")
+        threading.Thread(target=self.yt_refresh, daemon=True).start()
+
         # ---- Tab Mo nhanh ----
         tab7 = ttk.Frame(nb)
         nb.add(tab7, text="  🔗  Mở nhanh  ")
@@ -532,7 +577,7 @@ class App:
             dest = os.path.join(REPO_DIR, "backups", stamp)
             os.makedirs(dest, exist_ok=True)
             n = 0
-            for f in ["Acceleratorares.html", "admin.html", "avatar.jpg", "shop-logo.jpg"]:
+            for f in ["Acceleratorares.html", "admin.html", "avatar.jpg", "avatar.ico", "shop-logo.jpg", "robots.txt"]:
                 p = os.path.join(REPO_DIR, f)
                 if os.path.exists(p):
                     shutil.copy2(p, os.path.join(dest, f))
@@ -925,6 +970,161 @@ class App:
                 pass
             return chunk
 
+    # ---------- may chu tai video ----------
+    YT_PORT = 8799
+
+    def yt_dir(self):
+        return os.path.join(REPO_DIR, "yt-server")
+
+    def yt_ping(self):
+        try:
+            with urllib.request.urlopen("http://127.0.0.1:%d/ping" % self.YT_PORT, timeout=4) as r:
+                return json.loads(r.read().decode()).get("ok", False)
+        except Exception:
+            return False
+
+    def yt_port_busy(self):
+        import socket
+        try:
+            c = socket.create_connection(("127.0.0.1", self.YT_PORT), timeout=2)
+            c.close()
+            return True
+        except Exception:
+            return False
+
+    def yt_refresh(self):
+        on = self.yt_ping()
+        try:
+            self.yt_dot.configure(fg="#4caf6d" if on else MUTED)
+            self.yt_lbl.configure(text=("Đang chạy (cổng %d)" % self.YT_PORT) if on else "Đang tắt")
+        except Exception:
+            pass
+
+    def yt_need(self, public):
+        missing = []
+        if not shutil.which("node"):
+            missing.append("Node.js")
+        if not os.path.exists(os.path.join(self.yt_dir(), "server.js")):
+            missing.append("yt-server/server.js")
+        if not os.path.exists(os.path.join(REPO_DIR, "tools", "yt-dlp.exe")):
+            missing.append("tools/yt-dlp.exe")
+        if not os.path.exists(os.path.join(REPO_DIR, "tools", "ffmpeg.exe")):
+            missing.append("tools/ffmpeg.exe")
+        if public and not os.path.exists(os.path.join(REPO_DIR, "tools", "cloudflared.exe")):
+            missing.append("tools/cloudflared.exe")
+        return missing
+
+    def yt_start(self):
+        public = (self.yt_mode.get() == "public")
+        miss = self.yt_need(public)
+        if miss:
+            try:
+                self.yt_msg.configure(text="Thiếu: " + ", ".join(miss))
+            except Exception:
+                pass
+            return
+        if self.yt_port_busy():
+            try:
+                self.yt_msg.configure(text="Cổng %d đang bận (server cũ vẫn chạy)! Bấm TẮT trước." % self.YT_PORT)
+            except Exception:
+                pass
+            self.yt_refresh()
+            return
+        try:
+            self.yt_proc = subprocess.Popen(
+                [shutil.which("node"), "server.js"], cwd=self.yt_dir(),
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception as e:
+            try:
+                self.yt_msg.configure(text="Không mở được server: " + str(e))
+            except Exception:
+                pass
+            return
+        try:
+            self.yt_msg.configure(text="Đang mở server...")
+            self.yt_url_lbl.configure(text="")
+        except Exception:
+            pass
+        if public:
+            try:
+                cf = os.path.join(REPO_DIR, "tools", "cloudflared.exe")
+                self.yt_tun = subprocess.Popen(
+                    [cf, "tunnel", "--url", "http://127.0.0.1:%d" % self.YT_PORT],
+                    stderr=subprocess.PIPE, stdout=subprocess.DEVNULL,
+                    text=True, bufsize=1,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+                threading.Thread(target=self.yt_watch_tunnel, daemon=True).start()
+            except Exception as e:
+                try:
+                    self.yt_msg.configure(text="Server mở rồi, nhưng tunnel lỗi: " + str(e))
+                except Exception:
+                    pass
+        threading.Thread(target=self.yt_wait_up, daemon=True).start()
+
+    def yt_wait_up(self):
+        for _ in range(20):
+            time.sleep(1)
+            if self.yt_ping():
+                break
+        self.yt_refresh()
+        try:
+            if self.yt_ping():
+                self.yt_msg.configure(text="Server ĐANG CHẠY. Vào /admin bấm 'Tải bằng máy nhà' được rồi.")
+            else:
+                self.yt_msg.configure(text="Server không lên! Kiểm tra lại Node/tools.")
+        except Exception:
+            pass
+
+    def yt_watch_tunnel(self):
+        try:
+            for line in (getattr(self.yt_tun, "stderr", None) or []):
+                m = re.search(r"https://[a-z0-9-]+\.trycloudflare\.com", line)
+                if m:
+                    try:
+                        self.yt_url_lbl.configure(text="Địa chỉ chung: " + m.group(0))
+                    except Exception:
+                        pass
+                    return
+        except Exception:
+            pass
+
+    def yt_stop(self):
+        killed = self.yt_kill_port()
+        for attr in ("yt_proc", "yt_tun"):
+            try:
+                pr = getattr(self, attr, None)
+                if pr is not None and pr.poll() is None:
+                    pr.terminate()
+            except Exception:
+                pass
+        try:
+            self.yt_url_lbl.configure(text="")
+            self.yt_msg.configure(text="Đã tắt server." if killed else "Server vốn đã tắt.")
+        except Exception:
+            pass
+        self.yt_refresh()
+
+    def yt_kill_port(self):
+        try:
+            code, out = run("netstat -ano -p TCP", REPO_DIR)
+            pids = set()
+            for line in out.splitlines():
+                if (":%d" % self.YT_PORT) in line:
+                    parts = line.split()
+                    if parts and parts[-1].isdigit():
+                        pids.add(parts[-1])
+            hit = False
+            for pid in pids:
+                c2, nm = run("tasklist /FI \"PID eq %s\" /FO CSV /NH" % pid, REPO_DIR)
+                low = nm.lower()
+                if "node.exe" in low or "cloudflared.exe" in low:
+                    run("taskkill /F /PID %s" % pid, REPO_DIR)
+                    hit = True
+            return hit
+        except Exception:
+            return False
+
     # ---------- suc khoe / rebuild ----------
     def hlog(self, text):
         self.hlog_box.configure(state="normal")
@@ -968,6 +1168,10 @@ class App:
             self.hlog("✔ PyInstaller san sang (build EXE duoc)")
         except Exception:
             self.hlog("○ PyInstaller chua cai (can khi build EXE: pip install pyinstaller)")
+        for name, p in [("yt-dlp", "tools/yt-dlp.exe"), ("ffmpeg", "tools/ffmpeg.exe"),
+                        ("cloudflared", "tools/cloudflared.exe")]:
+            ok = os.path.exists(os.path.join(REPO_DIR, p))
+            self.hlog(("✔ " if ok else "○ ") + name + ("" if ok else " (thieu - tab May chu can)"))
 
     def rebuild_exe(self):
         if self.busy:
@@ -982,7 +1186,7 @@ class App:
         try:
             self.write("Dang build file EXE moi (3-5 phut, dung tat app)...")
             self.set_prog(20)
-            code, out = run("python -m PyInstaller --onefile --windowed --name DeployWeb --distpath dist_app deploy_app.py", REPO_DIR)
+            code, out = run("python -m PyInstaller --onefile --windowed --name DeployWeb --icon avatar.ico --distpath dist_app deploy_app.py", REPO_DIR)
             new_exe = os.path.join(REPO_DIR, "dist_app", "DeployWeb.exe")
             if code != 0 or not os.path.exists(new_exe):
                 self.write("LOI build:\n" + out[-1500:])
