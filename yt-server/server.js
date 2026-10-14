@@ -141,10 +141,10 @@ const server = http.createServer((req, res) => {
         const j = JSON.parse(body || '{}');
         /* Khong dung token (chu nhan chon tien dung thay bao mat).
            Giu: 1 video/lan + toi da 20 video/gio + 30 video/ngay. */
-        if (busy) return send(res, 409, { error: 'may dang tai video khac, doi chut roi bam lai' });
-        if (overLimit()) return send(res, 429, { error: 'may nha qua tai (toi da 20 video/gio, 30 video/ngay), doi chut roi bam lai' });
+        if (busy) return send(res, 409, { error: 'Máy đang tải video khác, đợi chút rồi bấm lại' });
+        if (overLimit()) return send(res, 429, { error: 'Máy nhà quá tải (tối đa 20 video/giờ, 30 video/ngày), đợi chút rồi bấm lại' });
         const url = String(j.url || '');
-        if (!/^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(url)) return send(res, 400, { error: 'khong phai link youtube' });
+        if (!/^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(url)) return send(res, 400, { error: 'Không phải link YouTube' });
         busy = true; hits.push(Date.now());
         prog = { stage: 'dl', pct: 0, detail: '' };
         try {
@@ -174,20 +174,20 @@ const server = http.createServer((req, res) => {
               const p = path.join(DL_DIR, n);
               try { return { p, m: fs.statSync(p).mtimeMs }; } catch (e) { return null; }
             }).filter(Boolean).sort((a, b) => b.m - a.m);
-            if (!cands.length || Date.now() - cands[0].m > 15 * 60 * 1000) throw new Error('tai xong nhung khong thay file (bam lai lan nua)');
+            if (!cands.length || Date.now() - cands[0].m > 15 * 60 * 1000) throw new Error('Tải xong nhưng không thấy file (bấm lại lần nữa)');
             fp = cands[0].p;
             st = fs.statSync(fp);
           }
           const dest = dest0;
           if (dest === 'home') {
             /* Kho o cung E:/videoserver: giu file, tao anh bia, khong gioi han dung luong */
-            if (!ensureDir(LIB_DIR)) throw new Error('khong thay o E:/videoserver (kiem tra o E roi bam lai)');
+            if (!ensureDir(LIB_DIR)) throw new Error('Không thấy ổ E:/videoserver (kiểm tra ổ E rồi bấm lại)');
             const destFp = path.join(LIB_DIR, path.basename(fp));
-            try { moveFile(fp, destFp); } catch (e) { throw new Error('khong giu duoc file o cung'); }
+            try { moveFile(fp, destFp); } catch (e) { throw new Error('Không giữ được file ở ổ cứng'); }
             const pub = '/files/' + encodeURIComponent(path.basename(destFp));
             let posterPath = '';
             try {
-              prog = { stage: 'up', pct: -1, detail: 'Dang tao anh bia...' };
+              prog = { stage: 'up', pct: -1, detail: 'Đang tạo ảnh bìa...' };
               const jpg = destFp.replace(/\.[^.]+$/, '.jpg');
               await run(cfg.ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', '-ss', '1', '-i', destFp, '-vframes', '1', '-vf', 'scale=640:-1', jpg]);
               posterPath = '/files/' + encodeURIComponent(path.basename(jpg));
@@ -198,11 +198,11 @@ const server = http.createServer((req, res) => {
           }
           if (st.size > 200 * 1024 * 1024) {
             busy = false;
-            return send(res, 413, { error: 'file ' + Math.round(st.size / 1048576) + 'MB vuot 200MB! File nam o yt-server/dl, up tay len Drive (toi 2GB) nhe' });
+            return send(res, 413, { error: 'File ' + Math.round(st.size / 1048576) + 'MB vượt 200MB! File nằm ở E:/videoserver, up tay lên Drive (tới 2GB) nhé' });
           }
           if (st.size > 100 * 1024 * 1024) {
             /* 100-200MB: Cloudinary free khong nhan -> up Catbox (toi da 200MB) */
-            prog = { stage: 'up', pct: -1, detail: 'Dang up len Catbox (file 100-200MB, cho vai phut)...' };
+            prog = { stage: 'up', pct: -1, detail: 'Đang up lên Catbox (file 100–200MB, chờ vài phút)...' };
             const r2 = await run('curl.exe', ['-sS', '-F', 'reqtype=fileupload',
               '-F', 'fileToUpload=@' + fp, 'https://catbox.moe/user/api.php']);
             const curl = (r2.out || '').trim();
@@ -212,7 +212,7 @@ const server = http.createServer((req, res) => {
             prog = { stage: 'done', pct: 100, detail: '' };
             return send(res, 200, { ok: true, url: curl, host: 'catbox', bytes: st.size });
           }
-          prog = { stage: 'up', pct: -1, detail: 'Dang up len Cloudinary (cho vai phut)...' };
+          prog = { stage: 'up', pct: -1, detail: 'Đang up lên Cloudinary (chờ vài phút)...' };
           const r2 = await run('curl.exe', ['-sS', '-X', 'POST',
             'https://api.cloudinary.com/v1_1/' + cfg.cloud + '/video/upload',
             '-F', 'file=@' + fp, '-F', 'upload_preset=' + cfg.preset]);
@@ -270,7 +270,7 @@ async function fbToken() {
       return fbT.id;
     } catch (e) { fbT = null; }
   }
-  if (!cfg.admin_email || !cfg.admin_pass) throw new Error('server chua co email/pass admin (mo yt-server/config.json dien vao)');
+  if (!cfg.admin_email || !cfg.admin_pass) throw new Error('Server chưa có email/pass admin (mở yt-server/config.json điền vào)');
   const r = await httpsReq('POST', 'identitytoolkit.googleapis.com', '/v1/accounts:signInWithPassword?key=' + FB_KEY,
     { email: cfg.admin_email, password: cfg.admin_pass, returnSecureToken: true });
   if (!r.idToken) throw new Error('sai email/pass admin');
@@ -313,6 +313,19 @@ function postLocalDl(url, dest, format) {
   });
 }
 let working = false;
+/* Loi ky thuat (tieng Anh) -> cau tieng Viet hien cho admin.
+   Chi tiet goc giu trong console cua so server de sua loi. */
+function friendlyErr(msg) {
+  msg = String(msg || '');
+  if (/unavailable|private video|deleted|not found| 404/i.test(msg)) return 'Video gốc không còn (bị xóa, ẩn hoặc khóa vùng)';
+  if (/sign in|log in|cookie|bot|captcha|SABR/i.test(msg)) return 'YouTube chặn tải tự động lúc này, gửi lại sau ít phút';
+  if (/catbox/i.test(msg)) return 'Kho Catbox từ chối lúc này, gửi lại sau';
+  if (/cloudinary|size limit|File size|100 ?MB/i.test(msg)) return 'File vượt giới hạn kho, thử lại hoặc đổi kho khác';
+  if (/quota|credit/i.test(msg)) return 'Kho Cloud hết quota tháng này';
+  if (/email\/pass|sai email/i.test(msg)) return 'Sai email/pass admin trong config, kiểm tra lại';
+  if (/o E:|E:\/videoserver/i.test(msg)) return 'Không thấy ổ E, kiểm tra ổ cứng rồi gửi lại';
+  return 'Máy nhà bận/không tải được lúc này, gửi lại sau ít phút';
+}
 async function queueTick() {
   if (busy || working) return;
   let q = null;
@@ -329,12 +342,12 @@ async function queueTick() {
   keys.sort(function (a, b) { return (q[a].time || 0) - (q[b].time || 0); });
   const key = keys[0], job = q[key];
   if (!/^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(String(job.url || ''))) {
-    try { await fbDel('settings/queue' + key); } catch (e) {}
+    try { await fbDel('settings/queue/' + key); } catch (e) {}
     return;
   }
   working = true;
   try {
-    await fbPatch('settings/queue' + key, { stage: 'downloading', pct: 0, detail: 'May nha da nhan viec', claimedAt: Date.now() });
+    await fbPatch('settings/queue/' + key, { stage: 'downloading', pct: 0, detail: 'Máy nhà đã nhận việc', claimedAt: Date.now() });
     let lastPct = -1, lastStage = '';
     const iv = setInterval(function () {
       fetch('http://127.0.0.1:' + PORT + '/progress').then(function (r) { return r.json(); }).then(function (p) {
@@ -342,7 +355,7 @@ async function queueTick() {
         const pc = Math.max(0, Math.min(99, Math.round(p.pct || 0)));
         if (st !== lastStage || Math.abs(pc - lastPct) >= 5) {
           lastStage = st; lastPct = pc;
-          fbPatch('settings/queue' + key, { stage: st, pct: pc, detail: p.detail || '' }).catch(function () {});
+          fbPatch('settings/queue/' + key, { stage: st, pct: pc, detail: p.detail || '' }).catch(function () {});
         }
       }).catch(function () {});
     }, 3000);
@@ -356,9 +369,10 @@ async function queueTick() {
       entry.host = r.host || 'cloudinary'; entry.url = r.url; entry.public_id = r.public_id || ''; entry.del = r.del || ''; entry.size = r.bytes || 0;
     }
     await fbPost('videos', entry);
-    await fbDel('settings/queue' + key);
+    await fbDel('settings/queue/' + key);
   } catch (e) {
-    try { await fbPatch('settings/queue' + key, { stage: 'error', detail: String((e && e.message) || e).slice(0, 200) }); } catch (e2) {}
+    try { console.error('[worker] loi ky thuat:', (e && e.message) || e); } catch (e3) {}
+    try { await fbPatch('settings/queue/' + key, { stage: 'error', detail: friendlyErr((e && e.message) || e) }); } catch (e2) {}
   }
   working = false;
 }
