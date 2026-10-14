@@ -73,6 +73,8 @@ class App:
         self.busy = False
         self.yt_proc = None
         self.yt_tun = None
+        self.yt_url = ""
+        self.yt_pushed = ""
         self.auto_var = tk.BooleanVar(value=load_cfg().get("auto_backup", True))
         root.title("AcceleratorAres Deploy " + VERSION)
         root.geometry("640x700")
@@ -366,9 +368,15 @@ class App:
                   bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
                   relief="flat", padx=14, pady=9, cursor="hand2",
                   command=self.yt_stop).pack(side="left", fill="x", expand=True, padx=(4, 0))
-        self.yt_url_lbl = tk.Label(yc, text="", font=("Segoe UI", 9), fg=GOLD, bg=PANEL,
-                                  wraplength=520, justify="left")
-        self.yt_url_lbl.pack(anchor="w", pady=(8, 0))
+        urow = tk.Frame(yc, bg=PANEL)
+        urow.pack(fill="x", pady=(8, 0))
+        self.yt_url_lbl = tk.Label(urow, text="", font=("Segoe UI", 9), fg=GOLD, bg=PANEL,
+                                  wraplength=430, justify="left")
+        self.yt_url_lbl.pack(side="left", fill="x", expand=True)
+        tk.Button(urow, text="📋 Copy", font=("Segoe UI", 9, "bold"),
+                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
+                  relief="flat", padx=12, pady=6, cursor="hand2",
+                  command=self.yt_copy_url).pack(side="right")
         self.yt_msg = tk.Label(tab8, text="", font=("Segoe UI", 9),
                                fg=GOLD, bg=BG, wraplength=560, justify="left")
         self.yt_msg.pack(padx=16, pady=8, anchor="w", fill="x")
@@ -1081,13 +1089,71 @@ class App:
             for line in (getattr(self.yt_tun, "stderr", None) or []):
                 m = re.search(r"https://[a-z0-9-]+\.trycloudflare\.com", line)
                 if m:
+                    self.yt_url = m.group(0)
+                    self.yt_pushed = m.group(0)
                     try:
-                        self.yt_url_lbl.configure(text="Địa chỉ chung: " + m.group(0))
+                        self.yt_url_lbl.configure(text="Địa chỉ chung: " + self.yt_url)
+                    except Exception:
+                        pass
+                    msg = self.yt_push_base(self.yt_url)
+                    try:
+                        self.yt_msg.configure(text="Địa chỉ chung: " + self.yt_url + " — " + msg)
                     except Exception:
                         pass
                     return
         except Exception:
             pass
+
+    def yt_copy_url(self):
+        url = getattr(self, "yt_url", "")
+        if not url:
+            try:
+                self.yt_msg.configure(text="Chưa có địa chỉ tunnel (bật chế độ 'Mọi admin dùng' trước).")
+            except Exception:
+                pass
+            return
+        try:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(url)
+            self.yt_msg.configure(text="Đã copy: " + url)
+        except Exception as e:
+            try:
+                self.yt_msg.configure(text="Không copy được: " + str(e))
+            except Exception:
+                pass
+
+    def yt_push_base(self, url):
+        try:
+            cfg = load_cfg()
+            email = cfg.get("admin_email", "")
+            pw = cfg.get("admin_pass", "")
+            if not email or not pw:
+                return "chưa tự dán được (nhập email/pass ở tab Video một lần để tự dán)"
+            token = self.fb_token(email, pw)
+            if not token:
+                return "chưa tự dán được (sai email/pass admin)"
+            req = urllib.request.Request(
+                FB_DB_URL + "/settings/ytServerBase.json?auth=" + token,
+                data=json.dumps(url).encode(),
+                headers={"Content-Type": "application/json"}, method="PUT")
+            urllib.request.urlopen(req, timeout=30).read()
+            return "đã tự dán vào web ✔" if url else "đã gỡ khỏi web ✔"
+        except Exception as e:
+            return "chưa tự dán được (" + str(e)[:80] + ")"
+
+    def yt_unpush(self):
+        url = getattr(self, "yt_pushed", "")
+        if not url:
+            return
+        try:
+            with urllib.request.urlopen(FB_DB_URL + "/settings/ytServerBase.json", timeout=20) as r:
+                cur = json.loads(r.read().decode())
+        except Exception:
+            return
+        if cur != url:
+            return
+        self.yt_pushed = ""
+        self.yt_push_base("")
 
     def yt_stop(self):
         killed = self.yt_kill_port()
@@ -1099,10 +1165,13 @@ class App:
             except Exception:
                 pass
         try:
+            self.yt_url = ""
+            self.yt_pushed = ""
             self.yt_url_lbl.configure(text="")
-            self.yt_msg.configure(text="Đã tắt server." if killed else "Server vốn đã tắt.")
+            self.yt_msg.configure(text="Đang tắt + gỡ địa chỉ khỏi web...")
         except Exception:
             pass
+        threading.Thread(target=self.yt_unpush, daemon=True).start()
         self.yt_refresh()
 
     def yt_kill_port(self):
