@@ -230,7 +230,7 @@ const server = http.createServer((req, res) => {
   }
   send(res, 404, { error: 'not found' });
 });
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, () => {
   console.log('YT server chay o http://127.0.0.1:' + PORT + ' (tat cua so nay = tat server)');
   console.log('Kho video o cung: ' + LIB_DIR + (ensureDir(LIB_DIR) ? ' (san sang)' : ' (CHUA TAO DUOC - kiem tra o E)'));
   console.log('Che do KHONG token: ai co dia chi tunnel deu bam tai duoc.');
