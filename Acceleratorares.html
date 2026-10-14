@@ -445,13 +445,11 @@ function paintVideos(){
     const cloud = (r.host || 'cloudinary') === 'cloudinary';
     const htag = r.host === 'home' ? 'Ổ cứng' : (r.host === 'catbox' ? 'Catbox' : 'Cloudinary');
     const isHome = r.host === 'home';
-    const lite = (isHome && r.light && homeBase) ? homeBase + r.light : '';
-    const play = lite || src;
     const dl = cloud ? dlUrl(src) : (isHome ? (src ? src + '?download=1' : '') : src);
     const fname = (((r.title || 'video').replace(/[^\w\-. ()À-ỹ]+/g, '_').substring(0, 80)) || 'video') + '.mp4';
     const cat = ((r.cat||'').trim());
     return '<div class="vid-card" data-cat="'+esc(cat)+'">'
-      + '<button type="button" class="vid-facade" data-url="'+esc(play)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)" aria-label="Phat video: '+esc(r.title)+'">'
+      + '<button type="button" class="vid-facade" data-url="'+esc(src)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)" aria-label="Phat video: '+esc(r.title)+'">'
       + (poster ? '<img class="vid-poster" loading="lazy" src="'+esc(poster)+'" alt="'+esc(r.title)+'">' : '')
       + '<div class="vid-play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
       + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div>'
