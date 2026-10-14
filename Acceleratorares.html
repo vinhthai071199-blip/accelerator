@@ -460,7 +460,7 @@ function paintVideos(){
       + '<h3>'+esc(r.title)+'</h3>'
       + '<div class="meta"><small>'+fmtSize(r.size)+'</small>'
       + (cloud ? '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener noreferrer">Tải xuống</a>'
-        : (isHome ? '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener noreferrer">Tải xuống (bản gốc)</a>'
+        : (isHome ? '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener noreferrer">Tải xuống</a>'
         : '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener noreferrer" data-url="'+esc(src)+'" data-name="'+esc(fname)+'" onclick="return dlFile(this)">Tải xuống</a>'))
       + '</div></div></div>';
   }).join('');
