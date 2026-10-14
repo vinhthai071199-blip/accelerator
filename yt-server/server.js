@@ -207,7 +207,7 @@ const server = http.createServer((req, res) => {
               '-F', 'fileToUpload=@' + fp, 'https://catbox.moe/user/api.php']);
             const curl = (r2.out || '').trim();
             if (!/^https:\/\/files\.catbox\.moe\//.test(curl)) throw new Error('catbox tu choi: ' + curl.slice(0, 120));
-            try { fs.unlinkSync(fp); } catch (e) {}
+            try { if (ensureDir(LIB_DIR)) moveFile(fp, path.join(LIB_DIR, path.basename(fp))); else fs.unlinkSync(fp); } catch (e) { try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e2) {} }
             busy = false;
             prog = { stage: 'done', pct: 100, detail: '' };
             return send(res, 200, { ok: true, url: curl, host: 'catbox', bytes: st.size });
@@ -219,7 +219,7 @@ const server = http.createServer((req, res) => {
           let up = {};
           try { up = JSON.parse(r2.out); } catch (e) { throw new Error('cloudinary tra ve la: ' + r2.out.slice(0, 200)); }
           if (!up.secure_url) throw new Error((up.error && up.error.message) || 'cloudinary tu choi');
-          try { fs.unlinkSync(fp); } catch (e) {}
+          try { if (ensureDir(LIB_DIR)) moveFile(fp, path.join(LIB_DIR, path.basename(fp))); else fs.unlinkSync(fp); } catch (e) { try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e2) {} }
           busy = false;
           prog = { stage: 'done', pct: 100, detail: '' };
           return send(res, 200, { ok: true, url: up.secure_url, host: 'cloudinary', public_id: up.public_id || '', del: up.delete_token || '', bytes: up.bytes || st.size });
@@ -230,9 +230,143 @@ const server = http.createServer((req, res) => {
   }
   send(res, 404, { error: 'not found' });
 });
+
+/* ============ WORKER HANG DOI (Firebase) ============
+   Dien thoai gui viec vao node 'queue', may nha tu ra lay (poll 15s)
+   roi tai + up kho + ghi videos + xoa viec. Khong can mo cong,
+   tunnel, Tailscale hay token. May tat thi viec nam cho. */
+const FB_KEY = 'AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw';
+const FB_DB = 'cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app';
+let fbT = null;
+function httpsReq(method, host, path, body, ctype) {
+  const https = require('https');
+  return new Promise(function (resolve, reject) {
+    const data = (body === undefined || body === null) ? null : (typeof body === 'string' ? body : JSON.stringify(body));
+    const rq = https.request({ host: host, path: path, method: method,
+      headers: Object.assign({ 'Content-Length': data ? Buffer.byteLength(data) : 0 },
+        data ? { 'Content-Type': ctype || 'application/json' } : {}) }, function (rs) {
+      let d = '';
+      rs.on('data', function (c) { d += c; });
+      rs.on('end', function () {
+        let j = null;
+        try { j = d ? JSON.parse(d) : null; } catch (e) { return reject(new Error('firebase tra ve la')); }
+        if (rs.statusCode >= 400) { const em = (j && j.error) || ('http-' + rs.statusCode); return reject(new Error(em)); }
+        resolve(j);
+      });
+    });
+    rq.on('error', reject);
+    if (data) rq.write(data);
+    rq.end();
+  });
+}
+async function fbToken() {
+  const now = Date.now();
+  if (fbT && fbT.exp > now + 60000) return fbT.id;
+  if (fbT && fbT.refresh) {
+    try {
+      const r = await httpsReq('POST', 'securetoken.googleapis.com', '/v1/token?key=' + FB_KEY,
+        'grant_type=refresh_token&refresh_token=' + encodeURIComponent(fbT.refresh), 'application/x-www-form-urlencoded');
+      fbT = { id: r.id_token, refresh: r.refresh_token || fbT.refresh, exp: now + (+r.expires_in || 3600) * 1000 };
+      return fbT.id;
+    } catch (e) { fbT = null; }
+  }
+  if (!cfg.admin_email || !cfg.admin_pass) throw new Error('server chua co email/pass admin (mo yt-server/config.json dien vao)');
+  const r = await httpsReq('POST', 'identitytoolkit.googleapis.com', '/v1/accounts:signInWithPassword?key=' + FB_KEY,
+    { email: cfg.admin_email, password: cfg.admin_pass, returnSecureToken: true });
+  if (!r.idToken) throw new Error('sai email/pass admin');
+  fbT = { id: r.idToken, refresh: r.refreshToken, exp: now + (+r.expiresIn || 3600) * 1000 };
+  return fbT.id;
+}
+async function fbGet(p) {
+  const t = await fbToken();
+  return httpsReq('GET', FB_DB, '/' + p + '.json?auth=' + t);
+}
+async function fbPatch(p, o) {
+  const t = await fbToken();
+  return httpsReq('PATCH', FB_DB, '/' + p + '.json?auth=' + t, o);
+}
+async function fbPost(p, o) {
+  const t = await fbToken();
+  return httpsReq('POST', FB_DB, '/' + p + '.json?auth=' + t, o);
+}
+async function fbDel(p) {
+  const t = await fbToken();
+  return httpsReq('DELETE', FB_DB, '/' + p + '.json?auth=' + t);
+}
+function postLocalDl(url, dest, format) {
+  return new Promise(function (resolve, reject) {
+    const data = JSON.stringify({ url: url, dest: dest || 'cloud', format: format || '' });
+    const rq = http.request({ host: '127.0.0.1', port: PORT, path: '/dl', method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) } }, function (rs) {
+      let d = '';
+      rs.on('data', function (c) { d += c; });
+      rs.on('end', function () {
+        let j = {};
+        try { j = JSON.parse(d); } catch (e) { return reject(new Error('server loi')); }
+        if (j.error) return reject(new Error(j.error));
+        resolve(j);
+      });
+    });
+    rq.on('error', reject);
+    rq.write(data);
+    rq.end();
+  });
+}
+let working = false;
+async function queueTick() {
+  if (busy || working) return;
+  let q = null;
+  try { q = await fbGet('queue'); } catch (e) { return; }
+  if (!q) return;
+  const keys = Object.keys(q).filter(function (k) {
+    const it = q[k] || {};
+    if (!it.url) return false;
+    if (it.stage === 'new' || !it.stage) return true;
+    if ((it.stage === 'downloading' || it.stage === 'uploading') && it.claimedAt && Date.now() - it.claimedAt > 30 * 60 * 1000) return true;
+    return false;
+  });
+  if (!keys.length) return;
+  keys.sort(function (a, b) { return (q[a].time || 0) - (q[b].time || 0); });
+  const key = keys[0], job = q[key];
+  if (!/^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(String(job.url || ''))) {
+    try { await fbDel('queue/' + key); } catch (e) {}
+    return;
+  }
+  working = true;
+  try {
+    await fbPatch('queue/' + key, { stage: 'downloading', pct: 0, detail: 'May nha da nhan viec', claimedAt: Date.now() });
+    let lastPct = -1, lastStage = '';
+    const iv = setInterval(function () {
+      fetch('http://127.0.0.1:' + PORT + '/progress').then(function (r) { return r.json(); }).then(function (p) {
+        const st = p.stage === 'up' ? 'uploading' : 'downloading';
+        const pc = Math.max(0, Math.min(99, Math.round(p.pct || 0)));
+        if (st !== lastStage || Math.abs(pc - lastPct) >= 5) {
+          lastStage = st; lastPct = pc;
+          fbPatch('queue/' + key, { stage: st, pct: pc, detail: p.detail || '' }).catch(function () {});
+        }
+      }).catch(function () {});
+    }, 3000);
+    let r;
+    try { r = await postLocalDl(job.url, job.dest, job.format); }
+    finally { clearInterval(iv); }
+    const entry = { title: job.title || 'YouTube video', time: Date.now(), cat: job.cat || '' };
+    if (r.host === 'home') {
+      entry.host = 'home'; entry.path = r.path || ''; entry.poster = r.poster || ''; entry.url = ''; entry.size = r.bytes || 0;
+    } else {
+      entry.host = r.host || 'cloudinary'; entry.url = r.url; entry.public_id = r.public_id || ''; entry.del = r.del || ''; entry.size = r.bytes || 0;
+    }
+    await fbPost('videos', entry);
+    await fbDel('queue/' + key);
+  } catch (e) {
+    try { await fbPatch('queue/' + key, { stage: 'error', detail: String((e && e.message) || e).slice(0, 200) }); } catch (e2) {}
+  }
+  working = false;
+}
+setInterval(queueTick, 15000);
+setTimeout(queueTick, 8000);
 server.listen(PORT, () => {
   console.log('YT server chay o http://127.0.0.1:' + PORT + ' (tat cua so nay = tat server)');
   console.log('Kho video o cung: ' + LIB_DIR + (ensureDir(LIB_DIR) ? ' (san sang)' : ' (CHUA TAO DUOC - kiem tra o E)'));
-  console.log('Che do KHONG token: ai co dia chi tunnel deu bam tai duoc.');
-  console.log('Giu kin dia chi tunnel, chi gui cho admin. Gioi han 20 video/gio + 30 video/ngay.');
+  console.log('Worker hang doi Firebase: ' + ((cfg.admin_email && cfg.admin_pass) ? 'BAT (poll 15s)' : 'TAT (thieu email/pass trong config.json)'));
+  console.log('Gioi han 20 video/gio + 30 video/ngay.');
 });

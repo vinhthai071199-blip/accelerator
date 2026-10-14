@@ -128,20 +128,23 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   </div>
   <div class="up-wrap">
     <div class="up-row">
-      <select id="ytDest"><option value="home">Kho: Ổ cứng nhà</option><option value="cloud">Kho: Cloud tự động</option></select>
+      <select id="ytDest"><option value="cloud">Kho: Cloud (xem nhanh, không cần máy nhà)</option><option value="home">Kho: Ổ cứng nhà</option></select>
     </div>
     <div class="up-row">
       <input type="text" id="ytUrl" placeholder="Dán link YouTube (watch / youtu.be / shorts)...">
       <button class="btn solid" id="ytBtn" onclick="ytFetch()">Lấy thông tin</button>
     </div>
     <div class="err" id="ytErr" style="text-align:left"></div>
-    <div class="prog" id="ytProg" style="display:none"><i id="ytBar"></i></div>
     <div id="ytPrev"></div>
     <div class="up-row" style="margin-top:12px">
       <input type="text" id="ytBase" placeholder="Dán địa chỉ máy chủ ( auto save )" oninput="ytBaseAuto()">
       <button class="btn" onclick="ytBaseDel()">Xóa địa chỉ</button>
     </div>
     <div class="err" id="ytBaseSt" style="text-align:left;color:#8fd694"></div>
+  </div>
+  <div class="up-wrap">
+    <div style="font-size:13.5px;font-weight:600;margin-bottom:10px">Hàng đợi tải (máy nhà tự làm lần lượt, máy tắt thì việc nằm chờ)</div>
+    <div id="ytQList"><div class="empty">Không có việc nào đang chờ.</div></div>
   </div>
   <div class="up-wrap" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
@@ -245,8 +248,8 @@ const UPLOAD_PRESET = "web_upload";
 const IC_UP = '<svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>';
 const IC_ADD = '<svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
-let vdUnsub = null, stUnsub = null, lkUnsub = null, slUnsub = null, phUnsub = null, spUnsub = null;
-let vdLast = [], lkLast = [], phLast = [];
+let vdUnsub = null, stUnsub = null, lkUnsub = null, slUnsub = null, phUnsub = null, spUnsub = null, ytQUnsub = null;
+let vdLast = [], lkLast = [], phLast = [], ytQLast = [];
 let vdCache = {};
 let lkCache = {};
 let phCache = {};
@@ -343,6 +346,7 @@ function startListeners(){
   ['videos','links','photos'].forEach(function(sec){
     catUnsub[sec] = db.ref('cats/'+sec).on('value', function(s){ fillCatSels(sec, s.val()); });
   });
+  ytQUnsub = db.ref('queue').on('value', s => { ytQLast = toList(s.val()); renderQ(ytQLast); });
 }
 function stopListeners(){
   if(vdUnsub){ db.ref('videos').off('value', vdUnsub); vdUnsub=null; }
@@ -354,6 +358,7 @@ function stopListeners(){
   ['videos','links','photos'].forEach(function(sec){
     if(catUnsub[sec]){ db.ref('cats/'+sec).off('value', catUnsub[sec]); catUnsub[sec]=null; }
   });
+  if(ytQUnsub){ db.ref('queue').off('value', ytQUnsub); ytQUnsub=null; }
 }
 function fmtSize(b){
   if(!b && b!==0) return '';
@@ -552,7 +557,7 @@ function ytRender(){
     + (ytInfo.author?'<span class="tag">'+esc(ytInfo.author)+'</span>':'')
     + (ytInfo.dur?'<span class="tag">'+esc(ytDur(ytInfo.dur))+'</span>':'')
     + '</div><div style="display:flex;gap:10px;align-items:center">'
-    + '<button class="del" id="ytSrvBtn" style="display:none" onclick="ytServer()">Tải bằng máy nhà</button>'
+    + '<button class="del" id="ytSrvBtn" onclick="ytQueue()">Gửi máy nhà tải</button>'
     + '</div></div>'
     + '<p><img loading="lazy" src="'+esc(ytInfo.thumb)+'" alt="" style="width:100%;max-width:420px;display:block;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:6px"></p>';
   h += '<p id="ytSrvNote" style="color:#a9a9b2;font-size:12.5px"></p></div>';
@@ -581,13 +586,9 @@ async function ytPing(){
     const r = await fetch(base+'/ping');
     ytSrvOn = !!(r.ok && (await r.json()).ok);
   }catch(e){ ytSrvOn = false; }
-  const b = document.getElementById('ytSrvBtn');
-  if(b) b.style.display = ytSrvOn ? '' : 'none';
-  const remote = base !== YT_SRV;
   const n = document.getElementById('ytSrvNote');
-  if(n) n.textContent = ytSrvOn ? ('Máy chủ đang bật' + (remote ? ' (máy chủ chung)' : ' (máy này)') + ' — bấm "Tải bằng máy nhà" để tải chất lượng cao (≤200MB), tự up kho + đăng Video.')
-    : (remote ? 'Không nối được máy chủ chung — kiểm tra địa chỉ + máy chủ có đang chạy không.'
-      : 'Muốn tải chất lượng cao không phụ thuộc cầu nối: chạy yt-server/start-yt.bat trên máy nhà rồi bấm Lấy thông tin lại.');
+  if(n) n.textContent = ytSrvOn ? 'Máy chủ đang bật — gửi là tải ngay.'
+    : 'Máy chủ đang tắt — cứ gửi, máy bật sẽ tự tải. (Muốn tải ngay: chạy yt-server/start-yt.bat trên máy nhà)';
 }
 let ytBaseTimer = null;
 let ytBaseLast = null;
@@ -625,55 +626,43 @@ function ytBaseDel(){
   inp.value = '';
   ytBaseAuto();
 }
-async function ytServer(){
+async function ytQueue(){
   const err = document.getElementById('ytErr');
   err.textContent = '';
   if(!ytInfo) return;
-  if(!confirm('Tải "'+ytInfo.title+'" bằng máy nhà (chất lượng cao, có tiếng) rồi up kho + đăng vào mục Video? (≤100MB lên Cloudinary, 100–200MB lên Catbox)')) return;
-  err.textContent = 'Máy nhà đang tải... (giữ cửa sổ server mở)';
-  document.getElementById('ytProg').style.display = 'block';
-  document.getElementById('ytBar').style.width = '0';
-  clearInterval(ytPollT);
-  ytPollT = setInterval(ytPoll, 1000);
-  ytPoll();
-  async function callSrv(){
-    const r = await (await fetch(ytBaseCur+'/dl', {method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({url:'https://www.youtube.com/watch?v='+ytInfo.id, dest:((document.getElementById('ytDest')||{}).value||'home')})})).json();
-    if(r.error) throw new Error(r.error);
-    return r;
-  }
-  try{
-    const r = await callSrv();
-    const homeUrl = (r.host === 'home') ? (ytBaseCur.replace(/\/+$/,'') + (r.path || '')) : '';
-    await db.ref('videos').push({title:ytInfo.title, url:r.host==='home'?homeUrl:r.url, host:r.host||'cloudinary', path:r.path||'', poster:r.poster||'', size:r.bytes||0, public_id:r.public_id||'', del:r.del||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
+  db.ref('queue').push({url:'https://www.youtube.com/watch?v='+ytInfo.id, title:ytInfo.title, author:ytInfo.author||'', thumb:ytInfo.thumb||'', dur:ytInfo.dur||0, dest:((document.getElementById('ytDest')||{}).value||'cloud'), cat:document.getElementById('vidCatSel').value, time:Date.now(), stage:'new', pct:0}).then(function(){
     document.getElementById('ytUrl').value = '';
     document.getElementById('ytPrev').innerHTML = '';
     ytInfo = null;
-    clearInterval(ytPollT);
-    document.getElementById('ytProg').style.display = 'none';
-    err.textContent = 'Xong! Video đã vào mục Video.' + (r.host === 'catbox' ? ' (Kho Catbox: xem/tải bình thường, không có ảnh bìa trước khi phát.)' : (r.host === 'home' ? ' (Kho ổ cứng nhà: chỉ xem được khi máy nhà bật.)' : ''));
-  }catch(e){
-    clearInterval(ytPollT);
-    document.getElementById('ytProg').style.display = 'none';
-    err.textContent = 'Máy nhà báo lỗi: '+(e.message||'không nối được — kiểm tra start-yt.bat có đang chạy không');
-  }
+    err.textContent = 'Đã gửi! Máy nhà đang bật thì tải ngay, tắt thì để đó máy bật sẽ tự làm. Xem tiến trình ở Hàng đợi bên dưới.';
+  }).catch(function(e){
+    err.textContent = 'Không gửi được ('+(e.code||'')+'). Vào Firebase Console → Rules, thêm "queue": { ".read": "auth != null", ".write": "auth != null" } rồi Publish.';
+  });
 }
-let ytPollT = null;
-async function ytPoll(){
-  try{
-    const r = await (await fetch(ytBaseCur+'/progress')).json();
-    const bar = document.getElementById('ytBar');
-    const err = document.getElementById('ytErr');
-    if(!bar || !err) return;
-    if(r.stage === 'dl'){
-      const p = Math.max(0, Math.min(99, Math.round(r.pct || 0)));
-      bar.style.width = p + '%';
-      err.textContent = 'Đang tải về máy nhà... ' + p + '% (giữ cửa sổ server mở)';
-    } else if(r.stage === 'up'){
-      bar.style.width = '100%';
-      err.textContent = r.detail || 'Đang up lên kho... (giữ cửa sổ server mở)';
-    }
-  }catch(e){}
+function renderQ(list){
+  const box = document.getElementById('ytQList');
+  if(!box) return;
+  list = list || ytQLast || [];
+  if(!list.length){ box.innerHTML = '<div class="empty">Không có việc nào đang chờ.</div>'; return; }
+  box.innerHTML = list.map(function(x){
+    const k = x[0], r = x[1] || {};
+    const st = r.stage || 'new';
+    const label = st === 'new' ? 'Mới gửi, chờ máy nhà nhận việc'
+      : st === 'downloading' ? ('Đang tải ' + Math.round(r.pct || 0) + '%')
+      : st === 'uploading' ? 'Đang up kho' : st === 'error' ? ('Lỗi: ' + (r.detail || '')) : st;
+    const pct = Math.max(0, Math.min(100, Math.round(r.pct || 0)));
+    return '<div class="item"><div class="head"><div><span class="who">'+esc(r.title || r.url || k)+'</span>'
+      + '<span class="tag">'+esc(r.dest === 'home' ? 'Ổ cứng' : 'Cloud')+'</span></div>'
+      + '<div style="display:flex;gap:10px;align-items:center"><button class="del" onclick="ytQDel(\''+k+'\')">Hủy</button>'
+      + '</div></div><p>'+esc(label)+'</p>'
+      + ((st === 'downloading' || st === 'uploading') ? '<div class="prog" style="display:block"><i style="width:'+pct+'%"></i></div>' : '')
+      + '</div>';
+  }).join('');
+}
+function ytQDel(key){
+  if(!confirm('Hủy việc tải này?')) return;
+  db.ref('queue/'+key).remove()
+    .catch(function(e){ alert('Không hủy được: '+e.message); });
 }
 
 function dlUrl(u){
