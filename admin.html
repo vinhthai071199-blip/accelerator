@@ -128,6 +128,9 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   </div>
   <div class="up-wrap">
     <div class="up-row">
+      <select id="ytDest"><option value="home">Kho: Ổ cứng nhà (máy phải bật mới xem được)</option><option value="cloud">Kho: Cloud tự động</option></select>
+    </div>
+    <div class="up-row">
       <input type="text" id="ytUrl" placeholder="Dán link YouTube (watch / youtu.be / shorts)...">
       <button class="btn solid" id="ytBtn" onclick="ytFetch()">Lấy thông tin</button>
     </div>
@@ -359,6 +362,22 @@ function fmtSize(b){
   return (b>=10||i===0 ? Math.round(b) : b.toFixed(1))+' '+u[i];
 }
 
+function homeBase(){
+  try{
+    if(typeof ytBaseCur !== 'undefined' && ytBaseCur && ytBaseCur !== YT_SRV) return String(ytBaseCur).replace(/\/+$/,'');
+  }catch(e){}
+  return '';
+}
+function homeSrc(r){
+  r = r || {};
+  if(r.host === 'home' && r.path){ const b = homeBase(); if(b) return b + r.path; }
+  return r.url || '';
+}
+function homePoster(r){
+  r = r || {};
+  if(r.host === 'home'){ const b = homeBase(); return (r.poster && b) ? b + r.poster : ''; }
+  return posterUrl(r);
+}
 function renderVd(list){
   list = list || vdLast || [];
   document.getElementById('cntVd').textContent = list.length;
@@ -373,10 +392,11 @@ function renderVd(list){
   box.innerHTML = '<div class="vid-grid">' + view.map(function(x){
     const k=x[0], r=x[1]||{};
     vdCache[k] = {title: r.title||'', del: r.del||''};
-    const dl = dlUrl(r.url), poster = posterUrl(r);
+    const src = homeSrc(r), poster = homePoster(r);
+    const dl = dlUrl(src);
     const hd = !!r.hidden;
     return '<div class="vid-card"'+(hd?' style="opacity:.55"':'')+'>'
-      + '<div class="vid-facade" data-url="'+esc(r.url)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)">'
+      + '<div class="vid-facade" data-url="'+esc(src)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)">'
       + (poster ? '<img class="vid-poster" loading="lazy" src="'+esc(poster)+'" alt="">' : '')
       + '<div class="vid-play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
       + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div></div>'
@@ -611,19 +631,20 @@ async function ytServer(){
   ytPoll();
   async function callSrv(){
     const r = await (await fetch(ytBaseCur+'/dl', {method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({url:'https://www.youtube.com/watch?v='+ytInfo.id})})).json();
+      body:JSON.stringify({url:'https://www.youtube.com/watch?v='+ytInfo.id, dest:((document.getElementById('ytDest')||{}).value||'home')})})).json();
     if(r.error) throw new Error(r.error);
     return r;
   }
   try{
     const r = await callSrv();
-    await db.ref('videos').push({title:ytInfo.title, url:r.url, host:r.host||'cloudinary', public_id:r.public_id||'', del:r.del||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
+    const homeUrl = (r.host === 'home') ? (ytBaseCur.replace(/\/+$/,'') + (r.path || '')) : '';
+    await db.ref('videos').push({title:ytInfo.title, url:r.host==='home'?homeUrl:r.url, host:r.host||'cloudinary', path:r.path||'', poster:r.poster||'', public_id:r.public_id||'', del:r.del||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
     document.getElementById('ytUrl').value = '';
     document.getElementById('ytPrev').innerHTML = '';
     ytInfo = null;
     clearInterval(ytPollT);
     document.getElementById('ytProg').style.display = 'none';
-    err.textContent = 'Xong! Video đã vào mục Video.' + (r.host === 'catbox' ? ' (Kho Catbox: xem/tải bình thường, không có ảnh bìa trước khi phát.)' : '');
+    err.textContent = 'Xong! Video đã vào mục Video.' + (r.host === 'catbox' ? ' (Kho Catbox: xem/tải bình thường, không có ảnh bìa trước khi phát.)' : (r.host === 'home' ? ' (Kho ổ cứng nhà: chỉ xem được khi máy nhà bật.)' : ''));
   }catch(e){
     clearInterval(ytPollT);
     document.getElementById('ytProg').style.display = 'none';

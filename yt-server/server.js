@@ -13,6 +13,8 @@ const ROOT = __dirname;
 const CFG_PATH = path.join(ROOT, 'config.json');
 const DL_DIR = path.join(ROOT, 'dl');
 if (!fs.existsSync(DL_DIR)) fs.mkdirSync(DL_DIR, { recursive: true });
+const FILES_DIR = path.join(ROOT, 'files');
+if (!fs.existsSync(FILES_DIR)) fs.mkdirSync(FILES_DIR, { recursive: true });
 
 let cfg = {};
 try { cfg = JSON.parse(fs.readFileSync(CFG_PATH, 'utf8')); } catch (e) { cfg = {}; }
@@ -88,6 +90,37 @@ const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
   if (req.method === 'GET' && u.pathname === '/ping') return send(res, 200, { ok: true, busy });
   if (req.method === 'GET' && u.pathname === '/progress') return send(res, 200, { ok: true, busy, stage: prog.stage, pct: prog.pct, detail: prog.detail });
+  if (req.method === 'GET' && u.pathname.indexOf('/files/') === 0) {
+    /* Kho o cung: phuc vu file + ho tro Range (seek video) */
+    cors(res);
+    let rel = '';
+    try { rel = decodeURIComponent(u.pathname.slice(7)); } catch (e) { res.writeHead(400); res.end(); return; }
+    const ffp = path.normalize(path.join(FILES_DIR, rel));
+    if (ffp !== FILES_DIR && ffp.indexOf(FILES_DIR + path.sep) !== 0) { res.writeHead(403); res.end(); return; }
+    fs.stat(ffp, function (err, fst) {
+      if (err || !fst.isFile()) { res.writeHead(404); res.end(); return; }
+      const ext = path.extname(ffp).toLowerCase();
+      const mime = ext === '.mp4' ? 'video/mp4' : (ext === '.jpg' || ext === '.jpeg') ? 'image/jpeg' : ext === '.webm' ? 'video/webm' : ext === '.m4a' ? 'audio/mp4' : 'application/octet-stream';
+      const total = fst.size;
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Content-Type', mime);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      const rg = String(req.headers.range || '');
+      const m = rg.match(/bytes=(\d*)-(\d*)/);
+      if (m) {
+        let start = m[1] === '' ? 0 : parseInt(m[1], 10);
+        let end = m[2] === '' ? total - 1 : parseInt(m[2], 10);
+        if (isNaN(start) || isNaN(end) || start >= total || end < start) { res.writeHead(416); res.end(); return; }
+        end = Math.min(end, total - 1);
+        res.writeHead(206, { 'Content-Range': 'bytes ' + start + '-' + end + '/' + total, 'Content-Length': end - start + 1 });
+        fs.createReadStream(ffp, { start: start, end: end }).pipe(res);
+      } else {
+        res.writeHead(200, { 'Content-Length': total });
+        fs.createReadStream(ffp).pipe(res);
+      }
+    });
+    return;
+  }
   if (req.method === 'POST' && u.pathname === '/dl') {
     let body = '';
     req.on('data', c => { body += c; if (body.length > 1e6) req.destroy(); });
@@ -128,6 +161,23 @@ const server = http.createServer((req, res) => {
             if (!cands.length || Date.now() - cands[0].m > 15 * 60 * 1000) throw new Error('tai xong nhung khong thay file (bam lai lan nua)');
             fp = cands[0].p;
             st = fs.statSync(fp);
+          }
+          const dest = j.dest === 'cloud' ? 'cloud' : 'home';
+          if (dest === 'home') {
+            /* Kho o cung: giu file trong files/, tao anh bia, khong gioi han dung luong */
+            const destFp = path.join(FILES_DIR, path.basename(fp));
+            try { fs.renameSync(fp, destFp); } catch (e) { throw new Error('khong giu duoc file o cung'); }
+            const pub = '/files/' + encodeURIComponent(path.basename(destFp));
+            let posterPath = '';
+            try {
+              prog = { stage: 'up', pct: -1, detail: 'Dang tao anh bia...' };
+              const jpg = destFp.replace(/\.[^.]+$/, '.jpg');
+              await run(cfg.ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', '-ss', '1', '-i', destFp, '-vframes', '1', '-vf', 'scale=640:-1', jpg]);
+              posterPath = '/files/' + encodeURIComponent(path.basename(jpg));
+            } catch (e) { posterPath = ''; }
+            busy = false;
+            prog = { stage: 'done', pct: 100, detail: '' };
+            return send(res, 200, { ok: true, url: pub, host: 'home', path: pub, poster: posterPath, bytes: st.size });
           }
           if (st.size > 200 * 1024 * 1024) {
             busy = false;

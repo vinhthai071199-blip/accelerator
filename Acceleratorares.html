@@ -24,6 +24,7 @@
 <meta name="twitter:description" content="Nạp game WuWa, Genshin Impact, Honkai Star Rail giá rẻ — nhanh chóng, uy tín.">
 <meta name="twitter:image" content="https://acceleratorares.vercel.app/avatar.jpg">
 
+<link rel="icon" type="image/x-icon" sizes="any" href="avatar.ico">
 <link rel="icon" type="image/jpeg" href="avatar.jpg">
 <link rel="apple-touch-icon" href="avatar.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -405,35 +406,57 @@ function loadVid(el){
   v.muted = true; /* trinh duyet chan autoplay neu video co tieng */
   var p = v.play(); if(p && p.catch) p.catch(function(){});
 }
+let homeBase = '';
+let vidLastRaw = null;
+function homeSrc(r){
+  r = r || {};
+  if(r.host === 'home' && r.path && homeBase) return homeBase + r.path;
+  return r.url || '';
+}
+function homePoster(r){
+  r = r || {};
+  if(r.host === 'home') return (r.poster && homeBase) ? homeBase + r.poster : '';
+  return posterUrl(r);
+}
+function paintVideos(){
+  const box = document.getElementById('vidGrid');
+  if(!box || vidLastRaw === null) return;
+  const vis = vidLastRaw.filter(function(o){ return !((o[1]||{}).hidden); });
+  box.innerHTML = vis.map(function(v){
+    const r = v[1]||{};
+    const src = homeSrc(r);
+    const poster = homePoster(r);
+    const dl = dlUrl(src);
+    const cat = ((r.cat||'').trim());
+    return '<div class="vid-card" data-cat="'+esc(cat)+'">'
+      + '<button type="button" class="vid-facade" data-url="'+esc(src)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)" aria-label="Phat video: '+esc(r.title)+'">'
+      + (poster ? '<img class="vid-poster" loading="lazy" src="'+esc(poster)+'" alt="'+esc(r.title)+'">' : '')
+      + '<div class="vid-play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
+      + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div>'
+      + '</button>'
+      + '<div class="vid-info">'
+      + (cat?'<span class="cat-tag">'+esc(cat)+'</span>':'')
+      + '<h3>'+esc(r.title)+'</h3>'
+      + '<div class="meta"><small>'+fmtSize(r.size)+'</small>'
+      + '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener noreferrer">Tải xuống</a>'
+      + '</div></div></div>';
+  }).join('');
+  renderCatBar('vidCats','videos',vis); applyCatFilter('videos');
+}
 async function initVideos(){
   const box = document.getElementById('vidGrid');
   if(!box) return; // muc video dang an
   try{
     await ensureFb();
+    firebase.database().ref('settings/ytServerBase').on('value', function(s){
+      homeBase = s.val() ? String(s.val()).replace(/\/+$/,'') : '';
+      paintVideos();
+    });
     firebase.database().ref('videos').on('value', function(s){
       const v = s.val();
-      if(!v){ box.innerHTML = '<div class="vid-empty">Chưa có video nào.</div>'; renderCatBar('vidCats','videos',[]); return; }
-      const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
-      const vis = list.filter(function(o){ return !((o[1]||{}).hidden); });
-      box.innerHTML = vis.map(function(v){
-        const r = v[1]||{};
-        const dl = dlUrl(r.url);
-        const poster = posterUrl(r);
-        const cat = ((r.cat||'').trim());
-        return '<div class="vid-card" data-cat="'+esc(cat)+'">'
-          + '<button type="button" class="vid-facade" data-url="'+esc(r.url)+'" data-poster="'+esc(poster)+'" onclick="loadVid(this)" aria-label="Phat video: '+esc(r.title)+'">'
-          + (poster ? '<img class="vid-poster" loading="lazy" src="'+esc(poster)+'" alt="'+esc(r.title)+'">' : '')
-          + '<div class="vid-play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
-          + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div>'
-          + '</button>'
-          + '<div class="vid-info">'
-          + (cat?'<span class="cat-tag">'+esc(cat)+'</span>':'')
-          + '<h3>'+esc(r.title)+'</h3>'
-          + '<div class="meta"><small>'+fmtSize(r.size)+'</small>'
-          + '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener noreferrer">Tải xuống</a>'
-          + '</div></div></div>';
-      }).join('');
-        renderCatBar('vidCats','videos',vis); applyCatFilter('videos');
+      if(!v){ vidLastRaw = []; box.innerHTML = '<div class="vid-empty">Chưa có video nào.</div>'; renderCatBar('vidCats','videos',[]); return; }
+      vidLastRaw = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
+      paintVideos();
     }, function(){ box.innerHTML = '<div class="vid-empty">Không tải được video.</div>'; });
   }catch(e){ box.innerHTML = '<div class="vid-empty">Không tải được video.</div>'; }
 }
