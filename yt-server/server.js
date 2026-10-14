@@ -106,6 +106,7 @@ const server = http.createServer((req, res) => {
     const ffp = path.normalize(path.join(LIB_DIR, rel));
     if (ffp !== LIB_DIR && ffp.indexOf(LIB_DIR + path.sep) !== 0) { res.writeHead(403); res.end(); return; }
     fs.stat(ffp, function (err, fst) {
+      try {
       if (err || !fst.isFile()) { res.writeHead(404); res.end(); return; }
       const ext = path.extname(ffp).toLowerCase();
       const mime = ext === '.mp4' ? 'video/mp4' : (ext === '.jpg' || ext === '.jpeg') ? 'image/jpeg' : ext === '.webm' ? 'video/webm' : ext === '.m4a' ? 'audio/mp4' : 'application/octet-stream';
@@ -114,8 +115,13 @@ const server = http.createServer((req, res) => {
       res.setHeader('Content-Type', mime);
       res.setHeader('Cache-Control', 'public, max-age=86400');
       if (u.searchParams.get('download') === '1') {
-        const dn = path.basename(ffp).replace(/"/g, '');
-        res.setHeader('Content-Disposition', 'attachment; filename="' + dn + '"; filename*=UTF-8\'\'' + encodeURIComponent(dn));
+        /* Ten file co the chua tieng Nhat/Han/emoji (vuot ASCII) -> Node
+           nem loi chet server. Tach: ten ASCII cho filename, ten goc cho filename*. */
+        const raw = path.basename(ffp).replace(/"/g, '');
+        const ascii = raw.replace(/[^\x20-\x7e]/g, '').trim() || 'video.mp4';
+        let star = '';
+        try { star = "; filename*=UTF-8''" + encodeURIComponent(raw); } catch (e) {}
+        res.setHeader('Content-Disposition', 'attachment; filename="' + ascii + '"' + star);
       }
       const rg = String(req.headers.range || '');
       const m = rg.match(/bytes=(\d*)-(\d*)/);
@@ -130,6 +136,7 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Length': total });
         fs.createReadStream(ffp).pipe(res);
       }
+      } catch (e) { try { if (!res.headersSent) res.writeHead(500); res.end(); } catch (e2) {} }
     });
     return;
   }
@@ -443,6 +450,9 @@ process.on('SIGINT', function () {
     }
   } catch (e) {}
   setTimeout(function () { process.exit(0); }, 1500);
+});
+process.on('uncaughtException', function (e) {
+  try { console.error('LOI bat ngo (server van chay):', (e && e.message) || e); } catch (e2) {}
 });
 server.listen(PORT, () => {
   console.log('YT server chay o http://127.0.0.1:' + PORT + ' (tat cua so nay = tat server)');
