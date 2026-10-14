@@ -232,9 +232,9 @@ const server = http.createServer((req, res) => {
 });
 
 /* ============ WORKER HANG DOI (Firebase) ============
-   Dien thoai gui viec vao node 'queue', may nha tu ra lay (poll 15s)
+   Dien thoai gui viec vao 'settings/queue', may nha tu ra lay (poll 15s)
    roi tai + up kho + ghi videos + xoa viec. Khong can mo cong,
-   tunnel, Tailscale hay token. May tat thi viec nam cho. */
+   tunnel, Tailscale, token hay sua rules. May tat thi viec nam cho. */
 const FB_KEY = 'AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw';
 const FB_DB = 'cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app';
 let fbT = null;
@@ -316,7 +316,7 @@ let working = false;
 async function queueTick() {
   if (busy || working) return;
   let q = null;
-  try { q = await fbGet('queue'); } catch (e) { return; }
+  try { q = await fbGet('settings/queue'); } catch (e) { return; }
   if (!q) return;
   const keys = Object.keys(q).filter(function (k) {
     const it = q[k] || {};
@@ -329,12 +329,12 @@ async function queueTick() {
   keys.sort(function (a, b) { return (q[a].time || 0) - (q[b].time || 0); });
   const key = keys[0], job = q[key];
   if (!/^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(String(job.url || ''))) {
-    try { await fbDel('queue/' + key); } catch (e) {}
+    try { await fbDel('settings/queue' + key); } catch (e) {}
     return;
   }
   working = true;
   try {
-    await fbPatch('queue/' + key, { stage: 'downloading', pct: 0, detail: 'May nha da nhan viec', claimedAt: Date.now() });
+    await fbPatch('settings/queue' + key, { stage: 'downloading', pct: 0, detail: 'May nha da nhan viec', claimedAt: Date.now() });
     let lastPct = -1, lastStage = '';
     const iv = setInterval(function () {
       fetch('http://127.0.0.1:' + PORT + '/progress').then(function (r) { return r.json(); }).then(function (p) {
@@ -342,7 +342,7 @@ async function queueTick() {
         const pc = Math.max(0, Math.min(99, Math.round(p.pct || 0)));
         if (st !== lastStage || Math.abs(pc - lastPct) >= 5) {
           lastStage = st; lastPct = pc;
-          fbPatch('queue/' + key, { stage: st, pct: pc, detail: p.detail || '' }).catch(function () {});
+          fbPatch('settings/queue' + key, { stage: st, pct: pc, detail: p.detail || '' }).catch(function () {});
         }
       }).catch(function () {});
     }, 3000);
@@ -356,9 +356,9 @@ async function queueTick() {
       entry.host = r.host || 'cloudinary'; entry.url = r.url; entry.public_id = r.public_id || ''; entry.del = r.del || ''; entry.size = r.bytes || 0;
     }
     await fbPost('videos', entry);
-    await fbDel('queue/' + key);
+    await fbDel('settings/queue' + key);
   } catch (e) {
-    try { await fbPatch('queue/' + key, { stage: 'error', detail: String((e && e.message) || e).slice(0, 200) }); } catch (e2) {}
+    try { await fbPatch('settings/queue' + key, { stage: 'error', detail: String((e && e.message) || e).slice(0, 200) }); } catch (e2) {}
   }
   working = false;
 }

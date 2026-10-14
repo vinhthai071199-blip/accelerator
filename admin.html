@@ -346,7 +346,7 @@ function startListeners(){
   ['videos','links','photos'].forEach(function(sec){
     catUnsub[sec] = db.ref('cats/'+sec).on('value', function(s){ fillCatSels(sec, s.val()); });
   });
-  ytQUnsub = db.ref('queue').on('value', s => { ytQLast = toList(s.val()); renderQ(ytQLast); });
+  ytQUnsub = db.ref('settings/queue').on('value', s => { ytQLast = toList(s.val()); renderQ(ytQLast); });
 }
 function stopListeners(){
   if(vdUnsub){ db.ref('videos').off('value', vdUnsub); vdUnsub=null; }
@@ -358,7 +358,7 @@ function stopListeners(){
   ['videos','links','photos'].forEach(function(sec){
     if(catUnsub[sec]){ db.ref('cats/'+sec).off('value', catUnsub[sec]); catUnsub[sec]=null; }
   });
-  if(ytQUnsub){ db.ref('queue').off('value', ytQUnsub); ytQUnsub=null; }
+  if(ytQUnsub){ db.ref('settings/queue').off('value', ytQUnsub); ytQUnsub=null; }
 }
 function fmtSize(b){
   if(!b && b!==0) return '';
@@ -630,13 +630,13 @@ async function ytQueue(){
   const err = document.getElementById('ytErr');
   err.textContent = '';
   if(!ytInfo) return;
-  db.ref('queue').push({url:'https://www.youtube.com/watch?v='+ytInfo.id, title:ytInfo.title, author:ytInfo.author||'', thumb:ytInfo.thumb||'', dur:ytInfo.dur||0, dest:((document.getElementById('ytDest')||{}).value||'cloud'), cat:document.getElementById('vidCatSel').value, time:Date.now(), stage:'new', pct:0}).then(function(){
+  db.ref('settings/queue').push({url:'https://www.youtube.com/watch?v='+ytInfo.id, title:ytInfo.title, author:ytInfo.author||'', thumb:ytInfo.thumb||'', dur:ytInfo.dur||0, dest:((document.getElementById('ytDest')||{}).value||'cloud'), cat:document.getElementById('vidCatSel').value, time:Date.now(), stage:'new', pct:0}).then(function(){
     document.getElementById('ytUrl').value = '';
     document.getElementById('ytPrev').innerHTML = '';
     ytInfo = null;
     err.textContent = 'Đã gửi! Máy nhà đang bật thì tải ngay, tắt thì để đó máy bật sẽ tự làm. Xem tiến trình ở Hàng đợi bên dưới.';
   }).catch(function(e){
-    err.textContent = 'Không gửi được ('+(e.code||'')+'). Vào Firebase Console → Rules, thêm "queue": { ".read": "auth != null", ".write": "auth != null" } rồi Publish.';
+    err.textContent = 'Không gửi được ('+(e.code||'')+'). Kiểm tra mạng rồi thử lại.';
   });
 }
 function renderQ(list){
@@ -661,7 +661,7 @@ function renderQ(list){
 }
 function ytQDel(key){
   if(!confirm('Hủy việc tải này?')) return;
-  db.ref('queue/'+key).remove()
+  db.ref('settings/queue/'+key).remove()
     .catch(function(e){ alert('Không hủy được: '+e.message); });
 }
 
