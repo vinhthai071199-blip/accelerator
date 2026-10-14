@@ -1023,9 +1023,16 @@ class App:
             missing.append("tools/ffmpeg.exe")
         if mode == "public" and not os.path.exists(os.path.join(REPO_DIR, "tools", "cloudflared.exe")):
             missing.append("tools/cloudflared.exe")
-        if mode == "tailscale" and not shutil.which("tailscale"):
+        if mode == "tailscale" and not self.ts_bin():
             missing.append("Tailscale (cài ở tailscale.com/download)")
         return missing
+
+    def ts_bin(self):
+        w = shutil.which("tailscale")
+        if w:
+            return w
+        p = r"C:\Program Files\Tailscale\tailscale.exe"
+        return p if os.path.exists(p) else ""
 
     def yt_start(self):
         mode = self.yt_mode.get()
@@ -1079,7 +1086,10 @@ class App:
 
     def yt_ts_ip(self):
         try:
-            code, out = run("tailscale ip -4", REPO_DIR)
+            ts = self.ts_bin()
+            if not ts:
+                return ""
+            code, out = run('"' + ts + '" ip -4', REPO_DIR)
             if code != 0:
                 return ""
             for line in out.strip().splitlines():
