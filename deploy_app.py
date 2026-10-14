@@ -20,7 +20,7 @@ REPO_DIR = r"D:\Opencode Project"
 SITE_URL = "https://acceleratorares.vercel.app/"
 EXTRA_FILES = ["admin.html", "avatar.jpg", "avatar.ico", "shop-logo.jpg", "robots.txt"]
 SRC_DIR = os.path.dirname(DEFAULT_HTML)
-VERSION = "v3.4"
+VERSION = "v3.5"
 CONFIG = os.path.join(REPO_DIR, "deploy_config.json")
 FB_API_KEY = "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw"
 FB_DB_URL = "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app"
@@ -1051,8 +1051,11 @@ class App:
             self.yt_refresh()
             return
         try:
+            env = dict(os.environ)
+            if mode == "public":
+                env["YT_TUNNEL"] = "1"
             self.yt_proc = subprocess.Popen(
-                [shutil.which("node"), "server.js"], cwd=self.yt_dir(),
+                [shutil.which("node"), "server.js"], cwd=self.yt_dir(), env=env,
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except Exception as e:
@@ -1067,19 +1070,7 @@ class App:
         except Exception:
             pass
         if mode == "public":
-            try:
-                cf = os.path.join(REPO_DIR, "tools", "cloudflared.exe")
-                self.yt_tun = subprocess.Popen(
-                    [cf, "tunnel", "--url", "http://127.0.0.1:%d" % self.YT_PORT],
-                    stderr=subprocess.PIPE, stdout=subprocess.DEVNULL,
-                    text=True, bufsize=1,
-                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-                threading.Thread(target=self.yt_watch_tunnel, daemon=True).start()
-            except Exception as e:
-                try:
-                    self.yt_msg.configure(text="Server mở rồi, nhưng tunnel lỗi: " + str(e))
-                except Exception:
-                    pass
+            threading.Thread(target=self.yt_watch_base, daemon=True).start()
         elif mode == "tailscale":
             threading.Thread(target=self.yt_setup_tailscale, daemon=True).start()
         threading.Thread(target=self.yt_wait_up, daemon=True).start()
@@ -1139,25 +1130,30 @@ class App:
         except Exception:
             pass
 
-    def yt_watch_tunnel(self):
-        try:
-            for line in (getattr(self.yt_tun, "stderr", None) or []):
-                m = re.search(r"https://[a-z0-9-]+\.trycloudflare\.com", line)
-                if m:
-                    self.yt_url = m.group(0)
-                    self.yt_pushed = m.group(0)
+    def yt_watch_base(self):
+        for _ in range(40):
+            time.sleep(5)
+            try:
+                with urllib.request.urlopen(FB_DB_URL + "/settings/ytServerBase.json", timeout=20) as r:
+                    url = json.loads(r.read().decode())
+                if url:
+                    self.yt_url = url
                     try:
-                        self.yt_url_lbl.configure(text="Địa chỉ chung: " + self.yt_url)
-                    except Exception:
-                        pass
-                    msg = self.yt_push_base(self.yt_url)
-                    try:
-                        self.yt_msg.configure(text="Địa chỉ chung: " + self.yt_url + " — " + msg)
+                        self.yt_url_lbl.configure(text="Địa chỉ chung: " + url)
+                        self.yt_msg.configure(text="Tunnel đã lên, địa chỉ tự vào web rồi ✔")
                     except Exception:
                         pass
                     return
+            except Exception:
+                pass
+        try:
+            self.yt_msg.configure(text="Chưa thấy tunnel lên (quá 3 phút). Kiểm tra cửa sổ server.")
         except Exception:
             pass
+
+    def yt_watch_tunnel(self):
+        # Khong dung nua: server tu nuoi tunnel (YT_TUNNEL=1), app chi hien thi qua yt_watch_base.
+        return
 
     def yt_copy_url(self):
         url = getattr(self, "yt_url", "")

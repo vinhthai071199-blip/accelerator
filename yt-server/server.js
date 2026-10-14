@@ -378,6 +378,72 @@ async function queueTick() {
 }
 setInterval(queueTick, 15000);
 setTimeout(queueTick, 8000);
+
+/* ============ TU NUOI TUNNEL ============
+   Bat YT_TUNNEL=1 (hoac config tunnel:true): server tu mo cloudflared,
+   chet tu dung lai, doi link tu cap nhat Firebase + file tun-url.txt.
+   YT_TUNNEL=file: chi ghi file (de test, khong dung Firebase). */
+const TUN_MODE = process.env.YT_TUNNEL || (cfg.tunnel ? '1' : '');
+const TUN_FILE = path.join(ROOT, 'tun-url.txt');
+let tunProc = null, tunUrl = '', tunBad = 0;
+async function pushBase(url) {
+  try { fs.writeFileSync(TUN_FILE, url); } catch (e) {}
+  if (TUN_MODE !== '1') return;
+  try {
+    const cur = await fbGet('settings/ytServerBase').catch(function () { return null; });
+    if (cur === url) return;
+    await fbPatch('settings', { ytServerBase: url });
+    console.log('Tunnel moi, da cap nhat dia chi web: ' + url);
+  } catch (e) { console.log('Chua cap nhat duoc dia chi web (se thu lai khi link doi)'); }
+}
+function tunnelTick() {
+  if (!TUN_MODE) return;
+  const cf = path.join(ROOT, '..', 'tools', 'cloudflared.exe');
+  if (!fs.existsSync(cf)) { console.log('Muon tunnel: thieu tools/cloudflared.exe'); return; }
+  if (tunProc && tunProc.exitCode === null) return;
+  tunProc = spawn(cf, ['tunnel', '--url', 'http://127.0.0.1:' + PORT], { windowsHide: true });
+  tunProc.stderr.on('data', function (d) {
+    const m = String(d).match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);
+    if (m && m[0] !== tunUrl) {
+      tunUrl = m[0]; tunBad = 0;
+      console.log('Tunnel public: ' + tunUrl);
+      pushBase(tunUrl);
+    }
+  });
+  tunProc.on('exit', function () {
+    tunProc = null;
+    setTimeout(tunnelTick, 5000);
+  });
+}
+async function tunnelLive() {
+  if (!TUN_MODE || !tunUrl) return;
+  try {
+    const r = await fetch(tunUrl + '/ping');
+    const j = await r.json().catch(function () { return {}; });
+    if (r.ok && j.ok) { tunBad = 0; return; }
+    throw new Error('bad');
+  } catch (e) {
+    tunBad++;
+    if (tunBad >= 2 && tunProc && tunProc.exitCode === null) {
+      console.log('Tunnel chet (mat ket noi) - dung lai...');
+      try { tunProc.kill(); } catch (e2) {}
+      tunProc = null;
+    }
+  }
+}
+setInterval(tunnelTick, 30000);
+setInterval(tunnelLive, 60000);
+setTimeout(tunnelTick, 5000);
+process.on('SIGINT', function () {
+  try {
+    if (TUN_MODE === '1' && tunUrl) {
+      fbGet('settings/ytServerBase').catch(function () { return ''; }).then(function (cur) {
+        if (cur === tunUrl) fbPatch('settings', { ytServerBase: '' }).catch(function () {});
+      });
+    }
+  } catch (e) {}
+  setTimeout(function () { process.exit(0); }, 1500);
+});
 server.listen(PORT, () => {
   console.log('YT server chay o http://127.0.0.1:' + PORT + ' (tat cua so nay = tat server)');
   console.log('Kho video o cung: ' + LIB_DIR + (ensureDir(LIB_DIR) ? ' (san sang)' : ' (CHUA TAO DUOC - kiem tra o E)'));

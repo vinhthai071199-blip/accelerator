@@ -1,5 +1,5 @@
 @echo off
-title YT Server PUBLIC - Cho moi admin dung chung
+title YT Server PUBLIC - Tu nuoi tunnel
 cd /d "%~dp0"
 powershell -NoProfile -Command "try { $c = New-Object Net.Sockets.TcpClient; $c.Connect('127.0.0.1',8799); $c.Close(); exit 0 } catch { exit 1 }" >nul 2>nul
 if not errorlevel 1 (
@@ -28,10 +28,10 @@ if not exist "..\tools\cloudflared.exe" (
     pause
     exit /b 1
 )
-echo Mo server + mo cong ra internet...
-echo GIU CA 2 CUA SO NAY MO khi muon moi admin dung duoc.
+echo Mo server + tu nuoi tunnel (chet tu dung lai, doi link tu cap nhat web).
+echo GIU CUA SO NAY MO khi muon moi admin dung duoc.
+echo Dia chi public xem trong yt-server\tun-url.txt
 echo.
-start "YT Server - May chu tai" node server.js
-timeout /t 3 /nobreak >nul
-"..\tools\cloudflared.exe" tunnel --url http://127.0.0.1:8799
+set YT_TUNNEL=1
+node server.js
 pause
