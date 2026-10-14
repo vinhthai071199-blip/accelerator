@@ -443,6 +443,7 @@ function paintVideos(){
     const src = homeSrc(r);
     const poster = homePoster(r);
     const cloud = (r.host || 'cloudinary') === 'cloudinary';
+    const htag = r.host === 'home' ? 'Ổ cứng' : (r.host === 'catbox' ? 'Catbox' : 'Cloudinary');
     const dl = cloud ? dlUrl(src) : src;
     const fname = (((r.title || 'video').replace(/[^\w\-. ()À-ỹ]+/g, '_').substring(0, 80)) || 'video') + '.mp4';
     const cat = ((r.cat||'').trim());
@@ -454,6 +455,7 @@ function paintVideos(){
       + '</button>'
       + '<div class="vid-info">'
       + (cat?'<span class="cat-tag">'+esc(cat)+'</span>':'')
+      + '<span class="cat-tag">'+htag+'</span>'
       + '<h3>'+esc(r.title)+'</h3>'
       + '<div class="meta"><small>'+fmtSize(r.size)+'</small>'
       + (cloud ? '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener noreferrer">Tải xuống</a>'

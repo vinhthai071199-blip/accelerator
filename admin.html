@@ -394,6 +394,7 @@ function renderVd(list){
     vdCache[k] = {title: r.title||'', del: r.del||''};
     const src = homeSrc(r), poster = homePoster(r);
     const cloud = (r.host || 'cloudinary') === 'cloudinary';
+    const htag = r.host === 'home' ? 'Ổ cứng' : (r.host === 'catbox' ? 'Catbox' : 'Cloudinary');
     const dl = cloud ? dlUrl(src) : src;
     const fname = (((r.title || 'video').replace(/[^\w\-. ()À-ỹ]+/g, '_').substring(0, 80)) || 'video') + '.mp4';
     const hd = !!r.hidden;
@@ -404,9 +405,10 @@ function renderVd(list){
       + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div></div>'
           + '<div class="vid-info">'
           + (r.cat?'<span class="tag">'+esc(r.cat)+'</span> ':'')
+          + '<span class="tag">'+htag+'</span> '
           + (hd?'<span class="tag">ĐÃ ẨN</span> ':'')
           + '<h3>'+esc(r.title)+'</h3>'
-          + '<div class="meta"><small>'+fmtTime(r.time)+'</small>'
+          + '<div class="meta"><small>'+fmtTime(r.time)+(r.size?' • '+fmtSize(r.size):'')+'</small>'
           + (cloud ? '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener">Tải xuống</a>'
           : '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener" data-url="'+esc(src)+'" data-name="'+esc(fname)+'" onclick="return dlFile(this)">Tải xuống</a>')
       + '<button class="del" onclick="editVideo(\''+k+'\')">Sửa tên</button>'
@@ -641,7 +643,7 @@ async function ytServer(){
   try{
     const r = await callSrv();
     const homeUrl = (r.host === 'home') ? (ytBaseCur.replace(/\/+$/,'') + (r.path || '')) : '';
-    await db.ref('videos').push({title:ytInfo.title, url:r.host==='home'?homeUrl:r.url, host:r.host||'cloudinary', path:r.path||'', poster:r.poster||'', public_id:r.public_id||'', del:r.del||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
+    await db.ref('videos').push({title:ytInfo.title, url:r.host==='home'?homeUrl:r.url, host:r.host||'cloudinary', path:r.path||'', poster:r.poster||'', size:r.bytes||0, public_id:r.public_id||'', del:r.del||'', cat:document.getElementById('vidCatSel').value, time:Date.now()});
     document.getElementById('ytUrl').value = '';
     document.getElementById('ytPrev').innerHTML = '';
     ytInfo = null;
