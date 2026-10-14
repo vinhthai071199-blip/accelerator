@@ -13,8 +13,16 @@ const ROOT = __dirname;
 const CFG_PATH = path.join(ROOT, 'config.json');
 const DL_DIR = path.join(ROOT, 'dl');
 if (!fs.existsSync(DL_DIR)) fs.mkdirSync(DL_DIR, { recursive: true });
-const FILES_DIR = path.join(ROOT, 'files');
-if (!fs.existsSync(FILES_DIR)) fs.mkdirSync(FILES_DIR, { recursive: true });
+function ensureDir(d) { try { fs.mkdirSync(d, { recursive: true }); return true; } catch (e) { return false; } }
+/* Kho video chinh: o E (khong co tu tao). Chuyen khac o dia -> copy+xoa. */
+const LIB_DIR = 'E:\\videoserver';
+function moveFile(a, b) {
+  try { fs.renameSync(a, b); return; } catch (e) {
+    if (!e || e.code !== 'EXDEV') throw e;
+  }
+  fs.copyFileSync(a, b);
+  fs.unlinkSync(a);
+}
 
 let cfg = {};
 try { cfg = JSON.parse(fs.readFileSync(CFG_PATH, 'utf8')); } catch (e) { cfg = {}; }
@@ -95,8 +103,8 @@ const server = http.createServer((req, res) => {
     cors(res);
     let rel = '';
     try { rel = decodeURIComponent(u.pathname.slice(7)); } catch (e) { res.writeHead(400); res.end(); return; }
-    const ffp = path.normalize(path.join(FILES_DIR, rel));
-    if (ffp !== FILES_DIR && ffp.indexOf(FILES_DIR + path.sep) !== 0) { res.writeHead(403); res.end(); return; }
+    const ffp = path.normalize(path.join(LIB_DIR, rel));
+    if (ffp !== LIB_DIR && ffp.indexOf(LIB_DIR + path.sep) !== 0) { res.writeHead(403); res.end(); return; }
     fs.stat(ffp, function (err, fst) {
       if (err || !fst.isFile()) { res.writeHead(404); res.end(); return; }
       const ext = path.extname(ffp).toLowerCase();
@@ -164,9 +172,10 @@ const server = http.createServer((req, res) => {
           }
           const dest = j.dest === 'cloud' ? 'cloud' : 'home';
           if (dest === 'home') {
-            /* Kho o cung: giu file trong files/, tao anh bia, khong gioi han dung luong */
-            const destFp = path.join(FILES_DIR, path.basename(fp));
-            try { fs.renameSync(fp, destFp); } catch (e) { throw new Error('khong giu duoc file o cung'); }
+            /* Kho o cung E:/videoserver: giu file, tao anh bia, khong gioi han dung luong */
+            if (!ensureDir(LIB_DIR)) throw new Error('khong thay o E:/videoserver (kiem tra o E roi bam lai)');
+            const destFp = path.join(LIB_DIR, path.basename(fp));
+            try { moveFile(fp, destFp); } catch (e) { throw new Error('khong giu duoc file o cung'); }
             const pub = '/files/' + encodeURIComponent(path.basename(destFp));
             let posterPath = '';
             try {
@@ -215,6 +224,7 @@ const server = http.createServer((req, res) => {
 });
 server.listen(PORT, '127.0.0.1', () => {
   console.log('YT server chay o http://127.0.0.1:' + PORT + ' (tat cua so nay = tat server)');
+  console.log('Kho video o cung: ' + LIB_DIR + (ensureDir(LIB_DIR) ? ' (san sang)' : ' (CHUA TAO DUOC - kiem tra o E)'));
   console.log('Che do KHONG token: ai co dia chi tunnel deu bam tai duoc.');
   console.log('Giu kin dia chi tunnel, chi gui cho admin. Gioi han 20 video/gio + 30 video/ngay.');
 });
