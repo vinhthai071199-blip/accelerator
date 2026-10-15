@@ -430,7 +430,7 @@ async function queueTick() {
       const waitMin = [10, 30, 60][attempts - 1] || 60;
       try { await fbPatch('settings/queue/' + key, { stage: 'waiting', retryAt: Date.now() + waitMin * 60000, attempts: attempts, detail: 'Bận tạm, tự thử lại sau ' + waitMin + ' phút (lần ' + attempts + '/3)' }); } catch (e2) {}
     } else {
-      try { await fbPatch('settings/queue/' + key, { stage: 'error', attempts: attempts, detail: friendlyErr(msg) }); } catch (e2) {}
+      try { await fbPatch('settings/queue/' + key, { stage: 'error', attempts: attempts, detail: friendlyErr(msg), tech: msg.slice(0, 300) }); } catch (e2) {}
     }
   }
   working = false;
