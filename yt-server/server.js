@@ -34,7 +34,7 @@ cfg.cloud = cfg.cloud || 'ck9gvbcq';
 cfg.preset = cfg.preset || 'web_upload';
 cfg.site = cfg.site || 'https://acceleratorares.vercel.app';
 const PORT = process.env.YT_PORT || cfg.port || 8799;
-const CODE_V = 7;
+const CODE_V = 8;
 fs.writeFileSync(CFG_PATH, JSON.stringify(cfg, null, 2));
 
 function cors(res) {
@@ -88,7 +88,12 @@ function run(cmd, args) {
     p.stdout.on('data', d => { out += d; });
     p.stderr.on('data', d => { err += d; });
     p.on('error', reject);
-    p.on('close', code => code === 0 ? resolve({ out, err }) : reject(new Error(err.slice(-2000) || ('exit ' + code))));
+    p.on('close', code => {
+      if (code === 0) return resolve({ out, err });
+      const e2 = new Error(err.slice(-2000) || ('exit ' + code));
+      e2.out = out; e2.err = err;
+      reject(e2);
+    });
   });
 }
 
@@ -192,16 +197,19 @@ const server = http.createServer((req, res) => {
             fp = cands[0].p;
             st = fs.statSync(fp);
           }
-          /* Chong ban cuc thap (bot-check chi nha 360p): duoi 720p thi bo file, bao thu lai */
+          /* Chong ban cuc thap (bot-check chi nha 360p): duoi 720p thi bo file, bao thu lai.
+             ffmpeg -i khong file ra luon exit != 0 nen doc kich thuoc tu output cua loi. */
           try {
-            const pb = await run(cfg.ffmpeg, ['-hide_banner', '-i', fp]);
-            const mm2 = (pb.err + pb.out).match(/Video:[^\n]*?(\d{3,5})x(\d{3,5})/);
+            await run(cfg.ffmpeg, ['-hide_banner', '-i', fp]);
+          } catch (e) {
+            const dump = ((e && e.err) || '') + '\n' + ((e && e.out) || '');
+            const mm2 = dump.match(/Video:[^\n]*?(\d{3,5})x(\d{3,5})/);
             const hh = mm2 ? parseInt(mm2[2], 10) : 0;
             if (hh && hh < 720) {
-              try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e) {}
-              throw new Error('YOUTUBE_CHI_NHA_BAN_THAP');
+              try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e2) {}
+              throw new Error('YouTube chỉ nhả bản thấp lúc này, gửi lại sau ít phút để lấy bản đẹp');
             }
-          } catch (e) { if (/YOUTUBE_CHI_NHA_BAN_THAP/.test(e.message || '')) throw new Error('YouTube chỉ nhả bản thấp lúc này, gửi lại sau ít phút để lấy bản đẹp'); }
+          }
           const dest = dest0;
           if (dest === 'litter') {
             /* Kho tam Litterbox: toi da 1GB, tu huy sau 72h. Khong luu E:. */
