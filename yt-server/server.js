@@ -192,6 +192,16 @@ const server = http.createServer((req, res) => {
             fp = cands[0].p;
             st = fs.statSync(fp);
           }
+          /* Chong ban cuc thap (bot-check chi nha 360p): duoi 720p thi bo file, bao thu lai */
+          try {
+            const pb = await run(cfg.ffmpeg, ['-hide_banner', '-i', fp]);
+            const mm2 = (pb.err + pb.out).match(/Video:[^\n]*?(\d{3,5})x(\d{3,5})/);
+            const hh = mm2 ? parseInt(mm2[2], 10) : 0;
+            if (hh && hh < 720) {
+              try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e) {}
+              throw new Error('YOUTUBE_CHI_NHA_BAN_THAP');
+            }
+          } catch (e) { if (/YOUTUBE_CHI_NHA_BAN_THAP/.test(e.message || '')) throw new Error('YouTube chỉ nhả bản thấp lúc này, gửi lại sau ít phút để lấy bản đẹp'); }
           const dest = dest0;
           if (dest === 'litter') {
             /* Kho tam Litterbox: toi da 1GB, tu huy sau 72h. Khong luu E:. */
@@ -347,6 +357,7 @@ let working = false;
    Chi tiet goc giu trong console cua so server de sua loi. */
 function friendlyErr(msg) {
   msg = String(msg || '');
+  if (/gửi lại sau|bản thấp|bản đẹp/i.test(msg)) return msg;
   if (/unavailable|private video|deleted|not found| 404/i.test(msg)) return 'Video gốc không còn (bị xóa, ẩn hoặc khóa vùng)';
   if (/sign in|log in|cookie|bot|captcha|SABR/i.test(msg)) return 'YouTube chặn tải tự động lúc này, gửi lại sau ít phút';
   if (/catbox/i.test(msg)) return 'Kho Catbox từ chối lúc này, gửi lại sau';
