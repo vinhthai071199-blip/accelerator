@@ -212,13 +212,13 @@ const server = http.createServer((req, res) => {
           }
           const dest = dest0;
           if (dest === 'litter') {
-            /* Kho tam Litterbox: toi da 1GB, tu huy sau 72h. Khong luu E:. */
+            /* Kho tam Litterbox: toi da 1GB, tu huy sau 1h. Khong luu E:. */
             if (st.size > 1024 * 1024 * 1024) {
               busy = false;
               return send(res, 413, { error: 'File ' + Math.round(st.size / 1048576) + 'MB vượt 1GB! Up tay lên Drive (tới 2GB) nhé' });
             }
-            prog = { stage: 'up', pct: -1, detail: 'Đang up lên Litterbox (tạm 72h, chờ vài phút)...' };
-            const r2 = await runRetry('curl.exe', ['-sS', '-F', 'reqtype=fileupload', '-F', 'time=72h',
+            prog = { stage: 'up', pct: -1, detail: 'Đang up lên Litterbox (tạm 1h, chờ vài phút)...' };
+            const r2 = await runRetry('curl.exe', ['-sS', '-F', 'reqtype=fileupload', '-F', 'time=1h',
               '-F', 'fileToUpload=@' + fp, 'https://litterbox.catbox.moe/resources/internals/api.php'], 3, 15000);
             const curl = (r2.out || '').trim();
             if (!/^https:\/\/litter\.catbox\.moe\//.test(curl)) throw new Error('litterbox từ chối: ' + curl.slice(0, 120));
@@ -418,7 +418,7 @@ async function queueTick() {
     } else {
       entry.host = r.host || 'cloudinary'; entry.url = r.url; entry.public_id = r.public_id || ''; entry.del = r.del || ''; entry.size = r.bytes || 0;
     }
-    if (r.host === 'litterbox') entry.expiresAt = Date.now() + 72 * 3600 * 1000;
+    if (r.host === 'litterbox') entry.expiresAt = Date.now() + 1 * 3600 * 1000;
     await fbPost('videos', entry);
     await fbDel('settings/queue/' + key);
   } catch (e) {
@@ -439,7 +439,7 @@ setInterval(queueTick, 15000);
 setTimeout(queueTick, 8000);
 
 /* ============ TU XOA VIDEO HET HAN ============
-   Video kho tam (Litterbox) qua 72h thi xoa khoi web (file goc tren
+   Video kho tam (Litterbox) qua 1h thi xoa khoi web (file goc tren
    Litterbox cung tu huy). Quet 10 phut/lan, moi lan toi da 20 muc. */
 async function sweepExpired() {
   let v = null;

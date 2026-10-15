@@ -443,7 +443,7 @@ function paintVideos(){
     const src = homeSrc(r);
     const poster = homePoster(r);
     const cloud = (r.host || 'cloudinary') === 'cloudinary';
-    const htag = r.host === 'home' ? 'Ổ cứng' : (r.host === 'catbox' ? 'Catbox' : (r.host === 'litterbox' ? 'Tạm 72h' : 'Cloudinary'));
+    const htag = r.host === 'home' ? 'Ổ cứng' : (r.host === 'catbox' ? 'Catbox' : (r.host === 'litterbox' ? 'Tạm 1h' : 'Cloudinary'));
     const isHome = r.host === 'home';
     const dl = cloud ? dlUrl(src) : (isHome ? (src ? src + '?download=1' : '') : src);
     const fname = (((r.title || 'video').replace(/[^\w\-. ()À-ỹ]+/g, '_').substring(0, 80)) || 'video') + '.mp4';

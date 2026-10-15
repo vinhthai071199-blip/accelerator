@@ -128,7 +128,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   </div>
   <div class="up-wrap">
     <div class="up-row">
-      <select id="ytDest"><option value="litter">Kho: Tạm 72h (tới 1GB)</option><option value="cloud">Kho: Cloud</option><option value="home">Kho: Ổ cứng nhà</option></select>
+      <select id="ytDest"><option value="litter">Kho: Tạm 1h (tới 1GB)</option><option value="cloud">Kho: Cloud</option><option value="home">Kho: Ổ cứng nhà</option></select>
     </div>
     <div class="up-row">
       <input type="text" id="ytUrl" placeholder="Dán link YouTube (watch / youtu.be / shorts)...">
@@ -382,7 +382,7 @@ function renderVd(list){
     vdCache[k] = {title: r.title||'', del: r.del||''};
     const src = homeSrc(r), poster = homePoster(r);
     const cloud = (r.host || 'cloudinary') === 'cloudinary';
-    const htag = r.host === 'home' ? 'Ổ cứng' : (r.host === 'catbox' ? 'Catbox' : (r.host === 'litterbox' ? 'Tạm 72h' : 'Cloudinary'));
+    const htag = r.host === 'home' ? 'Ổ cứng' : (r.host === 'catbox' ? 'Catbox' : (r.host === 'litterbox' ? 'Tạm 1h' : 'Cloudinary'));
     const isHome = r.host === 'home';
     const dl = cloud ? dlUrl(src) : (isHome ? (src ? src + '?download=1' : '') : src);
     const fname = (((r.title || 'video').replace(/[^\w\-. ()À-ỹ]+/g, '_').substring(0, 80)) || 'video') + '.mp4';
