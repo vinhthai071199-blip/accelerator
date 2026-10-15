@@ -230,22 +230,7 @@ const server = http.createServer((req, res) => {
             }
           }
           const dest = dest0;
-          if (dest === 'litter') {
-            /* Kho tam Litterbox: toi da 1GB, tu huy sau 1h. Khong luu E:. */
-            if (st.size > 1024 * 1024 * 1024) {
-              busy = false;
-              return send(res, 413, { error: 'File ' + Math.round(st.size / 1048576) + 'MB vượt 1GB! Up tay lên Drive (tới 2GB) nhé' });
-            }
-            prog = { stage: 'up', pct: -1, detail: 'Đang up lên Litterbox (tạm 1h, chờ vài phút)...' };
-            const r2 = await runRetry('curl.exe', ['-sS', '-F', 'reqtype=fileupload', '-F', 'time=1h',
-              '-F', 'fileToUpload=@' + fp, 'https://litterbox.catbox.moe/resources/internals/api.php'], 3, 15000);
-            const curl = (r2.out || '').trim();
-            if (!/^https:\/\/litter\.catbox\.moe\//.test(curl)) throw new Error('litterbox từ chối: ' + curl.slice(0, 120));
-            try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e) {}
-            busy = false;
-            prog = { stage: 'done', pct: 100, detail: '' };
-            return send(res, 200, { ok: true, url: curl, host: 'litterbox', bytes: st.size });
-          }
+          /* Bo kho tam Litterbox (hay sap): 'litter' cu rot xuong tu dong Cloud/Catbox theo dung luong */
           if (dest === 'home') {
             /* Kho o cung E:/videoserver: giu file, tao anh bia, khong gioi han dung luong */
             if (!ensureDir(LIB_DIR)) throw new Error('Không thấy ổ E:/videoserver (kiểm tra ổ E rồi bấm lại)');
@@ -438,7 +423,6 @@ async function queueTick() {
     } else {
       entry.host = r.host || 'cloudinary'; entry.url = r.url; entry.public_id = r.public_id || ''; entry.del = r.del || ''; entry.size = r.bytes || 0;
     }
-    if (r.host === 'litterbox') entry.expiresAt = Date.now() + 1 * 3600 * 1000;
     await fbPost('videos', entry);
     await fbDel('settings/queue/' + key);
   } catch (e) {
