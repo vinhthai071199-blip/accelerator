@@ -387,6 +387,7 @@ function friendlyErr(msg) {
   if (/gửi lại sau|bản thấp|bản đẹp/i.test(msg)) return msg;
   if (/unavailable|private video|deleted|not found| 404/i.test(msg)) return 'Video gốc không còn (bị xóa, ẩn hoặc khóa vùng)';
   if (/sign in|log in|cookie|bot|captcha|SABR/i.test(msg)) return 'YouTube chặn tải tự động lúc này, gửi lại sau ít phút';
+  if (/litterbox/i.test(msg)) return 'Kho Tạm (Litterbox) đang sập hoặc chặn mạng nhà lúc này, đổi sang kho Cloud rồi gửi lại';
   if (/catbox/i.test(msg)) return 'Kho Catbox từ chối lúc này, gửi lại sau';
   if (/cloudinary|size limit|File size|100 ?MB/i.test(msg)) return 'File vượt giới hạn kho, thử lại hoặc đổi kho khác';
   if (/quota|credit/i.test(msg)) return 'Kho Cloud hết quota tháng này';
