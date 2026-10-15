@@ -34,7 +34,7 @@ cfg.cloud = cfg.cloud || 'ck9gvbcq';
 cfg.preset = cfg.preset || 'web_upload';
 cfg.site = cfg.site || 'https://acceleratorares.vercel.app';
 const PORT = process.env.YT_PORT || cfg.port || 8799;
-const CODE_V = 8;
+const CODE_V = 9;
 fs.writeFileSync(CFG_PATH, JSON.stringify(cfg, null, 2));
 
 function cors(res) {
@@ -384,6 +384,7 @@ async function queueTick() {
     const it = q[k] || {};
     if (!it.url) return false;
     if (it.stage === 'new' || !it.stage) return true;
+    if (it.stage === 'waiting' && it.retryAt && Date.now() >= it.retryAt) return true;
     if ((it.stage === 'downloading' || it.stage === 'uploading') && it.claimedAt && Date.now() - it.claimedAt > 30 * 60 * 1000) return true;
     return false;
   });
@@ -421,8 +422,16 @@ async function queueTick() {
     await fbPost('videos', entry);
     await fbDel('settings/queue/' + key);
   } catch (e) {
-    try { console.error('[worker] loi ky thuat:', (e && e.message) || e); } catch (e3) {}
-    try { await fbPatch('settings/queue/' + key, { stage: 'error', detail: friendlyErr((e && e.message) || e) }); } catch (e2) {}
+    const msg = String((e && e.message) || e);
+    try { console.error('[worker] loi ky thuat:', msg); } catch (e3) {}
+    const attempts = (job.attempts || 0) + 1;
+    const perm = /không còn|bị xóa|khóa vùng|không phải link|vượt \d+MB|vượt 1GB|sai email|không thấy ổ|o E:/i.test(msg);
+    if (!perm && attempts <= 3) {
+      const waitMin = [10, 30, 60][attempts - 1] || 60;
+      try { await fbPatch('settings/queue/' + key, { stage: 'waiting', retryAt: Date.now() + waitMin * 60000, attempts: attempts, detail: 'Bận tạm, tự thử lại sau ' + waitMin + ' phút (lần ' + attempts + '/3)' }); } catch (e2) {}
+    } else {
+      try { await fbPatch('settings/queue/' + key, { stage: 'error', attempts: attempts, detail: friendlyErr(msg) }); } catch (e2) {}
+    }
   }
   working = false;
 }

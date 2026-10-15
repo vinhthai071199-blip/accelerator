@@ -588,7 +588,7 @@ async function ytPing(){
   }catch(e){ ytSrvOn = false; ytSrvV = 0; }
   const n = document.getElementById('ytSrvNote');
   if(n) n.textContent = (ytSrvOn ? 'Máy chủ đang bật — gửi là tải ngay.' : 'Máy chủ đang tắt — cứ gửi, máy bật sẽ tự tải.')
-    + ' (máy nhà bản ' + ytSrvV + ', cần bản 7)';
+    + ' (máy nhà bản ' + ytSrvV + ', cần bản 9)';
 }
 let ytBaseTimer = null;
 let ytBaseLast = null;
@@ -649,7 +649,7 @@ function renderQ(list){
     const st = r.stage || 'new';
     const label = st === 'new' ? 'Mới gửi, chờ máy nhà nhận việc'
       : st === 'downloading' ? ('Đang tải ' + Math.round(r.pct || 0) + '%')
-      : st === 'uploading' ? 'Đang up kho' : st === 'error' ? ('Lỗi: ' + (r.detail || '')) : st;
+      : st === 'uploading' ? 'Đang up kho' : st === 'waiting' ? ('Chờ thử lại: ' + (r.detail || '')) : st === 'error' ? ('Lỗi: ' + (r.detail || '')) : st;
     const pct = Math.max(0, Math.min(100, Math.round(r.pct || 0)));
     return '<div class="item"><div class="head"><div><span class="who">'+esc(r.title || r.url || k)+'</span>'
       + '<span class="tag">'+esc(r.dest === 'home' ? 'Ổ cứng' : (r.dest === 'litter' ? 'Tạm' : 'Cloud'))+'</span></div>'
