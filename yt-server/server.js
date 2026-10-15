@@ -189,7 +189,7 @@ const server = http.createServer((req, res) => {
         busy = true; hits.push(Date.now());
         prog = { stage: 'dl', pct: 0, detail: '' };
         try {
-          const dest0 = j.dest === 'cloud' ? 'cloud' : (j.dest === 'litter' ? 'litter' : 'home');
+          const dest0 = j.dest === 'cloud' ? 'cloud' : (j.dest === 'catbox' ? 'catbox' : 'home');
           /* Lay ban dep nhat (1080p-4K 60fps). Kho cloud tu chia theo dung
              luong; kho o cung giu nguyen ban goc. */
           const fmtDefault = 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b';
@@ -250,10 +250,10 @@ const server = http.createServer((req, res) => {
           }
           if (st.size > 200 * 1024 * 1024) {
             busy = false;
-            return send(res, 413, { error: 'File ' + Math.round(st.size / 1048576) + 'MB vượt 200MB! File nằm ở E:/videoserver, up tay lên Drive (tới 2GB) nhé' });
+            return send(res, 413, { error: 'File ' + Math.round(st.size / 1048576) + 'MB vượt 200MB (Catbox chỉ nhận tới 200MB)! File nằm ở yt-server/dl, up tay lên Drive (tới 2GB) nhé' });
           }
-          if (st.size > 100 * 1024 * 1024) {
-            /* 100-200MB: Cloudinary free khong nhan -> up Catbox (toi da 200MB) */
+          if (dest === 'catbox' || st.size > 100 * 1024 * 1024) {
+            /* Catbox truc tiep (mac dinh) hoac file 100-200MB: toi da 200MB */
             prog = { stage: 'up', pct: -1, detail: 'Đang up lên Catbox (file 100–200MB, chờ vài phút)...' };
             const r2 = await runRetry('curl.exe', ['-sS', '-F', 'reqtype=fileupload',
               '-F', 'fileToUpload=@' + fp, 'https://catbox.moe/user/api.php'], 3, 15000);
