@@ -47,6 +47,15 @@ function send(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(obj));
 }
+function sleepMs(ms) { return new Promise(function (res) { setTimeout(res, ms); }); }
+async function runRetry(cmd, args, tries, delayMs) {
+  let err = null;
+  for (let i = 0; i < tries; i++) {
+    try { return await run(cmd, args); }
+    catch (e) { err = e; if (i + 1 < tries) await sleepMs(delayMs); }
+  }
+  throw err;
+}
 function runLive(cmd, args, onPct) {
   return new Promise((resolve, reject) => {
     const p = spawn(cmd, args, { windowsHide: true,
@@ -161,17 +170,14 @@ const server = http.createServer((req, res) => {
           const fmtDefault = 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b';
           const fmt = (/^[A-Za-z0-9_*+\/()[\].\-=,:? ]{1,120}$/.test(String(j.format || '')) && j.format) || fmtDefault;
           const tpl = path.join(DL_DIR, Date.now() + '.%(title).60s [%(id)s].%(ext)s');
+          /* Thu tu client: web truoc (giu hanh vi cu), rot xuong web_embedded
+             roi android khi YouTube bat kiem tra bot / SABR */
           const baseArgs = ['-f', fmt, '--merge-output-format', 'mp4',
             '--ffmpeg-location', cfg.ffmpeg, '-o', tpl, '--no-playlist', '--retries', '3', '--newline',
+            '--extractor-args', 'youtube:player_client=web,web_embedded,android',
             '--print', 'after_move:filepath', url];
           const onPct = function(p){ prog.pct = p; };
-          let r1;
-          try { r1 = await runLive(cfg.ytdlp, baseArgs, onPct); }
-          catch (e1) {
-            /* Luot 2: doi sang android client (vuot kiem tra bot / SABR) */
-            prog.pct = 0;
-            r1 = await runLive(cfg.ytdlp, ['--extractor-args', 'youtube:player_client=android'].concat(baseArgs), onPct);
-          }
+          const r1 = await runLive(cfg.ytdlp, baseArgs, onPct);
           const fp0 = r1.out.trim().split(/\r?\n/).filter(function(l){ return l && l.indexOf('%') === -1; }).pop() || '';
           let fp = fp0, st = null;
           try { st = fs.statSync(fp); } catch (e) { st = null; }
@@ -193,8 +199,8 @@ const server = http.createServer((req, res) => {
               return send(res, 413, { error: 'File ' + Math.round(st.size / 1048576) + 'MB vượt 1GB! Up tay lên Drive (tới 2GB) nhé' });
             }
             prog = { stage: 'up', pct: -1, detail: 'Đang up lên Litterbox (tạm 72h, chờ vài phút)...' };
-            const r2 = await run('curl.exe', ['-sS', '-F', 'reqtype=fileupload', '-F', 'time=72h',
-              '-F', 'fileToUpload=@' + fp, 'https://litterbox.catbox.moe/resources/internals/api.php']);
+            const r2 = await runRetry('curl.exe', ['-sS', '-F', 'reqtype=fileupload', '-F', 'time=72h',
+              '-F', 'fileToUpload=@' + fp, 'https://litterbox.catbox.moe/resources/internals/api.php'], 3, 15000);
             const curl = (r2.out || '').trim();
             if (!/^https:\/\/litter\.catbox\.moe\//.test(curl)) throw new Error('litterbox từ chối: ' + curl.slice(0, 120));
             try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e) {}
@@ -226,8 +232,8 @@ const server = http.createServer((req, res) => {
           if (st.size > 100 * 1024 * 1024) {
             /* 100-200MB: Cloudinary free khong nhan -> up Catbox (toi da 200MB) */
             prog = { stage: 'up', pct: -1, detail: 'Đang up lên Catbox (file 100–200MB, chờ vài phút)...' };
-            const r2 = await run('curl.exe', ['-sS', '-F', 'reqtype=fileupload',
-              '-F', 'fileToUpload=@' + fp, 'https://catbox.moe/user/api.php']);
+            const r2 = await runRetry('curl.exe', ['-sS', '-F', 'reqtype=fileupload',
+              '-F', 'fileToUpload=@' + fp, 'https://catbox.moe/user/api.php'], 3, 15000);
             const curl = (r2.out || '').trim();
             if (!/^https:\/\/files\.catbox\.moe\//.test(curl)) throw new Error('catbox tu choi: ' + curl.slice(0, 120));
             try { if (ensureDir(LIB_DIR)) moveFile(fp, path.join(LIB_DIR, path.basename(fp))); else fs.unlinkSync(fp); } catch (e) { try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e2) {} }
@@ -236,9 +242,9 @@ const server = http.createServer((req, res) => {
             return send(res, 200, { ok: true, url: curl, host: 'catbox', bytes: st.size });
           }
           prog = { stage: 'up', pct: -1, detail: 'Đang up lên Cloudinary (chờ vài phút)...' };
-          const r2 = await run('curl.exe', ['-sS', '-X', 'POST',
+          const r2 = await runRetry('curl.exe', ['-sS', '-X', 'POST',
             'https://api.cloudinary.com/v1_1/' + cfg.cloud + '/video/upload',
-            '-F', 'file=@' + fp, '-F', 'upload_preset=' + cfg.preset]);
+            '-F', 'file=@' + fp, '-F', 'upload_preset=' + cfg.preset], 3, 15000);
           let up = {};
           try { up = JSON.parse(r2.out); } catch (e) { throw new Error('cloudinary tra ve la: ' + r2.out.slice(0, 200)); }
           if (!up.secure_url) throw new Error((up.error && up.error.message) || 'cloudinary tu choi');
