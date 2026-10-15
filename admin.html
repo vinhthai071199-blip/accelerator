@@ -568,6 +568,7 @@ function ytRender(){
    May nha tat thi nut tu an (ytPing), khong bao gio treo. */
 const YT_SRV = 'http://127.0.0.1:8799';
 let ytSrvOn = false;
+let ytSrvV = 0;
 let ytBaseCur = YT_SRV;
 async function ytPing(){
   let base = YT_SRV;
@@ -581,11 +582,13 @@ async function ytPing(){
   if(bi && document.activeElement !== bi) bi.value = (base === YT_SRV ? '' : base);
   try{
     const r = await fetch(base+'/ping');
-    ytSrvOn = !!(r.ok && (await r.json()).ok);
-  }catch(e){ ytSrvOn = false; }
+    const j = r.ok ? await r.json() : {};
+    ytSrvOn = !!j.ok;
+    ytSrvV = j.v || 0;
+  }catch(e){ ytSrvOn = false; ytSrvV = 0; }
   const n = document.getElementById('ytSrvNote');
-  if(n) n.textContent = ytSrvOn ? 'Máy chủ đang bật — gửi là tải ngay.'
-    : 'Máy chủ đang tắt — cứ gửi, máy bật sẽ tự tải.';
+  if(n) n.textContent = (ytSrvOn ? 'Máy chủ đang bật — gửi là tải ngay.' : 'Máy chủ đang tắt — cứ gửi, máy bật sẽ tự tải.')
+    + ' (máy nhà bản ' + ytSrvV + ', cần bản 7)';
 }
 let ytBaseTimer = null;
 let ytBaseLast = null;

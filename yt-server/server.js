@@ -34,6 +34,7 @@ cfg.cloud = cfg.cloud || 'ck9gvbcq';
 cfg.preset = cfg.preset || 'web_upload';
 cfg.site = cfg.site || 'https://acceleratorares.vercel.app';
 const PORT = process.env.YT_PORT || cfg.port || 8799;
+const CODE_V = 7;
 fs.writeFileSync(CFG_PATH, JSON.stringify(cfg, null, 2));
 
 function cors(res) {
@@ -105,7 +106,7 @@ function overLimit(){
 const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') { cors(res); res.writeHead(204); res.end(); return; }
   const u = new URL(req.url, 'http://x');
-  if (req.method === 'GET' && u.pathname === '/ping') return send(res, 200, { ok: true, busy });
+  if (req.method === 'GET' && u.pathname === '/ping') return send(res, 200, { ok: true, busy, v: CODE_V });
   if (req.method === 'GET' && u.pathname === '/progress') return send(res, 200, { ok: true, busy, stage: prog.stage, pct: prog.pct, detail: prog.detail });
   if (req.method === 'GET' && u.pathname.indexOf('/files/') === 0) {
     /* Kho o cung: phuc vu file + ho tro Range (seek video) */
