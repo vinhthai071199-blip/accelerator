@@ -35,6 +35,25 @@ cfg.preset = cfg.preset || 'web_upload';
 cfg.site = cfg.site || 'https://acceleratorares.vercel.app';
 const PORT = process.env.YT_PORT || cfg.port || 8799;
 const CODE_V = 9;
+/* Khoa don tien trinh: chi 1 server duoc chay (mo 2 cua so/app+bat
+   se danh nhau, treo viec). Tien trinh cu chet thi khoa cu tu het han. */
+const LOCK_FILE = path.join(ROOT, 'server.lock');
+function lockAlive() {
+  try {
+    const l = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf8'));
+    if (!l || !l.pid) return false;
+    const out = require('child_process').execSync('tasklist /FI "PID eq ' + l.pid + '" /FO CSV /NH', { windowsHide: true }).toString();
+    return out.toLowerCase().indexOf('node.exe') !== -1;
+  } catch (e) { return false; }
+}
+if (!process.env.YT_PORT && lockAlive()) {
+  console.log('Server khac van chay (khoa). Tat het cua so server cu / bam TAT trong app roi mo lai.');
+  process.exit(2);
+}
+if (!process.env.YT_PORT) {
+  try { fs.writeFileSync(LOCK_FILE, JSON.stringify({ pid: process.pid, port: PORT, at: Date.now() })); } catch (e) {}
+  process.on('exit', function () { try { fs.unlinkSync(LOCK_FILE); } catch (e) {} });
+}
 fs.writeFileSync(CFG_PATH, JSON.stringify(cfg, null, 2));
 
 function cors(res) {
@@ -435,8 +454,10 @@ async function queueTick() {
   }
   working = false;
 }
-setInterval(queueTick, 15000);
-setTimeout(queueTick, 8000);
+if (!process.env.YT_PORT) {
+  setInterval(queueTick, 15000);
+  setTimeout(queueTick, 8000);
+}
 
 /* ============ TU XOA VIDEO HET HAN ============
    Video kho tam (Litterbox) qua 1h thi xoa khoi web (file goc tren
@@ -454,8 +475,10 @@ async function sweepExpired() {
     try { await fbDel('videos/' + k); console.log('Tu xoa video het han: ' + k); } catch (e) {}
   }
 }
-setInterval(sweepExpired, 10 * 60 * 1000);
-setTimeout(sweepExpired, 30000);
+if (!process.env.YT_PORT) {
+  setInterval(sweepExpired, 10 * 60 * 1000);
+  setTimeout(sweepExpired, 30000);
+}
 
 /* ============ TU NUOI TUNNEL ============
    Bat YT_TUNNEL=1 (hoac config tunnel:true): server tu mo cloudflared,
