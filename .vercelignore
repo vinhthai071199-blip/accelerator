@@ -10,6 +10,7 @@ __pycache__/
 .git/
 .vscode/
 admin1.html
+BAN-GIAO-CHO-CHAT-MOI.txt
 scan.js
 read_requests.js
 deploy.bat
