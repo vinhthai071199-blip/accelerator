@@ -65,6 +65,14 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 .vid-info .meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .vid-info .meta small{color:#a9a9b2;font-size:12px}
 .vid-dl{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:999px;background:#e9e9f0;color:#0d0a14;font-size:12px;font-weight:700;text-decoration:none}
+/* ===== BANG CHON KHO ===== */
+.yt-modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:100;padding:18px}
+.yt-modal.on{display:flex}
+.yt-modal .box{width:100%;max-width:430px;background:#10131a;border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.yt-modal h3{font-size:16px;margin-bottom:6px}
+.yt-modal p{font-size:12.5px;color:#a9a9b2;line-height:1.5;margin-bottom:14px}
+.yt-modal .opt{display:flex;flex-direction:column;gap:9px}
+.yt-modal .opt .btn{width:100%;justify-content:flex-start;text-align:left}
 @media(max-width:600px){.login-wrap{margin-top:8vh}.topbar{flex-direction:column;align-items:flex-start}}
 </style>
 </head>
@@ -127,11 +135,19 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="err" id="upErr" style="text-align:left"></div>
   </div>
   <div class="up-wrap">
+    <div class="up-row" style="justify-content:space-between">
+      <span class="live" id="ytStBadge"><i id="ytDot"></i><span id="ytStTxt">Máy chủ: đang kiểm tra...</span></span>
+      <button class="btn" onclick="ytPing()">Kiểm tra lại</button>
+    </div>
     <div class="up-row">
       <select id="ytDest"><option value="catbox">Kho: Catbox</option><option value="cloud">Kho: Cloud (tự chia Cloudinary/Catbox)</option><option value="home">Kho: Ổ cứng nhà</option></select>
     </div>
     <div class="up-row">
-      <input type="text" id="ytUrl" placeholder="Dán link YouTube (watch / youtu.be / shorts)...">
+      <select id="ytRes"><option value="">Độ nét: Cao nhất</option><option value="2160">Độ nét: 4K (2160p)</option><option value="1440">Độ nét: 2K (1440p)</option><option value="1080" selected>Độ nét: 1080p</option><option value="720">Độ nét: 720p</option><option value="480">Độ nét: 480p</option><option value="360">Độ nét: 360p</option></select>
+      <select id="ytFps"><option value="">FPS: Cao nhất</option><option value="60" selected>FPS: tối đa 60</option><option value="30">FPS: tối đa 30</option></select>
+    </div>
+    <div class="up-row">
+      <input type="text" id="ytUrl" placeholder="Dán link YouTube (watch / youtu.be / shorts)..." oninput="ytAutoFetch()">
       <button class="btn solid" id="ytBtn" onclick="ytFetch()">Lấy thông tin</button>
     </div>
     <div class="err" id="ytErr" style="text-align:left"></div>
@@ -148,7 +164,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   </div>
   <div id="vdList"></div>
 
-  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Link & ảnh</h2>
+  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Links</h2>
   <div class="up-wrap">
     <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
       <input type="checkbox" id="showLinks" style="width:18px;height:18px;accent-color:#ffffff" onchange="toggleShowLinks(this.checked)">
@@ -204,6 +220,21 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   <div id="phList"></div>
 </div>
 
+<!-- ===== BANG CHON KHO ===== -->
+<div class="yt-modal" id="ytDestModal" onclick="if(event.target===this)ytDestClose()">
+  <div class="box">
+    <h3>Chọn kho cho video</h3>
+    <p>Chọn nơi lưu video. "Tải về máy" tải thẳng về máy, không lưu trên ổ cứng máy chủ.</p>
+    <div class="opt">
+      <button class="btn solid" onclick="ytDestPick('download')">Tải về máy (không lưu kho)</button>
+      <button class="btn" onclick="ytDestPick('catbox')">Catbox (tối đa 200MB)</button>
+      <button class="btn" onclick="ytDestPick('cloud')">Cloudinary / Cloud</button>
+      <button class="btn" onclick="ytDestPick('home')">Ổ cứng nhà</button>
+      <button class="btn" onclick="ytDestClose()">Hủy</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -219,7 +250,118 @@ const FIREBASE_CONFIG = {
 };
 firebase.initializeApp(FIREBASE_CONFIG);
 const auth = firebase.auth();
-const db = firebase.database();
+const fbdb = firebase.database();
+
+const FB_DB_URL = "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app";
+let rtdbOn = null, pollTimer = null;
+const FB_TOKEN = { v: null, at: 0 };
+const lastJSON = {};
+
+function fbIdToken(){
+  const u = firebase.auth().currentUser;
+  if(!u) return Promise.resolve(null);
+  if(FB_TOKEN.v && Date.now() - FB_TOKEN.at < 300000) return Promise.resolve(FB_TOKEN.v);
+  return u.getIdToken().then(function(t){ FB_TOKEN.v = t; FB_TOKEN.at = Date.now(); return t; }, function(){ return null; });
+}
+function fbAuthUrl(path, t){ return FB_DB_URL + '/' + path + '.json' + (t ? '?auth=' + encodeURIComponent(t) : ''); }
+function restOnce(path){
+  return fbIdToken().then(function(t){
+    return fetch(fbAuthUrl(path, t), {cache:'no-store'}).then(function(r){
+      if(!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    });
+  });
+}
+function restWrite(op, path, arg){
+  return fbIdToken().then(function(t){
+    const opt = {method: op === 'set' ? 'PUT' : op === 'update' ? 'PATCH' : op === 'remove' ? 'DELETE' : 'POST'};
+    if(op !== 'remove'){ opt.headers = {'Content-Type' : 'application/json'}; opt.body = JSON.stringify(arg === undefined ? null : arg); }
+    return fetch(fbAuthUrl(path, t), opt).then(function(r){
+      if(!r.ok) throw new Error('http ' + r.status);
+      return r.json().catch(function(){ return null; }).then(function(res){
+        if(op === 'push'){
+          let name = null;
+          if(typeof res === 'string'){ const parts = res.replace(/\/+$/,'').split('/'); name = parts[parts.length - 1]; }
+          else if(res && res.name){ name = res.name; }
+          return { name: name };
+        }
+        return res;
+      });
+    });
+  });
+}
+function changed(k, v){ const j = JSON.stringify(v === undefined ? null : v); if(lastJSON[k] === j) return false; lastJSON[k] = j; return true; }
+function reloadAll(){
+  return Promise.all([
+    restOnce('videos').then(function(v){ if(changed('vd', v)){ vdLast = toList(v); renderVd(vdLast); } }),
+    restOnce('links').then(function(v){ if(changed('lk', v)){ lkLast = toList(v); renderLk(lkLast); } }),
+    restOnce('photos').then(function(v){ if(changed('ph', v)){ phLast = toList(v); renderPh(phLast); } }),
+    restOnce('settings/queue').then(function(v){ if(changed('q', v)){ ytQLast = toList(v); renderQ(ytQLast); } }),
+    restOnce('settings/showVideos').then(function(v){ if(changed('sv', v)){ const e = document.getElementById('showVideos'); if(e) e.checked = v !== false; } }),
+    restOnce('settings/showLinks').then(function(v){ if(changed('sl', v)){ const e = document.getElementById('showLinks'); if(e) e.checked = v !== false; } }),
+    restOnce('settings/showPhotos').then(function(v){ if(changed('sp', v)){ const e = document.getElementById('showPhotos'); if(e) e.checked = v !== false; } }),
+    restOnce('settings/ytServerBase').then(function(v){ if(changed('base', v)){ const b = v ? String(v).replace(/\/+$/,'') : ''; ytBaseCur = b || YT_SRV; ytBaseApply(b); } }),
+    restOnce('cats/videos').then(function(v){ if(changed('cv', v)) fillCatSels('videos', v); }),
+    restOnce('cats/links').then(function(v){ if(changed('cl', v)) fillCatSels('links', v); }),
+    restOnce('cats/photos').then(function(v){ if(changed('cp', v)) fillCatSels('photos', v); })
+  ]).catch(function(){});
+}
+function startPoll(){ if(pollTimer) return; pollTimer = setInterval(reloadAll, 8000); setTimeout(reloadAll, 0); }
+function stopPoll(){ if(pollTimer){ clearInterval(pollTimer); pollTimer = null; } }
+function dbDo(op, path, arg){
+  const viaRTDB = !!rtdbOn;
+  const p = viaRTDB
+    ? (op === 'set' ? fbdb.ref(path).set(arg) : op === 'update' ? fbdb.ref(path).update(arg) : op === 'remove' ? fbdb.ref(path).remove() : fbdb.ref(path).push(arg))
+    : restWrite(op, path, arg);
+  return p.then(function(res){ if(!viaRTDB) reloadAll(); return res; },
+               function(e){ if(!viaRTDB) reloadAll(); throw e; });
+}
+/* Doc realtime qua WebSocket; neu bi chan (vai mang di dong) thi sau 0,3 giay
+   tu dong lay lai bang REST HTTPS (kem token dang nhap) — noi dung van hien. */
+function dbRefREST(path, cb, errCb){
+  let got = false, unsub = null;
+  try{
+    unsub = fbdb.ref(path).on('value',
+      function(s){ got = true; cb(s.val()); },
+      function(e){ if(!got && errCb) errCb(e); });
+  }catch(e){ if(errCb) errCb(e); return null; }
+  setTimeout(function(){
+    if(got) return;
+    restOnce(path).then(function(j){ if(!got){ got = true; cb(j); } }, function(){ if(!got && errCb) errCb(); });
+  }, 300);
+  return unsub;
+}
+/* db.ref(path) tu chon RTDB hay REST tuy tinh trang ket noi WebSocket. */
+function mkRef(path){
+  return {
+    on: function(type, cb, errCb){ return dbRefREST(path, function(v){ cb({ val: function(){ return v; } }); }, errCb); },
+    off: function(type, unsub){ try{ fbdb.ref(path).off(type, unsub); }catch(e){} },
+    once: function(){
+      return {
+        then: function(res, rej){
+          const inner = rtdbOn ? fbdb.ref(path).once('value')
+                               : restOnce(path).then(function(v){ return { val: function(){ return v; } }; });
+          return inner.then(res, rej);
+        },
+        catch: function(rej){ return this.then(null, rej); }
+      };
+    },
+    child: function(p){ return mkRef(path + '/' + p); },
+    set: function(v){ return dbDo('set', path, v); },
+    update: function(o){ return dbDo('update', path, o); },
+    remove: function(){ return dbDo('remove', path); },
+    push: function(v){ return dbDo('push', path, v); }
+  };
+}
+const db = { ref: function(path){ return mkRef(path); } };
+try{
+  fbdb.ref('.info/connected').on('value', function(s){
+    const on = (s.val() === true);
+    if(on === rtdbOn) return;
+    rtdbOn = on;
+    if(on) stopPoll(); else startPoll();
+  });
+}catch(e){ setTimeout(startPoll, 0); }
 
 // --- CLOUDINARY (dien thong so cua ban vao) ---
 const CLOUD_NAME = "ck9gvbcq";
@@ -304,34 +446,32 @@ function fmtTime(t){
   if(isNaN(d.getTime())) return '';
   return d.toLocaleString('vi-VN');
 }
-function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 function toList(v){ return v ? Object.entries(v).sort((a,b)=>(b[1].time||b[1].ts||0)-(a[1].time||a[1].ts||0)) : []; }
 
 function startListeners(){
   stopListeners();
-  vdUnsub = db.ref('videos').on('value', s => { vdLast = toList(s.val()); renderVd(vdLast); });
-  stUnsub = db.ref('settings/showVideos').on('value',
-    s => { document.getElementById('showVideos').checked = s.val() !== false; },
+  vdUnsub = dbRefREST('videos', s => { vdLast = toList(s); renderVd(vdLast); });
+  stUnsub = dbRefREST('settings/showVideos',
+    s => { document.getElementById('showVideos').checked = s !== false; },
     () => { document.getElementById('showVideos').checked = true; });
-  lkUnsub = db.ref('links').on('value', s => { lkLast = toList(s.val()); renderLk(lkLast); });
-  slUnsub = db.ref('settings/showLinks').on('value',
-    s => { document.getElementById('showLinks').checked = s.val() !== false; },
+  lkUnsub = dbRefREST('links', s => { lkLast = toList(s); renderLk(lkLast); });
+  slUnsub = dbRefREST('settings/showLinks',
+    s => { document.getElementById('showLinks').checked = s !== false; },
     () => { document.getElementById('showLinks').checked = true; });
-  phUnsub = db.ref('photos').on('value', s => { phLast = toList(s.val()); renderPh(phLast); });
-  spUnsub = db.ref('settings/showPhotos').on('value',
-    s => { document.getElementById('showPhotos').checked = s.val() !== false; },
+  phUnsub = dbRefREST('photos', s => { phLast = toList(s); renderPh(phLast); });
+  spUnsub = dbRefREST('settings/showPhotos',
+    s => { document.getElementById('showPhotos').checked = s !== false; },
     () => { document.getElementById('showPhotos').checked = true; });
   ['videos','links','photos'].forEach(function(sec){
-    catUnsub[sec] = db.ref('cats/'+sec).on('value', function(s){ fillCatSels(sec, s.val()); });
+    catUnsub[sec] = dbRefREST('cats/'+sec, function(v){ fillCatSels(sec, v); });
   });
-  ytQUnsub = db.ref('settings/queue').on('value', s => { ytQLast = toList(s.val()); renderQ(ytQLast); });
-  ytBaseUnsub = db.ref('settings/ytServerBase').on('value', function(s){
-    var v = s.val() ? String(s.val()).replace(/\/+$/,'') : '';
-    ytBaseLast = v;
-    ytBaseCur = v || YT_SRV;
-    var bi = document.getElementById('ytBase');
-    if(bi && document.activeElement !== bi) bi.value = v;
+  ytQUnsub = dbRefREST('settings/queue', s => { ytQLast = toList(s); renderQ(ytQLast); });
+  ytBaseUnsub = dbRefREST('settings/ytServerBase', function(v){
+    var s = v ? String(v).replace(/\/+$/,'') : '';
+    ytBaseCur = s || YT_SRV;
+    ytBaseApply(s);
     ytPing();
   });
 }
@@ -459,7 +599,7 @@ function uploadVideo(){
         let r = {};
         try{ r = JSON.parse(xhr.responseText); }catch(e){}
         if(!r.secure_url && tries<3){ setTimeout(function(){ upOne(); },1500); return; }
-        db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', del:r.delete_token||'', cat:document.getElementById('vidCatSel').value, size:f.size, time:Date.now()}).then(function(){
+        db.ref('videos').push({title:title, url:r.secure_url, public_id:r.public_id||'', cat:document.getElementById('vidCatSel').value, size:f.size, time:Date.now()}).then(function(){
           document.getElementById('upTitle').value = '';
           prog.style.display = 'none';
           btn.disabled = false; btn.innerHTML = IC_UP+' Tải lên';
@@ -503,11 +643,20 @@ function ytDur(s){
   const h = Math.floor(s/3600), m = Math.floor(s%3600/60), r = s%60;
   return (h?h+':':'')+(h?(m<10?'0':''):'')+m+':'+(r<10?'0':'')+r;
 }
+let ytAutoTimer = null;
+function ytAutoFetch(){
+  clearTimeout(ytAutoTimer);
+  const v = (document.getElementById('ytUrl').value || '').trim();
+  if(!ytId(v)) return;
+  ytAutoTimer = setTimeout(function(){ if(!ytSending) ytFetch(); }, 700);
+}
 async function ytFetch(){
   const err = document.getElementById('ytErr');
   const prev = document.getElementById('ytPrev');
   const btn = document.getElementById('ytBtn');
+  if(ytSending) return;
   err.textContent = '';
+  err.style.color = '';
   ytInfo = null;
   const id = ytId(document.getElementById('ytUrl').value);
   if(!id){ err.textContent = 'Link YouTube không hợp lệ! Dán link watch / youtu.be / shorts.'; return; }
@@ -554,22 +703,46 @@ function ytRender(){
     + (ytInfo.author?'<span class="tag">'+esc(ytInfo.author)+'</span>':'')
     + (ytInfo.dur?'<span class="tag">'+esc(ytDur(ytInfo.dur))+'</span>':'')
     + '</div><div style="display:flex;gap:10px;align-items:center">'
-    + '<button class="btn solid" id="ytSrvBtn" onclick="ytQueue()">Gửi máy nhà tải</button>'
+    + '<button class="btn solid" id="ytDlBtn" onclick="ytDestOpen(\'download\')">Tải về</button>'
+    + '<button class="btn" id="ytSrvBtn" onclick="ytDestOpen(\'send\')">Gửi về máy chủ</button>'
     + '</div></div>'
-    + '<p><img loading="lazy" src="'+esc(ytInfo.thumb)+'" alt="" style="width:100%;max-width:420px;display:block;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:6px"></p>';
-  h += '<p id="ytSrvNote" style="color:#a9a9b2;font-size:12.5px"></p></div>';
+    + '<p><img loading="lazy" src="'+esc(ytInfo.thumb)+'" alt="" style="width:100%;max-width:420px;display:block;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:6px"></p>'
+    + '<div class="prog" id="ytSndProg"><i id="ytSndBar"></i></div></div>';
   prev.innerHTML = h;
   ytPing();
 }
 
 /* ============ YOUTUBE QUA MAY NHA (yt-server) ============
-   Admin goi http://127.0.0.1:8799 tren chinh may cua ban: tai bang
-   yt-dlp + ffmpeg, up Cloudinary, tra link ve de admin tu ghi Firebase.
-   May nha tat thi nut tu an (ytPing), khong bao gio treo. */
+   May chu nha (yt-server) tai bang yt-dlp + ffmpeg roi up kho, tra link.
+   - Chon duoc "Do net" (toi da 4K) + "FPS" (toi da 60/30) truoc khi gui;
+     2 o nay can may chu ban 10 tro len (badge se nhac), khong chon = ban
+     dep nhat. Moc chong ban thap (720p) tu ha xuong theo tran da chon.
+   - May chu nay (base 127.0.0.1/localhost) + ONLINE: bam "Gui ve may chu"
+     la gui THANG (POST /dl), tai ngay, tu ghi ket qua vao web (videos).
+   - Qua mang (tunnel/Tailscale/IP khac): luon gui vao hang doi
+     (settings/queue) — may chu poll 15s tu nhan va tai. Khong gui thang
+     qua tunnel vi Cloudflare cat ket noi dai ~100s gay bao loi oan.
+   - May chu OFFLINE: cung gui vao hang doi, may chu bat lai se tu tai.
+   Trang thai ONLINE/OFFLINE hien ro o badge tren cung, tu kiem tra 15s. */
 const YT_SRV = 'http://127.0.0.1:8799';
 let ytSrvOn = false;
 let ytSrvV = 0;
 let ytBaseCur = YT_SRV;
+let ytPingTimer = null;
+let ytSending = false;
+function ytBaseApply(v){
+  const bi = document.getElementById('ytBase');
+  const st = document.getElementById('ytBaseSt');
+  const prev = ytBaseLast;
+  ytBaseLast = v;
+  if(!bi){ if(st) st.textContent = ''; return; }
+  const cur = (bi.value || '').trim().replace(/\/+$/,'');
+  if(document.activeElement === bi && cur && cur !== v) return;
+  if(bi.value !== v) bi.value = v;
+  if(st && prev !== v) st.textContent = v
+    ? ('Địa chỉ máy chủ lấy tự động lúc ' + new Date().toLocaleTimeString('vi-VN'))
+    : 'Chưa có địa chỉ máy chủ chung — trang sẽ thử máy 127.0.0.1 khi mở trên máy nhà.';
+}
 async function ytPing(){
   let base = YT_SRV;
   try{
@@ -577,28 +750,37 @@ async function ytPing(){
     if(s.val()) base = String(s.val()).replace(/\/+$/,'');
   }catch(e){}
   ytBaseCur = base;
-  ytBaseLast = (base === YT_SRV ? '' : base);
-  const bi = document.getElementById('ytBase');
-  if(bi && document.activeElement !== bi) bi.value = (base === YT_SRV ? '' : base);
+  ytBaseApply(base === YT_SRV ? '' : base);
+  let j = {};
   try{
     const r = await fetch(base+'/ping');
-    const j = r.ok ? await r.json() : {};
-    ytSrvOn = !!j.ok;
-    ytSrvV = j.v || 0;
-  }catch(e){ ytSrvOn = false; ytSrvV = 0; }
-  const n = document.getElementById('ytSrvNote');
-  if(n) n.textContent = (ytSrvOn ? 'Máy chủ đang bật — gửi là tải ngay.' : 'Máy chủ đang tắt — cứ gửi, máy bật sẽ tự tải.')
-    + ' (máy nhà bản ' + ytSrvV + ', cần bản 9)';
+    j = r.ok ? await r.json() : {};
+  }catch(e){ j = {}; }
+  ytSrvOn = !!j.ok;
+  ytSrvV = j.v || 0;
+  const bd = document.getElementById('ytStBadge');
+  const dot = document.getElementById('ytDot');
+  const tx = document.getElementById('ytStTxt');
+  if(bd && dot && tx){
+    if(ytSrvOn){
+      bd.style.color = '#8fd694';
+      dot.style.background = '#4caf6d';
+      tx.textContent = 'Máy chủ: ONLINE' + (j.busy ? ' (đang bận)' : '')
+        + (ytLocalBase() ? ' — máy này, gửi là tải ngay' : ' — qua mạng, gửi sẽ vào hàng đợi tải')
+        + (ytSrvV && ytSrvV < 10 ? ' — máy nhà bản ' + ytSrvV + ', cần bản 10 (chọn độ nét/FPS)!' : '');
+    } else {
+      bd.style.color = '#f87171';
+      dot.style.background = '#f87171';
+      tx.textContent = 'Máy chủ: OFFLINE — gửi sẽ xếp hàng, máy bật sẽ tự tải';
+    }
+  }
 }
 let ytBaseTimer = null;
 let ytBaseLast = null;
 async function ytBaseLoad(){
   try{
     const s = await db.ref('settings/ytServerBase').once('value');
-    const v = s.val() ? String(s.val()).replace(/\/+$/,'') : '';
-    ytBaseLast = v;
-    const bi = document.getElementById('ytBase');
-    if(bi && document.activeElement !== bi) bi.value = v;
+    ytBaseApply(s.val() ? String(s.val()).replace(/\/+$/,'') : '');
   }catch(e){}
 }
 async function ytBaseAuto(){
@@ -626,17 +808,179 @@ function ytBaseDel(){
   inp.value = '';
   ytBaseAuto();
 }
-async function ytQueue(){
+function ytLocalBase(){
+  try{ const u = new URL(ytBaseCur); return u.hostname === '127.0.0.1' || u.hostname === 'localhost'; }catch(e){ return false; }
+}
+function ytPushQueue(url, dest, cat, qres, qfps){
   const err = document.getElementById('ytErr');
-  err.textContent = '';
-  if(!ytInfo) return;
-  db.ref('settings/queue').push({url:'https://www.youtube.com/watch?v='+ytInfo.id, title:ytInfo.title, author:ytInfo.author||'', thumb:ytInfo.thumb||'', dur:ytInfo.dur||0, dest:((document.getElementById('ytDest')||{}).value||'cloud'), cat:document.getElementById('vidCatSel').value, time:Date.now(), stage:'new', pct:0}).then(function(){
-    document.getElementById('ytUrl').value = '';
-    document.getElementById('ytPrev').innerHTML = '';
-    ytInfo = null;
-    err.textContent = 'Đã gửi! Máy nhà đang bật thì tải ngay, tắt thì để đó máy bật sẽ tự làm. Xem tiến trình ở Hàng đợi bên dưới.';
+  const info = ytInfo;
+  db.ref('settings/queue').push({url:url, title:(info && info.title) || 'YouTube video', author:(info && info.author) || '', thumb:(info && info.thumb) || '', dur:(info && info.dur) || 0, dest:dest, cat:cat, res:qres||0, fps:qfps||0, time:Date.now(), stage:'new', pct:0}).then(function(){
+    if(ytInfo === info){
+      document.getElementById('ytUrl').value = '';
+      document.getElementById('ytPrev').innerHTML = '';
+      ytInfo = null;
+    }
+    err.style.color = '#8fd694';
+    err.textContent = ytSrvOn
+      ? 'Đã gửi! Máy chủ đang bật sẽ nhận việc trong khoảng 15 giây — xem tiến trình ở Hàng đợi tải bên dưới.'
+      : 'Máy chủ đang tắt — đã xếp vào hàng đợi, máy chủ bật lên là tự tải ngay (xem Hàng đợi tải bên dưới).';
   }).catch(function(e){
     err.textContent = 'Không gửi được ('+(e.code||'')+'). Kiểm tra mạng rồi thử lại.';
+  });
+}
+function ytQueue(){
+  const err = document.getElementById('ytErr');
+  err.textContent = '';
+  err.style.color = '';
+  if(!ytInfo || ytSending) return;
+  const url = 'https://www.youtube.com/watch?v='+ytInfo.id;
+  const dest = ((document.getElementById('ytDest')||{}).value||'cloud');
+  const cat = document.getElementById('vidCatSel').value;
+  const qres = parseInt(((document.getElementById('ytRes')||{}).value)||'0', 10) || 0;
+  const qfps = parseInt(((document.getElementById('ytFps')||{}).value)||'0', 10) || 0;
+  document.getElementById('ytUrl').value = '';
+  document.getElementById('ytPrev').innerHTML = '';
+  if(ytSrvOn && ytLocalBase()){ ytSendDirect(url, dest, cat, qres, qfps); return; }
+  ytPushQueue(url, dest, cat, qres, qfps);
+}
+async function ytSendDirect(url, dest, cat, qres, qfps){
+  const err = document.getElementById('ytErr');
+  const btn = document.getElementById('ytSrvBtn');
+  const info = ytInfo;
+  ytSending = true;
+  if(btn){ btn.disabled = true; btn.textContent = 'Đang gửi về máy chủ...'; }
+  err.textContent = 'Đang gửi về máy chủ...';
+  const prog = document.getElementById('ytSndProg');
+  const bar = document.getElementById('ytSndBar');
+  if(prog) prog.style.display = 'block';
+  const iv = setInterval(async function(){
+    try{
+      const p = await (await fetch(ytBaseCur+'/progress')).json();
+      if(!p.busy) return;
+      const pc = Math.max(0, Math.min(99, Math.round(p.pct||0)));
+      if(p.stage === 'up'){
+        err.textContent = 'Máy chủ đang đưa lên kho... ' + (p.detail||'');
+        if(bar) bar.style.width = '99%';
+      } else {
+        err.textContent = 'Máy chủ đang tải video về: ' + pc + '%';
+        if(bar) bar.style.width = pc + '%';
+      }
+    }catch(e){}
+  }, 2000);
+  let j = null, netErr = false;
+  try{
+    const r = await fetch(ytBaseCur+'/dl', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url:url, dest:dest, res:qres||0, fps:qfps||0})});
+    j = await r.json().catch(function(){ return {}; });
+    if(!r.ok || !j.ok){ err.textContent = j.error || ('Máy chủ trả lỗi ' + r.status + ', thử lại sau.'); j = null; }
+  }catch(e){ netErr = true; }
+  clearInterval(iv);
+  ytSending = false;
+  if(btn){ btn.disabled = false; btn.textContent = 'Gửi về máy chủ'; }
+  if(prog) prog.style.display = 'none';
+  if(bar) bar.style.width = '0%';
+  ytPing();
+  if(netErr){
+    let busyNow = false;
+    try{ const p = await (await fetch(ytBaseCur+'/ping')).json(); busyNow = !!p.busy; }catch(e){}
+    if(busyNow){
+      err.textContent = 'Kết nối bị ngắt nhưng máy chủ VẪN ĐANG chạy việc (đừng gửi lại) — video sẽ hiện trong "Video của tôi" sau ít phút.';
+      return;
+    }
+    err.textContent = 'Mất kết nối trực tiếp — đang chuyển sang hàng đợi...';
+    ytPushQueue(url, dest, cat, qres, qfps);
+    return;
+  }
+  if(!j) return;
+  try{
+    const entry = {title:(info && info.title) || 'YouTube video', time:Date.now(), cat:cat||''};
+    if(j.host === 'home'){
+      entry.host = 'home'; entry.path = j.path || ''; entry.poster = j.poster || ''; entry.url = ''; entry.size = j.bytes || 0;
+    } else {
+      entry.host = j.host || 'cloudinary'; entry.url = j.url; entry.public_id = j.public_id || ''; entry.del = j.del || ''; entry.size = j.bytes || 0;
+    }
+    await db.ref('videos').push(entry);
+    if(ytInfo === info){
+      document.getElementById('ytUrl').value = '';
+      document.getElementById('ytPrev').innerHTML = '';
+      ytInfo = null;
+    }
+    err.style.color = '#8fd694';
+    err.textContent = 'Xong! Máy chủ đã tải xong và video đã lên web.';
+  }catch(e){
+    err.textContent = 'Video đã tải xong ở máy nhà nhưng chưa ghi được lên web (lỗi: ' + (e.code || e.message || '') + ') — thử bấm gửi lại lần nữa.';
+  }
+}
+function ytDestOpen(origin){
+  ytDestOrigin = origin || 'send';
+  const m = document.getElementById('ytDestModal');
+  if(m) m.classList.add('on');
+}
+function ytDestClose(){
+  const m = document.getElementById('ytDestModal');
+  if(m) m.classList.remove('on');
+}
+function ytDestPick(dest){
+  ytDestClose();
+  if(dest === 'download'){ ytDownloadDirect(); return; }
+  const sel = document.getElementById('ytDest');
+  if(sel) sel.value = dest;
+  ytQueue();
+}
+let ytDestOrigin = 'send';
+function ytDownloadDirect(){
+  const err = document.getElementById('ytErr');
+  const btn = document.getElementById('ytDlBtn');
+  if(!ytInfo || ytSending) return;
+  if(!ytSrvOn){ err.style.color = '#f87171'; err.textContent = 'Máy chủ đang offline — bật yt-server rồi thử lại.'; return; }
+  const url = 'https://www.youtube.com/watch?v='+ytInfo.id;
+  const qres = parseInt(((document.getElementById('ytRes')||{}).value)||'0', 10) || 0;
+  const qfps = parseInt(((document.getElementById('ytFps')||{}).value)||'0', 10) || 0;
+  ytSending = true;
+  if(btn){ btn.disabled = true; btn.textContent = 'Đang tải...'; }
+  err.style.color = '';
+  err.textContent = 'Đang gửi lệnh tải về máy...';
+  const prog = document.getElementById('ytSndProg');
+  const bar = document.getElementById('ytSndBar');
+  if(prog) prog.style.display = 'block';
+  const iv = setInterval(async function(){
+    try{
+      const p = await (await fetch(ytBaseCur+'/progress')).json();
+      if(!p.busy) return;
+      const pc = Math.max(0, Math.min(99, Math.round(p.pct||0)));
+      if(p.stage === 'up'){
+        err.textContent = 'Máy chủ đang chuẩn bị file... ' + (p.detail||'');
+        if(bar) bar.style.width = '99%';
+      } else {
+        err.textContent = 'Máy chủ đang tải video về: ' + pc + '%';
+        if(bar) bar.style.width = pc + '%';
+      }
+    }catch(e){}
+  }, 2000);
+  fetch(ytBaseCur+'/dl', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url:url, dest:'download', res:qres||0, fps:qfps||0})})
+  .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, status:r.status, j:j}; }); })
+  .then(function(x){
+    clearInterval(iv);
+    if(!x.ok || !x.j.ok){ err.style.color = '#f87171'; err.textContent = x.j.error || ('Máy chủ trả lỗi '+x.status+', thử lại sau.'); return; }
+    err.style.color = '#8fd694';
+    err.textContent = 'Đang tải file về máy...';
+    const link = ytBaseCur + x.j.url;
+    const a = document.createElement('a');
+    a.href = link;
+    a.download = x.j.name || '';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ try{ a.remove(); }catch(e){} }, 5000);
+    setTimeout(function(){ if(err.textContent === 'Đang tải file về máy...') err.textContent = 'Đã gửi lệnh tải. Kiểm tra thư mục Downloads.'; }, 2500);
+  })
+  .catch(function(){
+    clearInterval(iv);
+    err.style.color = '#f87171'; err.textContent = 'Mất kết nối máy chủ, thử lại.';
+  })
+  .then(function(){
+    ytSending = false;
+    if(btn){ btn.disabled = false; btn.textContent = 'Tải về'; }
+    if(prog) prog.style.display = 'none';
+    if(bar) bar.style.width = '0%';
   });
 }
 function renderQ(list){
@@ -652,7 +996,8 @@ function renderQ(list){
       : st === 'uploading' ? 'Đang up kho' : st === 'waiting' ? ('Chờ thử lại: ' + (r.detail || '')) : st === 'error' ? ('Lỗi: ' + (r.detail || '')) : st;
     const pct = Math.max(0, Math.min(100, Math.round(r.pct || 0)));
     return '<div class="item"><div class="head"><div><span class="who">'+esc(r.title || r.url || k)+'</span>'
-      + '<span class="tag">'+esc(r.dest === 'home' ? 'Ổ cứng' : (r.dest === 'litter' ? 'Tạm' : 'Cloud'))+'</span></div>'
+      + '<span class="tag">'+esc(r.dest === 'home' ? 'Ổ cứng' : (r.dest === 'litter' ? 'Tạm' : 'Cloud'))+'</span>'
+      + ((r.res || r.fps) ? '<span class="tag">'+esc((r.res ? r.res + 'p' : '') + (r.fps ? (r.res ? ' · ' : '') + r.fps + 'fps' : ''))+'</span>' : '')+'</div>'
       + '<div style="display:flex;gap:10px;align-items:center"><button class="del" onclick="ytQDel(\''+k+'\')">Hủy</button>'
       + '</div></div><p>'+esc(label)+'</p>'
       + ((st === 'downloading' || st === 'uploading') ? '<div class="prog" style="display:block"><i style="width:'+pct+'%"></i></div>' : '')
@@ -919,8 +1264,8 @@ function addPhoto(){
   if(f && f.size > PH_MAX_MB*1024*1024){ err.textContent = 'Ảnh quá lớn! Tối đa '+PH_MAX_MB+'MB'; return; }
   const btn = document.getElementById('phBtn');
   btn.disabled = true; btn.textContent = 'Đang thêm...';
-  function save(img, del){
-    db.ref('photos').push({title:title, img:img, del:del||'', cat:document.getElementById('phCatSel').value, time:Date.now()}).then(function(){
+  function save(img){
+    db.ref('photos').push({title:title, img:img, cat:document.getElementById('phCatSel').value, time:Date.now()}).then(function(){
       document.getElementById('phTitle').value = '';
       document.getElementById('phImg').value = '';
       fi.value = '';
@@ -930,18 +1275,18 @@ function addPhoto(){
       btn.disabled = false; btn.innerHTML = IC_ADD+' Thêm';
     });
   }
-  if(!f){ save(imgUrl,''); return; }
+  if(!f){ save(imgUrl); return; }
   const fd = new FormData();
   fd.append('file', f);
   fd.append('upload_preset', UPLOAD_PRESET);
   fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload', {method:'POST', body:fd})
     .then(function(r){ if(!r.ok) throw new Error('http-'+r.status); return r.json(); })
-    .then(function(r){ save(r.secure_url, (r.delete_token||'')); })
+    .then(function(r){ save(r.secure_url); })
     .catch(function(){ err.textContent = 'Tải ảnh thất bại! Kiểm tra Cloud name + Preset.'; btn.disabled=false; btn.innerHTML=IC_ADD+' Thêm'; });
 }
 
 function showLogin(){ document.getElementById('loginView').style.display='block'; document.getElementById('adminView').style.display='none'; stopListeners(); }
-function showAdmin(){ document.getElementById('loginView').style.display='none'; document.getElementById('adminView').style.display='block'; startListeners(); ytBaseLoad(); }
+function showAdmin(){ document.getElementById('loginView').style.display='none'; document.getElementById('adminView').style.display='block'; startListeners(); ytBaseLoad(); ytPing(); if(!ytPingTimer) ytPingTimer = setInterval(ytPing, 15000); }
 
 function doLogin(e){
   e.preventDefault();
