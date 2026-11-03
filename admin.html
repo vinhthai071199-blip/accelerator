@@ -44,12 +44,25 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 .empty{color:#8a8a93;font-size:13.5px;padding:22px 0;text-align:center}
 .up-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:20px;margin-bottom:16px}
 .up-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hid{display:none!important}
 .up-row input[type=text]{flex:1;min-width:180px}
 .up-row input[type=file]{padding:10px;font-size:12.5px}
 .prog{height:8px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:12px;overflow:hidden;display:none}
 .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffffff,#8e8e96)}
 .live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8fd694}
 .live i{width:8px;height:8px;border-radius:50%;background:#4caf6d;display:inline-block}
+/* ===== KHOI YOUTUBE + HANG DOI (gon) ===== */
+.qbox{max-height:270px;overflow-y:auto;padding-right:4px}
+.qitem{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:9px 12px;margin-bottom:8px}
+.qline{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.qline .qname{font-weight:600;font-size:13px;flex:1 1 180px;word-break:break-word}
+.qline .tag{font-size:10.5px;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,.14);color:#ffffff;white-space:nowrap}
+.qline .qstat{font-size:12px;color:#c9c9d1;flex:1 1 150px}
+.yt-prev{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:12px}
+.yt-thumb{width:180px;max-width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#000;display:block}
+.yt-meta{flex:1 1 220px;min-width:0}
+.yt-name{font-weight:600;font-size:14.5px;line-height:1.4;word-break:break-word}
+.yt-meta .tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:3px;background:rgba(255,255,255,.14);color:#ffffff;margin-right:8px}
 /* ===== THE VIDEO GIONG TRANG CHINH ===== */
 .vid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
 .vid-card{border-radius:12px;overflow:hidden;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.09)}
@@ -61,6 +74,7 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 .vid-note{color:#c9c9d1;font-size:12px;position:relative;z-index:1}
 .vid-card video{width:100%;display:block;aspect-ratio:16/9;background:#000}
 .vid-info{padding:14px 16px 18px}
+.vid-info .tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:3px;background:rgba(255,255,255,.14);color:#ffffff;margin:0 6px 4px 0}
 .vid-info h3{font-size:14.5px;font-weight:600;margin-bottom:10px;line-height:1.4;word-break:break-word}
 .vid-info .meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .vid-info .meta small{color:#a9a9b2;font-size:12px}
@@ -134,13 +148,11 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="prog" id="upProg"><i id="upBar"></i></div>
     <div class="err" id="upErr" style="text-align:left"></div>
   </div>
+  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor" stroke="none"/></svg> Tải video YouTube</h2>
   <div class="up-wrap">
     <div class="up-row" style="justify-content:space-between">
       <span class="live" id="ytStBadge"><i id="ytDot"></i><span id="ytStTxt">Máy chủ: đang kiểm tra...</span></span>
       <button class="btn" onclick="ytPing()">Kiểm tra lại</button>
-    </div>
-    <div class="up-row">
-      <select id="ytDest"><option value="catbox">Kho: Catbox</option><option value="cloud">Kho: Cloud (tự chia Cloudinary/Catbox)</option><option value="home">Kho: Ổ cứng nhà</option></select>
     </div>
     <div class="up-row">
       <select id="ytRes"><option value="">Độ nét: Cao nhất</option><option value="2160">Độ nét: 4K (2160p)</option><option value="1440">Độ nét: 2K (1440p)</option><option value="1080" selected>Độ nét: 1080p</option><option value="720">Độ nét: 720p</option><option value="480">Độ nét: 480p</option><option value="360">Độ nét: 360p</option></select>
@@ -148,7 +160,6 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     </div>
     <div class="up-row">
       <input type="text" id="ytUrl" placeholder="Dán link YouTube (watch / youtu.be / shorts)..." oninput="ytAutoFetch()">
-      <button class="btn solid" id="ytBtn" onclick="ytFetch()">Lấy thông tin</button>
     </div>
     <div class="err" id="ytErr" style="text-align:left"></div>
     <div id="ytPrev"></div>
@@ -159,10 +170,16 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="err" id="ytBaseSt" style="text-align:left;color:#8fd694"></div>
   </div>
   <div class="up-wrap">
-    <div style="font-size:13.5px;font-weight:600;margin-bottom:10px">Hàng đợi tải</div>
-    <div id="ytQList"><div class="empty">Không có việc nào đang chờ.</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px">
+      <span style="font-size:13.5px;font-weight:600">Hàng đợi tải</span>
+      <span id="ytQCount" style="font-size:12px;color:#a9a9b2"></span>
+    </div>
+    <div class="qbox" id="ytQList"><div class="empty">Không có việc nào đang chờ.</div></div>
   </div>
-  <div id="vdList"></div>
+  <div class="up-row" style="margin:14px 0">
+    <button class="btn solid" id="vdToggle" onclick="toggleVdList()">Hiện danh sách video</button>
+  </div>
+  <div id="vdList" class="hid"></div>
 
   <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Links</h2>
   <div class="up-wrap">
@@ -511,9 +528,25 @@ function homePoster(r){
   if(r.host === 'home'){ const b = homeBase(); return (r.poster && b) ? b + r.poster : ''; }
   return posterUrl(r);
 }
+let vdOpen = false;
+function vdToggleLabel(n){
+  const b = document.getElementById('vdToggle');
+  if(!b) return;
+  if(typeof n !== 'number') n = (vdLast || []).length;
+  b.textContent = (vdOpen ? 'Ẩn danh sách video' : 'Hiện danh sách video') + (n ? ' (' + n + ')' : '');
+}
+function toggleVdList(){
+  vdOpen = !vdOpen;
+  const box = document.getElementById('vdList');
+  if(box){
+    if(vdOpen) box.classList.remove('hid'); else box.classList.add('hid');
+  }
+  vdToggleLabel();
+}
 function renderVd(list){
   list = list || vdLast || [];
   document.getElementById('cntVd').textContent = list.length;
+  vdToggleLabel(list.length);
   const box = document.getElementById('vdList');
   if(!list.length){ box.innerHTML = '<div class="empty">Chưa có video nào. Tải lên video đầu tiên nhé!</div>'; return; }
   vdCache = {};
@@ -533,19 +566,19 @@ function renderVd(list){
       + '<div class="vid-play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
       + '<div class="vid-note">Bấm để phát • '+fmtSize(r.size)+'</div></div>'
           + '<div class="vid-info">'
-          + (r.cat?'<span class="tag">'+esc(r.cat)+'</span> ':'')
-          + '<span class="tag">'+htag+'</span> '
-          + ((r.expiresAt && Date.now() > r.expiresAt) ? '<span class="tag">HẾT HẠN</span> ' : '')
-          + (hd?'<span class="tag">ĐÃ ẨN</span> ':'')
-          + '<h3>'+esc(r.title)+'</h3>'
+          + (r.cat?'<span class="tag">'+esc(r.cat)+'</span>':'')
+          + '<span class="tag">'+htag+'</span>'
+          + ((r.expiresAt && Date.now() > r.expiresAt) ? '<span class="tag">HẾT HẠN</span>' : '')
+          + (hd?'<span class="tag">ĐÃ ẨN</span>':'')
+          + '<h3 title="'+esc(r.title)+'">'+esc(r.title)+'</h3>'
           + '<div class="meta"><small>'+fmtTime(r.time)+(r.size?' • '+fmtSize(r.size):'')+'</small>'
           + (cloud ? '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener">Tải xuống</a>'
           : (isHome ? '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener">Tải xuống</a>'
           : '<a class="vid-dl" href="'+esc(dl)+'" target="_blank" rel="noopener" data-url="'+esc(src)+'" data-name="'+esc(fname)+'" onclick="return dlFile(this)">Tải xuống</a>'))
-      + '<button class="del" onclick="editVideo(\''+k+'\')">Sửa tên</button>'
-      + '<button class="del" onclick="toggleHide(\'videos\',\''+k+'\','+(hd?'true':'false')+')">'+(hd?'Hiện':'Ẩn')+'</button>'
-      + '<button class="del" onclick="delVideo(\''+k+'\')">Xóa</button>'
-      + '</div></div></div>';
+          + '<button class="del" onclick="editVideo(\''+k+'\')">Sửa tên</button>'
+          + '<button class="del" onclick="toggleHide(\'videos\',\''+k+'\','+(hd?'true':'false')+')">'+(hd?'Hiện':'Ẩn')+'</button>'
+          + '<button class="del" onclick="delVideo(\''+k+'\')">Xóa</button>'
+          + '</div></div></div>';
   }).join('') + '</div>';
 }
 
@@ -653,7 +686,6 @@ function ytAutoFetch(){
 async function ytFetch(){
   const err = document.getElementById('ytErr');
   const prev = document.getElementById('ytPrev');
-  const btn = document.getElementById('ytBtn');
   if(ytSending) return;
   err.textContent = '';
   err.style.color = '';
@@ -661,7 +693,6 @@ async function ytFetch(){
   const id = ytId(document.getElementById('ytUrl').value);
   if(!id){ err.textContent = 'Link YouTube không hợp lệ! Dán link watch / youtu.be / shorts.'; return; }
   const watch = 'https://www.youtube.com/watch?v='+id;
-  btn.disabled = true; btn.textContent = 'Đang lấy...';
   prev.innerHTML = '<div class="empty">Đang lấy thông tin...</div>';
   ytInfo = null;
   /* noembed truoc (nhanh, ~1s) -> hien ngay; Invidious sau (lay them do dai), timeout 10s */
@@ -669,7 +700,6 @@ async function ytFetch(){
     const n = await (await fetch('https://noembed.com/embed?url='+encodeURIComponent(watch))).json();
     if(n && n.title){
       ytInfo = {id:id, title:n.title, author:n.author_name||'', dur:0, thumb:n.thumbnail_url||('https://i.ytimg.com/vi/'+id+'/hqdefault.jpg')};
-      btn.disabled = false; btn.textContent = 'Lấy thông tin';
       ytRender();
     }
   }catch(e){}
@@ -686,11 +716,9 @@ async function ytFetch(){
       } else {
         ytInfo = {id:id, title:r.title||id, author:r.author||'', dur:r.lengthSeconds||0, thumb:th.url||('https://i.ytimg.com/vi/'+id+'/hqdefault.jpg')};
       }
-      btn.disabled = false; btn.textContent = 'Lấy thông tin';
       ytRender();
     }
   }catch(e){}
-  btn.disabled = false; btn.textContent = 'Lấy thông tin';
   if(!ytInfo){
     err.textContent = 'Không lấy được thông tin. Kiểm tra lại link hoặc mạng rồi thử lại.';
     prev.innerHTML = '';
@@ -699,15 +727,16 @@ async function ytFetch(){
 function ytRender(){
   const prev = document.getElementById('ytPrev');
   if(!ytInfo){ prev.innerHTML = ''; return; }
-  let h = '<div class="item"><div class="head"><div><span class="who">'+esc(ytInfo.title)+'</span>'
+  let h = '<div class="yt-prev">'
+    + '<img loading="lazy" class="yt-thumb" src="'+esc(ytInfo.thumb)+'" alt="">'
+    + '<div class="yt-meta"><div class="yt-name">'+esc(ytInfo.title)+'</div>'
+    + '<div style="margin-top:7px">'
     + (ytInfo.author?'<span class="tag">'+esc(ytInfo.author)+'</span>':'')
     + (ytInfo.dur?'<span class="tag">'+esc(ytDur(ytInfo.dur))+'</span>':'')
-    + '</div><div style="display:flex;gap:10px;align-items:center">'
-    + '<button class="btn solid" id="ytDlBtn" onclick="ytDestOpen(\'download\')">Tải về</button>'
-    + '<button class="btn" id="ytSrvBtn" onclick="ytDestOpen(\'send\')">Gửi về máy chủ</button>'
+    + '</div>'
+    + '<div style="margin-top:11px"><button class="btn solid" id="ytDlBtn" onclick="ytDestOpen()">Tải về</button></div>'
     + '</div></div>'
-    + '<p><img loading="lazy" src="'+esc(ytInfo.thumb)+'" alt="" style="width:100%;max-width:420px;display:block;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:6px"></p>'
-    + '<div class="prog" id="ytSndProg"><i id="ytSndBar"></i></div></div>';
+    + '<div class="prog" id="ytSndProg"><i id="ytSndBar"></i></div>';
   prev.innerHTML = h;
   ytPing();
 }
@@ -766,7 +795,7 @@ async function ytPing(){
       bd.style.color = '#8fd694';
       dot.style.background = '#4caf6d';
       tx.textContent = 'Máy chủ: ONLINE' + (j.busy ? ' (đang bận)' : '')
-        + (ytLocalBase() ? ' — máy này, gửi là tải ngay' : ' — qua mạng, gửi sẽ vào hàng đợi tải')
+        + (ytLocalBase() ? ' — máy này, gửi là tải ngay' : '')
         + (ytSrvV && ytSrvV < 10 ? ' — máy nhà bản ' + ytSrvV + ', cần bản 10 (chọn độ nét/FPS)!' : '');
     } else {
       bd.style.color = '#f87171';
@@ -828,13 +857,13 @@ function ytPushQueue(url, dest, cat, qres, qfps){
     err.textContent = 'Không gửi được ('+(e.code||'')+'). Kiểm tra mạng rồi thử lại.';
   });
 }
-function ytQueue(){
+function ytQueue(dest){
   const err = document.getElementById('ytErr');
   err.textContent = '';
   err.style.color = '';
   if(!ytInfo || ytSending) return;
   const url = 'https://www.youtube.com/watch?v='+ytInfo.id;
-  const dest = ((document.getElementById('ytDest')||{}).value||'cloud');
+  dest = dest || 'cloud';
   const cat = document.getElementById('vidCatSel').value;
   const qres = parseInt(((document.getElementById('ytRes')||{}).value)||'0', 10) || 0;
   const qfps = parseInt(((document.getElementById('ytFps')||{}).value)||'0', 10) || 0;
@@ -845,10 +874,8 @@ function ytQueue(){
 }
 async function ytSendDirect(url, dest, cat, qres, qfps){
   const err = document.getElementById('ytErr');
-  const btn = document.getElementById('ytSrvBtn');
   const info = ytInfo;
   ytSending = true;
-  if(btn){ btn.disabled = true; btn.textContent = 'Đang gửi về máy chủ...'; }
   err.textContent = 'Đang gửi về máy chủ...';
   const prog = document.getElementById('ytSndProg');
   const bar = document.getElementById('ytSndBar');
@@ -875,7 +902,6 @@ async function ytSendDirect(url, dest, cat, qres, qfps){
   }catch(e){ netErr = true; }
   clearInterval(iv);
   ytSending = false;
-  if(btn){ btn.disabled = false; btn.textContent = 'Gửi về máy chủ'; }
   if(prog) prog.style.display = 'none';
   if(bar) bar.style.width = '0%';
   ytPing();
@@ -910,8 +936,7 @@ async function ytSendDirect(url, dest, cat, qres, qfps){
     err.textContent = 'Video đã tải xong ở máy nhà nhưng chưa ghi được lên web (lỗi: ' + (e.code || e.message || '') + ') — thử bấm gửi lại lần nữa.';
   }
 }
-function ytDestOpen(origin){
-  ytDestOrigin = origin || 'send';
+function ytDestOpen(){
   const m = document.getElementById('ytDestModal');
   if(m) m.classList.add('on');
 }
@@ -922,11 +947,8 @@ function ytDestClose(){
 function ytDestPick(dest){
   ytDestClose();
   if(dest === 'download'){ ytDownloadDirect(); return; }
-  const sel = document.getElementById('ytDest');
-  if(sel) sel.value = dest;
-  ytQueue();
+  ytQueue(dest);
 }
-let ytDestOrigin = 'send';
 function ytDownloadDirect(){
   const err = document.getElementById('ytErr');
   const btn = document.getElementById('ytDlBtn');
@@ -985,22 +1007,26 @@ function ytDownloadDirect(){
 }
 function renderQ(list){
   const box = document.getElementById('ytQList');
+  const cnt = document.getElementById('ytQCount');
   if(!box) return;
   list = list || ytQLast || [];
+  if(cnt) cnt.textContent = list.length ? (list.length + ' việc') : '';
   if(!list.length){ box.innerHTML = '<div class="empty">Không có việc nào đang chờ.</div>'; return; }
   box.innerHTML = list.map(function(x){
     const k = x[0], r = x[1] || {};
     const st = r.stage || 'new';
-    const label = st === 'new' ? 'Mới gửi, chờ máy nhà nhận việc'
+    const label = st === 'new' ? 'Chờ máy nhà nhận việc'
       : st === 'downloading' ? ('Đang tải ' + Math.round(r.pct || 0) + '%')
       : st === 'uploading' ? 'Đang up kho' : st === 'waiting' ? ('Chờ thử lại: ' + (r.detail || '')) : st === 'error' ? ('Lỗi: ' + (r.detail || '')) : st;
     const pct = Math.max(0, Math.min(100, Math.round(r.pct || 0)));
-    return '<div class="item"><div class="head"><div><span class="who">'+esc(r.title || r.url || k)+'</span>'
+    return '<div class="qitem"><div class="qline">'
+      + '<span class="qname">'+esc(r.title || r.url || k)+'</span>'
       + '<span class="tag">'+esc(r.dest === 'home' ? 'Ổ cứng' : (r.dest === 'litter' ? 'Tạm' : 'Cloud'))+'</span>'
-      + ((r.res || r.fps) ? '<span class="tag">'+esc((r.res ? r.res + 'p' : '') + (r.fps ? (r.res ? ' · ' : '') + r.fps + 'fps' : ''))+'</span>' : '')+'</div>'
-      + '<div style="display:flex;gap:10px;align-items:center"><button class="del" onclick="ytQDel(\''+k+'\')">Hủy</button>'
-      + '</div></div><p>'+esc(label)+'</p>'
-      + ((st === 'downloading' || st === 'uploading') ? '<div class="prog" style="display:block"><i style="width:'+pct+'%"></i></div>' : '')
+      + ((r.res || r.fps) ? '<span class="tag">'+esc((r.res ? r.res + 'p' : '') + (r.fps ? (r.res ? ' · ' : '') + r.fps + 'fps' : ''))+'</span>' : '')
+      + '<span class="qstat">'+esc(label)+'</span>'
+      + '<button class="del" onclick="ytQDel(\''+k+'\')">Hủy</button>'
+      + '</div>'
+      + ((st === 'downloading' || st === 'uploading') ? '<div class="prog" style="display:block;height:4px;margin-top:7px"><i style="width:'+pct+'%"></i></div>' : '')
       + '</div>';
   }).join('');
 }
@@ -1211,9 +1237,9 @@ function renderPh(list){
     return '<div class="vid-card"'+(hdP?' style="opacity:.55"':'')+'>'
       + '<a href="'+esc(r.img)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+esc(r.img)+'" alt="" style="width:100%;display:block;aspect-ratio:16/10;object-fit:cover;background:#000"></a>'
       + '<div class="vid-info">'
-      + (r.cat?'<span class="tag">'+esc(r.cat)+'</span> ':'')
-      + (hdP?'<span class="tag">ĐÃ ẨN</span> ':'')
-      + '<h3>'+esc(r.title)+'</h3>'
+      + (r.cat?'<span class="tag">'+esc(r.cat)+'</span>':'')
+      + (hdP?'<span class="tag">ĐÃ ẨN</span>':'')
+      + '<h3 title="'+esc(r.title)+'">'+esc(r.title)+'</h3>'
       + '<div class="meta"><small>'+fmtTime(r.time)+'</small>'
       + '<button class="del" onclick="editPhoto(\''+k+'\')">Sửa tên</button>'
       + '<button class="del" onclick="toggleHide(\'photos\',\''+k+'\','+(hdP?'true':'false')+')">'+(hdP?'Hiện':'Ẩn')+'</button>'
