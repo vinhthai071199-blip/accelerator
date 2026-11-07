@@ -23,6 +23,14 @@ function moveFile(a, b) {
   fs.copyFileSync(a, b);
   fs.unlinkSync(a);
 }
+/* Curl -F "file=@..." tach dau phay trong ten file thanh nhieu file.
+   Doi sang ten tam an toan truoc khi up de tranh loi curl (26). */
+function safeUploadFp(fp) {
+  const ext = path.extname(fp) || '.mp4';
+  const out = path.join(DL_DIR, 'up_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex') + ext);
+  moveFile(fp, out);
+  return out;
+}
 
 let cfg = {};
 try { cfg = JSON.parse(fs.readFileSync(CFG_PATH, 'utf8')); } catch (e) { cfg = {}; }
@@ -34,7 +42,7 @@ cfg.cloud = cfg.cloud || 'ck9gvbcq';
 cfg.preset = cfg.preset || 'web_upload';
 cfg.site = cfg.site || 'https://acceleratorares.vercel.app';
 const PORT = process.env.YT_PORT || cfg.port || 8799;
-const CODE_V = 9;
+const CODE_V = 10;
 /* Khoa don tien trinh: chi 1 server duoc chay (mo 2 cua so/app+bat
    se danh nhau, treo viec). Tien trinh cu chet thi khoa cu tu het han. */
 const LOCK_FILE = path.join(ROOT, 'server.lock');
@@ -174,6 +182,37 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
+  if (req.method === 'GET' && u.pathname.indexOf('/tmp/') === 0) {
+    /* File tam vua tai tu YouTube: gui xong thi xoa, khong giu o E */
+    cors(res);
+    let rel = '';
+    try { rel = decodeURIComponent(u.pathname.slice(5)); } catch (e) { res.writeHead(400); res.end(); return; }
+    const ffp = path.normalize(path.join(DL_DIR, rel));
+    if (ffp !== DL_DIR && ffp.indexOf(DL_DIR + path.sep) !== 0) { res.writeHead(403); res.end(); return; }
+    fs.stat(ffp, function (err, fst) {
+      try {
+        if (err || !fst.isFile()) { res.writeHead(404); res.end(); return; }
+        const ext = path.extname(ffp).toLowerCase();
+        const mime = ext === '.mp4' ? 'video/mp4' : ext === '.webm' ? 'video/webm' : ext === '.m4a' ? 'audio/mp4' : 'application/octet-stream';
+        const raw = path.basename(ffp).replace(/"/g, '');
+        const ascii = raw.replace(/[^\x20-\x7e]/g, '').trim() || 'video.mp4';
+        let star = '';
+        try { star = "; filename*=UTF-8''" + encodeURIComponent(raw); } catch (e) {}
+        res.writeHead(200, {
+          'Content-Type': mime,
+          'Content-Length': fst.size,
+          'Content-Disposition': 'attachment; filename="' + ascii + '"' + star,
+          'Cache-Control': 'no-store'
+        });
+        const rs = fs.createReadStream(ffp);
+        const cleanup = function () { try { if (fs.existsSync(ffp)) fs.unlinkSync(ffp); } catch (e) {} };
+        rs.on('close', cleanup);
+        res.on('close', cleanup);
+        rs.pipe(res);
+      } catch (e) { try { if (!res.headersSent) res.writeHead(500); res.end(); } catch (e2) {} }
+    });
+    return;
+  }
   if (req.method === 'POST' && u.pathname === '/dl') {
     let body = '';
     req.on('data', c => { body += c; if (body.length > 1e6) req.destroy(); });
@@ -189,45 +228,79 @@ const server = http.createServer((req, res) => {
         busy = true; hits.push(Date.now());
         prog = { stage: 'dl', pct: 0, detail: '' };
         try {
-          const dest0 = j.dest === 'cloud' ? 'cloud' : (j.dest === 'catbox' ? 'catbox' : 'home');
-          /* Lay ban dep nhat (1080p-4K 60fps). Kho cloud tu chia theo dung
-             luong; kho o cung giu nguyen ban goc. */
-          const fmtDefault = 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b';
-          const fmt = (/^[A-Za-z0-9_*+\/()[\].\-=,:? ]{1,120}$/.test(String(j.format || '')) && j.format) || fmtDefault;
+          const dest0 = j.dest === 'home' ? 'home' : (j.dest === 'catbox' ? 'catbox' : (j.dest === 'download' ? 'download' : 'cloud'));
+          /* Lay ban dep nhat theo lua chon cua admin: res = tran do phan
+             giai (0 = toi da), fps = tran khung hinh/giay (0 = toi da).
+             Kho cloud tu chia theo dung luong; kho o cung giu ban goc. */
+          const RES_OK = [2160, 1440, 1080, 720, 480, 360];
+          const resCap = RES_OK.indexOf(Number(j.res)) >= 0 ? Number(j.res) : 0;
+          const fpsCap = (Number(j.fps) === 60 || Number(j.fps) === 30) ? Number(j.fps) : 0;
+          const capV = (resCap ? '[height<=' + resCap + ']' : '') + (fpsCap ? '[fps<=' + fpsCap + ']' : '');
+          const fmtAuto = 'bv*[ext=mp4]' + capV + '+ba[ext=m4a]/b[ext=mp4]' + (resCap ? '[height<=' + resCap + ']' : '') + '/b';
+          const fmt = (/^[A-Za-z0-9_*+\/()[\].\-=,:? ]{1,120}$/.test(String(j.format || '')) && j.format) || fmtAuto;
           const tpl = path.join(DL_DIR, Date.now() + '.%(title).60s [%(id)s].%(ext)s');
           /* Thu tu client: web truoc (giu hanh vi cu), rot xuong web_embedded
              roi android khi YouTube bat kiem tra bot / SABR */
-          const baseArgs = ['-f', fmt, '--merge-output-format', 'mp4',
-            '--ffmpeg-location', cfg.ffmpeg, '-o', tpl, '--no-playlist', '--retries', '3', '--newline',
-            '--extractor-args', 'youtube:player_client=web,web_embedded,android',
-            '--print', 'after_move:filepath', url];
+          /* Thu lan luot vai bo client: YouTube co luc chi nha ban thap (bot-check
+             / SABR) tuy tung phien — thu lai NGAY voi client khac truoc khi bao loi. */
+          const clientList = [
+            'youtube:player_client=web,web_embedded,android',
+            '',                       /* de yt-dlp tu chon (mac dinh moi nhat) */
+            'youtube:player_client=tv_embedded,web'
+          ];
           const onPct = function(p){ prog.pct = p; };
-          const r1 = await runLive(cfg.ytdlp, baseArgs, onPct);
-          const fp0 = r1.out.trim().split(/\r?\n/).filter(function(l){ return l && l.indexOf('%') === -1; }).pop() || '';
-          let fp = fp0, st = null;
-          try { st = fs.statSync(fp); } catch (e) { st = null; }
-          if (!st) {
-            /* Du phong: ten in ra lech encoding thi lay file mp4 moi nhat trong dl/ */
-            const cands = fs.readdirSync(DL_DIR).map(function (n) {
-              const p = path.join(DL_DIR, n);
-              try { return { p, m: fs.statSync(p).mtimeMs }; } catch (e) { return null; }
-            }).filter(Boolean).sort((a, b) => b.m - a.m);
-            if (!cands.length || Date.now() - cands[0].m > 15 * 60 * 1000) throw new Error('Tải xong nhưng không thấy file (bấm lại lần nữa)');
-            fp = cands[0].p;
-            st = fs.statSync(fp);
-          }
-          /* Chong ban cuc thap (bot-check chi nha 360p): duoi 720p thi bo file, bao thu lai.
-             ffmpeg -i khong file ra luon exit != 0 nen doc kich thuoc tu output cua loi. */
-          try {
-            await run(cfg.ffmpeg, ['-hide_banner', '-i', fp]);
-          } catch (e) {
-            const dump = ((e && e.err) || '') + '\n' + ((e && e.out) || '');
-            const mm2 = dump.match(/Video:[^\n]*?(\d{3,5})x(\d{3,5})/);
-            const hh = mm2 ? parseInt(mm2[2], 10) : 0;
-            if (hh && hh < 720) {
-              try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e2) {}
-              throw new Error('YouTube chỉ nhả bản thấp lúc này, gửi lại sau ít phút để lấy bản đẹp');
+          const minOk = Math.min(720, resCap || 720);
+          let fp = null, st = null, lowFail = false, lastErr = null;
+          for (let attempt = 0; attempt < clientList.length && !st; attempt++) {
+            if (attempt > 0) prog = { stage: 'dl', pct: 0, detail: 'YouTube nhả bản thấp, đang thử lại (lần ' + (attempt + 1) + ')...' };
+            try {
+              const args = ['-f', fmt, '--merge-output-format', 'mp4',
+                '--ffmpeg-location', cfg.ffmpeg, '-o', tpl, '--no-playlist', '--retries', '3', '--newline'];
+              if (clientList[attempt]) args.push('--extractor-args', clientList[attempt]);
+              args.push('--print', 'after_move:filepath', url);
+              const r1 = await runLive(cfg.ytdlp, args, onPct);
+              const fp0 = r1.out.trim().split(/\r?\n/).filter(function(l){ return l && l.indexOf('%') === -1; }).pop() || '';
+              fp = fp0; st = null;
+              try { st = fs.statSync(fp); } catch (e) { st = null; }
+              if (!st) {
+                /* Du phong: ten in ra lech encoding thi lay file mp4 moi nhat trong dl/ */
+                const cands = fs.readdirSync(DL_DIR).map(function (n) {
+                  const p = path.join(DL_DIR, n);
+                  try { return { p, m: fs.statSync(p).mtimeMs }; } catch (e) { return null; }
+                }).filter(Boolean).sort((a, b) => b.m - a.m);
+                if (!cands.length || Date.now() - cands[0].m > 15 * 60 * 1000) throw new Error('Tải xong nhưng không thấy file (bấm lại lần nữa)');
+                fp = cands[0].p;
+                st = fs.statSync(fp);
+              }
+              /* Chong ban cuc thap (bot-check chi nha 360p): duoi moc thi bo file, thu client khac.
+                 Neu admin da chon tran thap hon (480/360) thi lay tran do lam moc.
+                 ffmpeg -i khong file ra luon exit != 0 nen doc kich thuoc tu output cua loi. */
+              let hh = 0;
+              try {
+                await run(cfg.ffmpeg, ['-hide_banner', '-i', fp]);
+              } catch (e) {
+                const dump = ((e && e.err) || '') + '\n' + ((e && e.out) || '');
+                const mm2 = dump.match(/Video:[^\n]*?(\d{3,5})x(\d{3,5})/);
+                hh = mm2 ? parseInt(mm2[2], 10) : 0;
+              }
+              if (hh && hh < minOk) {
+                try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e2) {}
+                st = null; lowFail = true;
+                continue;
+              }
+            } catch (e) {
+              st = null; lastErr = e;
+              if (attempt === clientList.length - 1) throw e;
+              continue;
             }
+          }
+          if (!st) {
+            if (lowFail) {
+              throw new Error(resCap && resCap < 720
+                ? 'YouTube chỉ nhả bản thấp hơn mức đã chọn lúc này, gửi lại sau ít phút'
+                : 'YouTube chỉ nhả bản thấp lúc này, gửi lại sau ít phút để lấy bản đẹp');
+            }
+            throw (lastErr || new Error('Tải xong nhưng không thấy file (bấm lại lần nữa)'));
           }
           const dest = dest0;
           /* Bo kho tam Litterbox (hay sap): 'litter' cu rot xuong tu dong Cloud/Catbox theo dung luong */
@@ -248,30 +321,49 @@ const server = http.createServer((req, res) => {
             prog = { stage: 'done', pct: 100, detail: '' };
             return send(res, 200, { ok: true, url: pub, host: 'home', path: pub, poster: posterPath, bytes: st.size });
           }
+          if (dest === 'download') {
+            /* Tai thang ve may: giu file tam trong yt-server/dl, /tmp se xoa sau khi gui xong */
+            busy = false;
+            prog = { stage: 'done', pct: 100, detail: '' };
+            return send(res, 200, { ok: true, url: '/tmp/' + encodeURIComponent(path.basename(fp)) + '?download=1', host: 'download', name: path.basename(fp), bytes: st.size });
+          }
           if (st.size > 200 * 1024 * 1024) {
             busy = false;
             return send(res, 413, { error: 'File ' + Math.round(st.size / 1048576) + 'MB vượt 200MB (Catbox chỉ nhận tới 200MB)! File nằm ở yt-server/dl, up tay lên Drive (tới 2GB) nhé' });
           }
           if (dest === 'catbox' || st.size > 100 * 1024 * 1024) {
             /* Catbox truc tiep (mac dinh) hoac file 100-200MB: toi da 200MB */
+            const upFp = safeUploadFp(fp);
             prog = { stage: 'up', pct: -1, detail: 'Đang up lên Catbox (file 100–200MB, chờ vài phút)...' };
-            const r2 = await runRetry('curl.exe', ['-sS', '-F', 'reqtype=fileupload',
-              '-F', 'fileToUpload=@' + fp, 'https://catbox.moe/user/api.php'], 3, 15000);
-            const curl = (r2.out || '').trim();
-            if (!/^https:\/\/files\.catbox\.moe\//.test(curl)) throw new Error('catbox tu choi: ' + curl.slice(0, 120));
-            try { if (ensureDir(LIB_DIR)) moveFile(fp, path.join(LIB_DIR, path.basename(fp))); else fs.unlinkSync(fp); } catch (e) { try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e2) {} }
+            let curl = '';
+            try {
+              const r2 = await runRetry('curl.exe', ['-sS', '-F', 'reqtype=fileupload',
+                '-F', 'fileToUpload=@' + upFp, 'https://catbox.moe/user/api.php'], 3, 15000);
+              curl = (r2.out || '').trim();
+              if (!/^https:\/\/files\.catbox\.moe\//.test(curl)) throw new Error('catbox tu choi: ' + curl.slice(0, 120));
+            } catch (e) {
+              try { if (fs.existsSync(upFp)) fs.unlinkSync(upFp); } catch (e2) {}
+              throw e;
+            }
+            try { fs.unlinkSync(upFp); } catch (e) { try { if (fs.existsSync(upFp)) fs.unlinkSync(upFp); } catch (e2) {} }
             busy = false;
             prog = { stage: 'done', pct: 100, detail: '' };
             return send(res, 200, { ok: true, url: curl, host: 'catbox', bytes: st.size });
           }
+          const upFp = safeUploadFp(fp);
           prog = { stage: 'up', pct: -1, detail: 'Đang up lên Cloudinary (chờ vài phút)...' };
-          const r2 = await runRetry('curl.exe', ['-sS', '-X', 'POST',
-            'https://api.cloudinary.com/v1_1/' + cfg.cloud + '/video/upload',
-            '-F', 'file=@' + fp, '-F', 'upload_preset=' + cfg.preset], 3, 15000);
           let up = {};
-          try { up = JSON.parse(r2.out); } catch (e) { throw new Error('cloudinary tra ve la: ' + r2.out.slice(0, 200)); }
-          if (!up.secure_url) throw new Error((up.error && up.error.message) || 'cloudinary tu choi');
-          try { if (ensureDir(LIB_DIR)) moveFile(fp, path.join(LIB_DIR, path.basename(fp))); else fs.unlinkSync(fp); } catch (e) { try { if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e2) {} }
+          try {
+            const r2 = await runRetry('curl.exe', ['-sS', '-X', 'POST',
+              'https://api.cloudinary.com/v1_1/' + cfg.cloud + '/video/upload',
+              '-F', 'file=@' + upFp, '-F', 'upload_preset=' + cfg.preset], 3, 15000);
+            try { up = JSON.parse(r2.out); } catch (e) { throw new Error('cloudinary tra ve la: ' + r2.out.slice(0, 200)); }
+            if (!up.secure_url) throw new Error((up.error && up.error.message) || 'cloudinary tu choi');
+          } catch (e) {
+            try { if (fs.existsSync(upFp)) fs.unlinkSync(upFp); } catch (e2) {}
+            throw e;
+          }
+          try { fs.unlinkSync(upFp); } catch (e) { try { if (fs.existsSync(upFp)) fs.unlinkSync(upFp); } catch (e2) {} }
           busy = false;
           prog = { stage: 'done', pct: 100, detail: '' };
           return send(res, 200, { ok: true, url: up.secure_url, host: 'cloudinary', public_id: up.public_id || '', del: up.delete_token || '', bytes: up.bytes || st.size });
@@ -286,7 +378,7 @@ const server = http.createServer((req, res) => {
 /* ============ WORKER HANG DOI (Firebase) ============
    Dien thoai gui viec vao 'settings/queue', may nha tu ra lay (poll 15s)
    roi tai + up kho + ghi videos + xoa viec. Khong can mo cong,
-   tunnel, Tailscale, token hay sua rules. May tat thi viec nam cho. */
+   tunnel, token hay sua rules. May tat thi viec nam cho. */
 const FB_KEY = 'AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw';
 const FB_DB = 'cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app';
 let fbT = null;
@@ -345,9 +437,9 @@ async function fbDel(p) {
   const t = await fbToken();
   return httpsReq('DELETE', FB_DB, '/' + p + '.json?auth=' + t);
 }
-function postLocalDl(url, dest, format) {
+function postLocalDl(url, dest, format, res, fps) {
   return new Promise(function (resolve, reject) {
-    const data = JSON.stringify({ url: url, dest: dest || 'cloud', format: format || '' });
+    const data = JSON.stringify({ url: url, dest: dest || 'cloud', format: format || '', res: res || 0, fps: fps || 0 });
     const rq = http.request({ host: '127.0.0.1', port: PORT, path: '/dl', method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) } }, function (rs) {
       let d = '';
@@ -415,7 +507,7 @@ async function queueTick() {
       }).catch(function () {});
     }, 3000);
     let r;
-    try { r = await postLocalDl(job.url, job.dest, job.format); }
+    try { r = await postLocalDl(job.url, job.dest, job.format, job.res, job.fps); }
     finally { clearInterval(iv); }
     const entry = { title: job.title || 'YouTube video', time: Date.now(), cat: job.cat || '' };
     if (r.host === 'home') {
@@ -463,6 +555,21 @@ async function sweepExpired() {
 if (!process.env.YT_PORT) {
   setInterval(sweepExpired, 10 * 60 * 1000);
   setTimeout(sweepExpired, 30000);
+}
+
+/* Don file tam tai ve may qua lau (khong de chat dong o yt-server/dl) */
+function sweepTmp() {
+  try {
+    const now = Date.now();
+    fs.readdirSync(DL_DIR).forEach(function (n) {
+      const p = path.join(DL_DIR, n);
+      try { const s = fs.statSync(p); if (s.isFile() && now - s.mtimeMs > 2 * 3600 * 1000) fs.unlinkSync(p); } catch (e) {}
+    });
+  } catch (e) {}
+}
+if (!process.env.YT_PORT) {
+  setInterval(sweepTmp, 30 * 60 * 1000);
+  setTimeout(sweepTmp, 60000);
 }
 
 /* ============ TU NUOI TUNNEL ============

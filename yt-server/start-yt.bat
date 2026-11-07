@@ -26,6 +26,8 @@ if not exist "..\tools\ffmpeg.exe" (
     exit /b 1
 )
 echo Giua cua so nay mo de admin tai video. Tat cua so = tat server.
+echo Nhat ky cung duoc luu vao: yt-server\server.log (xem trong app, muc May chu).
 echo.
-node server.js
+if exist server.log for %%A in (server.log) do if %%~zA GTR 1000000 del server.log
+powershell -NoProfile -ExecutionPolicy Bypass -Command "node server.js 2>&1 | ForEach-Object { $l = [string]$_; $l; [IO.File]::AppendAllText('server.log', ($l + [Environment]::NewLine), [Text.UTF8Encoding]::new($false)) }"
 pause

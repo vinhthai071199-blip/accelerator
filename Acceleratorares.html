@@ -375,6 +375,24 @@ function ensureFb(){
   })();
   return fbReady;
 }
+const FB_DB_URL = 'https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app';
+/* Doc realtime qua WebSocket; neu bi chan (vai mang di dong chan WebSocket) thi
+   tu dong lay lai bang REST HTTPS sau 0,3 giay — noi dung van hien binh thuong. */
+function fbRef(path, cb, errCb){
+  let got = false;
+  try{
+    firebase.database().ref(path).on('value',
+      function(s){ got = true; cb(s.val()); },
+      function(e){ if(!got && errCb) errCb(e); });
+  }catch(e){ if(errCb) errCb(e); return; }
+  setTimeout(function(){
+    if(got) return;
+    fetch(FB_DB_URL + '/' + path + '.json', {cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error('http ' + r.status); return r.json(); })
+      .then(function(j){ if(!got){ got = true; cb(j); } })
+      .catch(function(){ if(!got && errCb) errCb(); });
+  }, 300);
+}
 function esc(s){ const d=document.createElement('div'); d.textContent=(s==null?'':String(s)); return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function fmtSize(b){
   if(!b && b!==0) return '';
@@ -471,12 +489,11 @@ async function initVideos(){
   if(!box) return; // muc video dang an
   try{
     await ensureFb();
-    firebase.database().ref('settings/ytServerBase').on('value', function(s){
-      homeBase = s.val() ? String(s.val()).replace(/\/+$/,'') : '';
+    fbRef('settings/ytServerBase', function(val){
+      homeBase = val ? String(val).replace(/\/+$/,'') : '';
       paintVideos();
     });
-    firebase.database().ref('videos').on('value', function(s){
-      const v = s.val();
+    fbRef('videos', function(v){
       if(!v){ vidLastRaw = []; box.innerHTML = '<div class="vid-empty">Chưa có video nào.</div>'; renderCatBar('vidCats','videos',[]); return; }
       vidLastRaw = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
       paintVideos();
@@ -493,8 +510,8 @@ function applyVideoVisibility(show){
 async function initVideoVisibility(){
   try{
     await ensureFb();
-    firebase.database().ref('settings/showVideos').on('value', function(s){
-      applyVideoVisibility(s.val() !== false);
+    fbRef('settings/showVideos', function(v){
+      applyVideoVisibility(v !== false);
     });
   }catch(e){ applyVideoVisibility(true); }
 }
@@ -512,8 +529,7 @@ async function initLinks(){
   if(!box) return;
   try{
     await ensureFb();
-    firebase.database().ref('links').on('value', function(s){
-      const v = s.val();
+    fbRef('links', function(v){
       if(!v){ box.innerHTML = '<div class="link-empty">Chưa có link nào.</div>'; renderCatBar('linkCats','links',[]); return; }
       const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
       const visL = list.filter(function(o){ return !((o[1]||{}).hidden); });
@@ -534,8 +550,8 @@ async function initLinks(){
 async function initLinksVisibility(){
   try{
     await ensureFb();
-    firebase.database().ref('settings/showLinks').on('value', function(s){
-      applyLinksVisibility(s.val() !== false);
+    fbRef('settings/showLinks', function(v){
+      applyLinksVisibility(v !== false);
     });
   }catch(e){ applyLinksVisibility(true); }
 }
@@ -547,8 +563,7 @@ async function initPhotos(){
   if(!box) return;
   try{
     await ensureFb();
-    firebase.database().ref('photos').on('value', function(s){
-      const v = s.val();
+    fbRef('photos', function(v){
       if(!v){ box.innerHTML = '<div class="link-empty">Chưa có ảnh nào.</div>'; renderCatBar('photoCats','photos',[]); return; }
       const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
       const visP = list.filter(function(o){ return !((o[1]||{}).hidden); });
@@ -574,8 +589,8 @@ function applyPhotosVisibility(show){
 async function initPhotosVisibility(){
   try{
     await ensureFb();
-    firebase.database().ref('settings/showPhotos').on('value', function(s){
-      applyPhotosVisibility(s.val() !== false);
+    fbRef('settings/showPhotos', function(v){
+      applyPhotosVisibility(v !== false);
     });
   }catch(e){ applyPhotosVisibility(true); }
 }

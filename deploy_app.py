@@ -20,7 +20,7 @@ REPO_DIR = r"D:\Opencode Project"
 SITE_URL = "https://acceleratorares.vercel.app/"
 EXTRA_FILES = ["admin.html", "avatar.jpg", "avatar.ico", "shop-logo.jpg", "robots.txt"]
 SRC_DIR = os.path.dirname(DEFAULT_HTML)
-VERSION = "v3.5"
+VERSION = "v3.7"
 CONFIG = os.path.join(REPO_DIR, "deploy_config.json")
 FB_API_KEY = "AIzaSyCvCjTJ30HSsHv-oM1H4nngEHhzMyqjLtw"
 FB_DB_URL = "https://cinevault-ec9d1-default-rtdb.asia-southeast1.firebasedatabase.app"
@@ -51,19 +51,45 @@ def save_cfg(d):
     except Exception:
         pass
 
-BG = "#0d0f14"
-PANEL = "#12151d"
-CARD = "#1a1e27"
-GOLD = "#c8a864"
-GOLD_LT = "#e0c078"
-TXT = "#e8e4da"
-MUTED = "#8a8478"
+
+def vercel_exe():
+    return "vercel.cmd" if shutil.which("vercel.cmd") else "vercel"
+
+BG = "#eef1f6"
+PANEL = "#ffffff"
+CARD = "#eef2f7"
+GOLD = "#2563eb"
+GOLD_LT = "#1d4ed8"
+TXT = "#1f2937"
+MUTED = "#64748b"
+SIDE = "#0f172a"
+SIDE_HOV = "#1e293b"
+EDGE = "#d9e1ea"
+GREEN = "#16a34a"
+RED = "#dc2626"
 
 
 def run(cmd, cwd=None):
     p = subprocess.run(cmd, cwd=cwd, shell=True, capture_output=True, text=True,
                         encoding="utf-8", errors="replace")
     return p.returncode, (p.stdout or "") + (p.stderr or "")
+
+
+GIT_NAME = "vinhthai071199-blip"
+GIT_MAIL = "vinhthai071199-blip@users.noreply.github.com"
+
+
+def ensure_git_identity():
+    """May chua co git user.name/user.email thi moi lenh commit deu that bai (exit 128),
+    nen app bao 'XONG' trong khi web van la ban cu. Tu cau hinh neu thieu."""
+    code, out = run("git var GIT_AUTHOR_IDENT", REPO_DIR)
+    if code == 0:
+        return
+    run('git config user.name "' + GIT_NAME + '"', REPO_DIR)
+    run('git config user.email "' + GIT_MAIL + '"', REPO_DIR)
+    code, out = run("git var GIT_AUTHOR_IDENT", REPO_DIR)
+    if code != 0:
+        raise RuntimeError("Khong cau hinh duoc git user.name/user.email:\n" + out[-400:])
 
 
 class App:
@@ -77,8 +103,8 @@ class App:
         self.yt_pushed = ""
         self.auto_var = tk.BooleanVar(value=load_cfg().get("auto_backup", True))
         root.title("AcceleratorAres Deploy " + VERSION)
-        root.geometry("640x700")
-        root.minsize(600, 640)
+        root.geometry("820x680")
+        root.minsize(760, 620)
         root.configure(bg=BG)
 
         s = ttk.Style()
@@ -87,145 +113,208 @@ class App:
         except Exception:
             pass
         s.configure("TNotebook", background=BG, borderwidth=0)
-        s.configure("TNotebook.Tab", background=CARD, foreground=MUTED,
-                    padding=(18, 9), font=("Segoe UI", 10, "bold"), borderwidth=0)
-        s.map("TNotebook.Tab", background=[("selected", PANEL)],
-              foreground=[("selected", GOLD)])
         s.configure("TFrame", background=BG)
-        s.configure("Card.TFrame", background=PANEL)
         s.configure("TLabel", background=BG, foreground=TXT, font=("Segoe UI", 10))
-        s.configure("Card.TLabel", background=PANEL, foreground=TXT, font=("Segoe UI", 10))
-        s.configure("Muted.TLabel", background=BG, foreground=MUTED, font=("Segoe UI", 9))
-        s.configure("Gold.Horizontal.TProgressbar", background=GOLD, troughcolor=CARD,
-                    borderwidth=0, thickness=8)
+        s.configure("Blue.Horizontal.TProgressbar", background=GOLD, troughcolor="#e2e8f0",
+                    borderwidth=0, thickness=9)
 
-        # ===== BANNER =====
-        banner = tk.Frame(root, bg=PANEL)
-        banner.pack(fill="x")
-        tk.Frame(root, bg=GOLD, height=2).pack(fill="x")
-        left = tk.Frame(banner, bg=PANEL)
-        left.pack(side="left", padx=(18, 0), pady=12)
-        tk.Label(left, text="⬢ ACCELERATORARES", font=("Segoe UI", 15, "bold"),
-                 fg=GOLD, bg=PANEL).pack(anchor="w")
-        tk.Label(left, text="Công cụ deploy website  •  " + VERSION,
-                 font=("Segoe UI", 9), fg=MUTED, bg=PANEL).pack(anchor="w")
-        right = tk.Frame(banner, bg=PANEL)
-        right.pack(side="right", padx=18)
-        self.dot = tk.Label(right, text="●", font=("Segoe UI", 16), fg="#4caf6d", bg=PANEL)
+        # ===== KHUNG CHINH: MENU TRAI + NOI DUNG =====
+        shell = tk.Frame(root, bg=BG)
+        shell.pack(fill="both", expand=True)
+
+        side = tk.Frame(shell, bg=SIDE, width=205)
+        side.pack(side="left", fill="y")
+        side.pack_propagate(False)
+
+        brand = tk.Frame(side, bg=SIDE)
+        brand.pack(fill="x", padx=18, pady=(20, 16))
+        tk.Label(brand, text="⬢ ACCELERATORARES", font=("Segoe UI", 12, "bold"),
+                 fg="#ffffff", bg=SIDE).pack(anchor="w")
+        tk.Label(brand, text="Công cụ quản lý website", font=("Segoe UI", 8),
+                 fg="#94a3b8", bg=SIDE).pack(anchor="w", pady=(2, 0))
+
+        body = tk.Frame(shell, bg=BG)
+        body.pack(side="left", fill="both", expand=True)
+        body.grid_rowconfigure(0, weight=1)
+        body.grid_columnconfigure(0, weight=1)
+
+        pages = {}
+        nav_btns = {}
+        cur = {"name": ""}
+
+        def show(name):
+            cur["name"] = name
+            for n, b in nav_btns.items():
+                if n == name:
+                    b.configure(bg=GOLD, fg="#ffffff")
+                else:
+                    b.configure(bg=SIDE, fg="#cbd5e1")
+            pages[name].tkraise()
+
+        for n, label in [("web", "  🚀   Đăng web"),
+                         ("sua", "  ✏️   Sửa web"),
+                         ("maychu", "  🖥️   Máy chủ"),
+                         ("lichsu", "  🕘   Lịch sử"),
+                         ("mo", "  🔗   Mở nhanh"),
+                         ("suckhoe", "  🩺   Sức khỏe")]:
+            b = tk.Button(side, text=label, font=("Segoe UI", 10, "bold"),
+                          bg=SIDE, fg="#cbd5e1", activebackground=SIDE_HOV,
+                          activeforeground="#ffffff", relief="flat", bd=0,
+                          anchor="w", padx=14, pady=10, cursor="hand2")
+            b.configure(command=lambda k=n: show(k))
+            b.pack(fill="x", padx=10, pady=1)
+            b.bind("<Enter>", lambda e, k=n, btn=b: btn.configure(bg=SIDE_HOV)
+                   if cur["name"] != k else None)
+            b.bind("<Leave>", lambda e, k=n, btn=b: btn.configure(bg=SIDE)
+                   if cur["name"] != k else None)
+            nav_btns[n] = b
+
+        stat = tk.Frame(side, bg=SIDE)
+        stat.pack(side="bottom", fill="x", padx=16, pady=14)
+        self.dot = tk.Label(stat, text="●", font=("Segoe UI", 13), fg=GREEN, bg=SIDE)
         self.dot.pack(side="left")
-        self.status = tk.Label(right, text="Sẵn sàng", font=("Segoe UI", 10, "bold"),
-                               fg=TXT, bg=PANEL)
+        self.status = tk.Label(stat, text="Sẵn sàng", font=("Segoe UI", 10, "bold"),
+                               fg="#ffffff", bg=SIDE)
         self.status.pack(side="left", padx=(6, 0))
 
-        # ===== TABS =====
-        nb = ttk.Notebook(root)
-        nb.pack(fill="both", expand=True, padx=12, pady=12)
+        def make_page(name):
+            p = tk.Frame(body, bg=BG)
+            p.grid(row=0, column=0, sticky="nsew")
+            pages[name] = p
+            return p
 
-        # ---- Tab Deploy ----
-        tab1 = ttk.Frame(nb)
-        nb.add(tab1, text="  🚀  Deploy  ")
+        def head(parent, title, sub):
+            tk.Label(parent, text=title, font=("Segoe UI", 16, "bold"),
+                     fg=TXT, bg=BG).pack(anchor="w", padx=20, pady=(16, 0))
+            tk.Label(parent, text=sub, font=("Segoe UI", 9), fg=MUTED, bg=BG,
+                     wraplength=540, justify="left").pack(anchor="w", padx=20, pady=(2, 0))
 
-        card1 = ttk.Frame(tab1, style="Card.TFrame", padding=14)
-        card1.pack(fill="x", padx=14, pady=(14, 8))
-        tk.Label(card1, text="FILE HTML", font=("Segoe UI", 9, "bold"),
-                 fg=MUTED, bg=PANEL).pack(anchor="w", pady=(0, 6))
-        fr = tk.Frame(card1, bg=PANEL)
-        fr.pack(fill="x")
-        self.file_lbl = tk.Label(fr, text=os.path.basename(self.html_file),
+        def card(parent, pady=8):
+            c = tk.Frame(parent, bg=PANEL, highlightthickness=1,
+                         highlightbackground=EDGE)
+            c.pack(fill="x", padx=20, pady=(8, pady))
+            return c
+
+        def btn_primary(parent, text, cmd, font_size=13, **kw):
+            return tk.Button(parent, text=text, command=cmd,
+                             font=("Segoe UI", font_size, "bold"),
+                             bg=GOLD, fg="#ffffff", activebackground=GOLD_LT,
+                             activeforeground="#ffffff", disabledforeground="#bfdbfe",
+                             relief="flat", cursor="hand2", bd=0, **kw)
+
+        def btn_ghost(parent, text, cmd, **kw):
+            return tk.Button(parent, text=text, command=cmd,
+                             font=("Segoe UI", 9, "bold"),
+                             bg=CARD, fg=TXT, activebackground="#dfe6ef",
+                             activeforeground=TXT, relief="flat", cursor="hand2",
+                             bd=0, padx=12, pady=7, **kw)
+
+        # ===== TRANG: DANG WEB =====
+        p_web = make_page("web")
+        head(p_web, "Đăng web",
+             "Chọn file → ghi chú → bấm nút xanh. App tự sao lưu, đẩy lên GitHub và cập nhật web.")
+
+        c1 = card(p_web, pady=4)
+        tk.Label(c1, text="BƯỚC 1 — CHỌN FILE HTML", font=("Segoe UI", 8, "bold"),
+                 fg=MUTED, bg=PANEL).pack(anchor="w", padx=14, pady=(10, 2))
+        r1 = tk.Frame(c1, bg=PANEL)
+        r1.pack(fill="x", padx=14, pady=(0, 10))
+        self.file_lbl = tk.Label(r1, text=os.path.basename(self.html_file),
                                  font=("Segoe UI", 11, "bold"), fg=GOLD, bg=PANEL)
         self.file_lbl.pack(side="left", fill="x", expand=True)
-        tk.Button(fr, text="Chọn file...", font=("Segoe UI", 9, "bold"),
-                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
-                  relief="flat", padx=12, pady=6, cursor="hand2",
-                  command=self.pick_file).pack(side="right")
+        btn_ghost(r1, "Chọn file...", self.pick_file).pack(side="right")
 
-        card2 = ttk.Frame(tab1, style="Card.TFrame", padding=14)
-        card2.pack(fill="x", padx=14, pady=8)
-        tk.Label(card2, text="GHI CHÚ BẢN DEPLOY", font=("Segoe UI", 9, "bold"),
-                 fg=MUTED, bg=PANEL).pack(anchor="w", pady=(0, 6))
-        self.msg = tk.Entry(card2, font=("Segoe UI", 11), bg=CARD, fg=TXT,
-                            insertbackground=GOLD, relief="flat")
+        c2 = card(p_web, pady=10)
+        tk.Label(c2, text="BƯỚC 2 — GHI CHÚ BẢN ĐĂNG", font=("Segoe UI", 8, "bold"),
+                 fg=MUTED, bg=PANEL).pack(anchor="w", padx=14, pady=(10, 2))
+        self.msg = tk.Entry(c2, font=("Segoe UI", 11), bg="#f8fafc", fg=TXT,
+                            insertbackground=GOLD, relief="flat",
+                            highlightthickness=1, highlightbackground=EDGE,
+                            highlightcolor=GOLD)
         self.msg.insert(0, "Cap nhat web")
-        self.msg.pack(fill="x", ipady=8, ipadx=8)
+        self.msg.pack(fill="x", padx=14, ipady=7, pady=(0, 12))
 
-        self.btn = tk.Button(tab1, text="🚀  DEPLOY NGAY", font=("Segoe UI", 14, "bold"),
-                             bg=GOLD, fg="#161005", activebackground=GOLD_LT,
-                             relief="flat", pady=12, cursor="hand2",
-                             command=self.start)
-        self.btn.pack(fill="x", padx=14, pady=(8, 4))
-        fr2 = tk.Frame(tab1, bg=BG)
-        fr2.pack(fill="x", padx=14, pady=(0, 4))
-        tk.Button(fr2, text="DEPLOY TRANG CHÍNH", font=("Segoe UI", 10, "bold"),
-                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
-                  relief="flat", padx=10, pady=8, cursor="hand2",
-                  command=lambda: self.start_one("Acceleratorares.html", "trang chính")).pack(side="left", fill="x", expand=True, padx=(0, 4))
-        tk.Button(fr2, text="DEPLOY TRANG ADMIN", font=("Segoe UI", 10, "bold"),
-                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
-                  relief="flat", padx=10, pady=8, cursor="hand2",
-                  command=lambda: self.start_one("admin.html", "trang admin")).pack(side="left", fill="x", expand=True, padx=(4, 0))
-        tk.Checkbutton(tab1, text="Tự động sao lưu trước khi deploy / khôi phục",
+        self.btn = btn_primary(p_web, "🚀  ĐĂNG LÊN WEB NGAY", self.start, font_size=14)
+        self.btn.pack(fill="x", padx=20, pady=(2, 4), ipady=6)
+
+        r2 = tk.Frame(p_web, bg=BG)
+        r2.pack(fill="x", padx=20, pady=(4, 0))
+        btn_ghost(r2, "Đăng nhanh: Trang chính",
+                  lambda: self.start_one("Acceleratorares.html", "trang chính")
+                  ).pack(side="left", fill="x", expand=True, padx=(0, 4))
+        btn_ghost(r2, "Đăng nhanh: Trang admin",
+                  lambda: self.start_one("admin.html", "trang admin")
+                  ).pack(side="left", fill="x", expand=True, padx=(4, 0))
+
+        r3 = tk.Frame(p_web, bg=BG)
+        r3.pack(fill="x", padx=20, pady=(8, 0))
+        tk.Checkbutton(r3, text="Tự động sao lưu trước khi đăng / khôi phục",
                        variable=self.auto_var, command=self.save_auto,
-                       font=("Segoe UI", 10), bg=BG, fg=TXT,
-                       selectcolor=CARD, activebackground=BG, activeforeground=TXT,
-                       cursor="hand2").pack(anchor="w", padx=18, pady=(0, 2))
-        self.backup_btn = tk.Button(tab1, text="💾  SAO LƯU BẢN HIỆN TẠI", font=("Segoe UI", 11, "bold"),
-                                    bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
-                                    relief="flat", pady=9, cursor="hand2",
-                                    command=self.backup)
-        self.backup_btn.pack(fill="x", padx=14, pady=(0, 4))
-        self.prog = ttk.Progressbar(tab1, style="Gold.Horizontal.TProgressbar",
-                                    mode="determinate", maximum=100, value=0)
-        self.prog.pack(fill="x", padx=14, pady=(0, 8))
+                       font=("Segoe UI", 9), bg=BG, fg=TXT,
+                       selectcolor="#ffffff", activebackground=BG,
+                       activeforeground=TXT, cursor="hand2").pack(side="left")
+        self.backup_btn = btn_ghost(r3, "💾  Sao lưu ngay", self.backup)
+        self.backup_btn.pack(side="right")
 
-        tk.Label(tab1, text="NHẬT KÝ", font=("Segoe UI", 9, "bold"),
-                 fg=MUTED, bg=BG).pack(anchor="w", padx=16)
-        self.log = scrolledtext.ScrolledText(tab1, font=("Consolas", 9),
-                                             bg=PANEL, fg="#d6d0c2",
-                                             insertbackground=GOLD, relief="flat",
-                                             height=10)
-        self.log.pack(fill="both", expand=True, padx=14, pady=(4, 14))
+        self.prog = ttk.Progressbar(p_web, style="Blue.Horizontal.TProgressbar",
+                                    mode="determinate", maximum=100, value=0)
+        self.prog.pack(fill="x", padx=20, pady=(8, 8))
+
+        lc = tk.Frame(p_web, bg=PANEL, highlightthickness=1, highlightbackground=EDGE)
+        lc.pack(fill="both", expand=True, padx=20, pady=(0, 16))
+        tk.Label(lc, text="NHẬT KÝ HOẠT ĐỘNG", font=("Segoe UI", 8, "bold"),
+                 fg=MUTED, bg=PANEL).pack(anchor="w", padx=14, pady=(10, 4))
+        self.log = scrolledtext.ScrolledText(lc, font=("Consolas", 9),
+                                             bg="#0f172a", fg="#e2e8f0",
+                                             insertbackground="#e2e8f0",
+                                             relief="flat", height=8)
+        self.log.pack(fill="both", expand=True, padx=14, pady=(0, 12))
         self.log.configure(state="disabled")
 
-        # ---- Tab Lich su ----
-        tab2 = ttk.Frame(nb)
-        nb.add(tab2, text="  🕘  Lịch sử & Khôi phục  ")
+        # ===== TRANG: SUA WEB =====
+        p_sua = make_page("sua")
+        head(p_sua, "Sửa web",
+             "Chọn phần cần sửa. Sửa xong nhớ sang “Đăng web” để đưa lên.")
 
-        tk.Label(tab2, text="Chọn 1 bản trong lịch sử để đưa web về đúng bản đó.",
-                 font=("Segoe UI", 9), fg=MUTED, bg=BG,
-                 wraplength=560, justify="left").pack(anchor="w", padx=16, pady=(14, 6))
-        fr2 = tk.Frame(tab2, bg=BG)
-        fr2.pack(fill="both", expand=True, padx=14)
-        self.hist = tk.Listbox(fr2, font=("Consolas", 10), bg=PANEL, fg="#d6d0c2",
-                               selectbackground="#8a6d3b", relief="flat",
-                               activestyle="none", height=12)
-        self.hist.pack(side="left", fill="both", expand=True)
-        sb = tk.Scrollbar(fr2, command=self.hist.yview)
-        sb.pack(side="right", fill="y")
-        self.hist.configure(yscrollcommand=sb.set)
+        seg = tk.Frame(p_sua, bg=BG)
+        seg.pack(fill="x", padx=20, pady=(10, 0))
+        seg_btns = {}
+        subc = tk.Frame(p_sua, bg=BG)
+        subc.pack(fill="both", expand=True, padx=20, pady=(8, 16))
+        subc.grid_rowconfigure(0, weight=1)
+        subc.grid_columnconfigure(0, weight=1)
+        sp1 = tk.Frame(subc, bg=BG)
+        sp2 = tk.Frame(subc, bg=BG)
+        sp3 = tk.Frame(subc, bg=BG)
+        for sp in (sp1, sp2, sp3):
+            sp.grid(row=0, column=0, sticky="nsew")
 
-        fr3 = tk.Frame(tab2, bg=BG)
-        fr3.pack(fill="x", padx=14, pady=10)
-        tk.Button(fr3, text="↻  Làm mới", font=("Segoe UI", 10, "bold"),
-                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
-                  relief="flat", padx=14, pady=8, cursor="hand2",
-                  command=lambda: threading.Thread(target=self.load_hist, daemon=True).start()
-                  ).pack(side="left")
-        tk.Button(fr3, text="⏪  KHÔI PHỤC BẢN NÀY", font=("Segoe UI", 10, "bold"),
-                  bg="#7a4a3a", fg="#ffffff", activebackground="#9a5a48",
-                  relief="flat", padx=14, pady=8, cursor="hand2",
-                  command=self.ask_restore).pack(side="right")
-        threading.Thread(target=self.load_hist, daemon=True).start()
+        def pick_seg(k):
+            for kk, bb in seg_btns.items():
+                if kk == k:
+                    bb.configure(bg=GOLD, fg="#ffffff", highlightbackground=GOLD)
+                else:
+                    bb.configure(bg=PANEL, fg=TXT, highlightbackground=EDGE)
+            {"chu": sp1, "anh": sp2, "video": sp3}[k].tkraise()
 
-        # ---- Tab Noi dung ----
-        tab4 = ttk.Frame(nb)
-        nb.add(tab4, text="  📝  Nội dung  ")
+        for k, label in [("chu", "📝  Chữ trên web"), ("anh", "🖼️  Ảnh"),
+                         ("video", "🎬  Video")]:
+            b = tk.Button(seg, text=label, font=("Segoe UI", 10, "bold"),
+                          bg=PANEL, fg=TXT, activebackground="#dfe6ef",
+                          activeforeground=TXT, relief="flat", bd=0,
+                          padx=16, pady=8, cursor="hand2",
+                          highlightthickness=1, highlightbackground=EDGE)
+            b.configure(command=lambda kk=k: pick_seg(kk))
+            b.pack(side="left", padx=(0, 6))
+            seg_btns[k] = b
 
-        tk.Label(tab4, text="Sửa chữ trên web. Lưu xong nhớ sang tab Deploy để đưa lên.",
-                 font=("Segoe UI", 9), fg=MUTED, bg=BG,
-                 wraplength=560, justify="left").pack(anchor="w", padx=16, pady=(14, 6))
+        cA = tk.Frame(sp1, bg=PANEL, highlightthickness=1, highlightbackground=EDGE)
+        cA.pack(fill="both", expand=True)
+        tk.Label(cA, text="CHỮ HIỂN THỊ TRÊN WEB", font=("Segoe UI", 8, "bold"),
+                 fg=MUTED, bg=PANEL).pack(anchor="w", padx=14, pady=(10, 2))
         self.content_vars = {}
-        cf = tk.Frame(tab4, bg=BG)
-        cf.pack(fill="both", expand=True, padx=16)
+        cf = tk.Frame(cA, bg=PANEL)
+        cf.pack(fill="both", expand=True, padx=14)
         for key, label in [("title", "Tiêu đề (cạnh avatar)"),
                            ("welcome", "Dòng chào mừng"),
                            ("shopname", "Tên shop"),
@@ -233,202 +322,210 @@ class App:
                            ("shoplink", "Link shop"),
                            ("cskhlink", "Link CSKH")]:
             tk.Label(cf, text=label, font=("Segoe UI", 9, "bold"),
-                     fg=MUTED, bg=BG).pack(anchor="w", pady=(6, 2))
+                     fg=MUTED, bg=PANEL).pack(anchor="w", pady=(5, 2))
             var = tk.StringVar()
             self.content_vars[key] = var
             tk.Entry(cf, textvariable=var, font=("Segoe UI", 10),
-                     bg=CARD, fg=TXT, insertbackground=GOLD,
-                     relief="flat").pack(fill="x", ipady=7, ipadx=8)
-        fr6 = tk.Frame(tab4, bg=BG)
+                     bg="#f8fafc", fg=TXT, insertbackground=GOLD, relief="flat",
+                     highlightthickness=1, highlightbackground=EDGE,
+                     highlightcolor=GOLD).pack(fill="x", ipady=6)
+        fr6 = tk.Frame(cA, bg=PANEL)
         fr6.pack(fill="x", padx=14, pady=12)
-        tk.Button(fr6, text="↻  Tải nội dung hiện tại", font=("Segoe UI", 10, "bold"),
-                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
-                  relief="flat", padx=14, pady=8, cursor="hand2",
-                  command=self.content_load).pack(side="left")
-        tk.Button(fr6, text="💾  LƯU THAY ĐỔI", font=("Segoe UI", 10, "bold"),
-                  bg=GOLD, fg="#161005", activebackground=GOLD_LT,
-                  relief="flat", padx=14, pady=8, cursor="hand2",
-                  command=self.content_save).pack(side="right")
-        self.content_msg = tk.Label(tab4, text="", font=("Segoe UI", 9),
-                                    fg=GOLD, bg=BG)
-        self.content_msg.pack(padx=16, pady=(0, 10), anchor="w")
+        btn_ghost(fr6, "↻  Tải nội dung hiện tại", self.content_load).pack(side="left")
+        btn_primary(fr6, "💾  LƯU THAY ĐỔI", self.content_save, font_size=10,
+                    padx=14, pady=8).pack(side="right")
+        self.content_msg = tk.Label(cA, text="", font=("Segoe UI", 9),
+                                    fg=GOLD, bg=PANEL)
+        self.content_msg.pack(padx=14, pady=(0, 10), anchor="w")
 
-        # ---- Tab Hinh anh ----
-        tab5 = ttk.Frame(nb)
-        nb.add(tab5, text="  🖼️  Hình ảnh  ")
-
-        tk.Label(tab5, text="Đổi avatar và logo shop. Ảnh mới tự đi theo khi deploy.",
-                 font=("Segoe UI", 9), fg=MUTED, bg=BG,
-                 wraplength=560, justify="left").pack(anchor="w", padx=16, pady=(14, 6))
+        cB = tk.Frame(sp2, bg=PANEL, highlightthickness=1, highlightbackground=EDGE)
+        cB.pack(fill="x")
+        tk.Label(cB, text="AVATAR & LOGO", font=("Segoe UI", 8, "bold"),
+                 fg=MUTED, bg=PANEL).pack(anchor="w", padx=14, pady=(10, 4))
         self.img_rows = {}
-        imgf = tk.Frame(tab5, bg=BG)
-        imgf.pack(fill="x", padx=16)
         for key, label, fname in [("avatar", "Avatar (cạnh tiêu đề + icon tab)", "avatar.jpg"),
                                   ("logo", "Logo Teyvat Store", "shop-logo.jpg")]:
-            row = ttk.Frame(tab5, style="Card.TFrame", padding=12)
-            row.pack(fill="x", padx=14, pady=6)
+            row = tk.Frame(cB, bg=PANEL)
+            row.pack(fill="x", padx=14, pady=(2, 10))
             tk.Label(row, text=label, font=("Segoe UI", 10, "bold"),
                      fg=TXT, bg=PANEL).pack(anchor="w")
-            sub = tk.Frame(row, bg=PANEL)
-            sub.pack(fill="x", pady=(6, 0))
-            lbl = tk.Label(sub, text=fname, font=("Segoe UI", 9), fg=MUTED, bg=PANEL)
+            subrow = tk.Frame(row, bg=PANEL)
+            subrow.pack(fill="x", pady=(4, 0))
+            lbl = tk.Label(subrow, text=fname, font=("Segoe UI", 9), fg=MUTED, bg=PANEL)
             lbl.pack(side="left", fill="x", expand=True)
             self.img_rows[key] = (fname, lbl)
-            tk.Button(sub, text="Chọn ảnh...", font=("Segoe UI", 9, "bold"),
-                      bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
-                      relief="flat", padx=12, pady=6, cursor="hand2",
-                      command=lambda k=key: self.pick_image(k)).pack(side="right")
-        self.img_msg = tk.Label(tab5, text="", font=("Segoe UI", 9),
-                                fg=GOLD, bg=BG)
-        self.img_msg.pack(padx=16, pady=8, anchor="w")
+            btn_ghost(subrow, "Chọn ảnh...",
+                      lambda k=key: self.pick_image(k)).pack(side="right")
+        self.img_msg = tk.Label(sp2, text="", font=("Segoe UI", 9), fg=GOLD, bg=BG)
+        self.img_msg.pack(padx=2, pady=8, anchor="w")
 
-        # ---- Tab Video ----
-        tab6 = ttk.Frame(nb)
-        nb.add(tab6, text="  🎬  Video  ")
-
-        tk.Label(tab6, text="Upload video lên Cloudinary, tự hiện lên web. Tối đa 100MB.",
-                 font=("Segoe UI", 9), fg=MUTED, bg=BG,
-                 wraplength=560, justify="left").pack(anchor="w", padx=16, pady=(14, 6))
+        cC = tk.Frame(sp3, bg=PANEL, highlightthickness=1, highlightbackground=EDGE)
+        cC.pack(fill="x")
+        tk.Label(cC, text="UPLOAD VIDEO LÊN WEB (tối đa 100MB)", font=("Segoe UI", 8, "bold"),
+                 fg=MUTED, bg=PANEL).pack(anchor="w", padx=14, pady=(10, 2))
         cfg = load_cfg()
-        vf = tk.Frame(tab6, bg=BG)
-        vf.pack(fill="x", padx=16)
+        vf = tk.Frame(cC, bg=PANEL)
+        vf.pack(fill="x", padx=14)
         tk.Label(vf, text="Tên video", font=("Segoe UI", 9, "bold"),
-                 fg=MUTED, bg=BG).pack(anchor="w", pady=(4, 2))
-        self.vd_title = tk.Entry(vf, font=("Segoe UI", 10), bg=CARD, fg=TXT,
-                                 insertbackground=GOLD, relief="flat")
-        self.vd_title.pack(fill="x", ipady=7, ipadx=8)
+                 fg=MUTED, bg=PANEL).pack(anchor="w", pady=(2, 2))
+        self.vd_title = tk.Entry(vf, font=("Segoe UI", 10), bg="#f8fafc", fg=TXT,
+                                 insertbackground=GOLD, relief="flat",
+                                 highlightthickness=1, highlightbackground=EDGE,
+                                 highlightcolor=GOLD)
+        self.vd_title.pack(fill="x", ipady=6)
         self.vd_file_lbl = tk.Label(vf, text="File video: chưa chọn", font=("Segoe UI", 9),
-                                      fg=MUTED, bg=BG, wraplength=540, justify="left")
-        self.vd_file_lbl.pack(anchor="w", pady=(8, 2))
+                                      fg=MUTED, bg=PANEL, wraplength=520, justify="left")
+        self.vd_file_lbl.pack(anchor="w", pady=(8, 0))
         self.vd_file = None
-        fr7 = tk.Frame(tab6, bg=BG)
-        fr7.pack(fill="x", padx=14, pady=8)
-        tk.Button(fr7, text="Chọn video...", font=("Segoe UI", 10, "bold"),
-                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
-                  relief="flat", padx=14, pady=8, cursor="hand2",
-                  command=self.pick_video).pack(side="left")
-        self.vd_btn = tk.Button(fr7, text="⬆️  UPLOAD", font=("Segoe UI", 10, "bold"),
-                                bg=GOLD, fg="#161005", activebackground=GOLD_LT,
-                                relief="flat", padx=14, pady=8, cursor="hand2",
-                                command=self.start_vdupload)
+        fr7 = tk.Frame(cC, bg=PANEL)
+        fr7.pack(fill="x", padx=14, pady=10)
+        btn_ghost(fr7, "Chọn video...", self.pick_video).pack(side="left")
+        self.vd_btn = btn_primary(fr7, "⬆️  UPLOAD", self.start_vdupload, font_size=10,
+                                  padx=14, pady=8)
         self.vd_btn.pack(side="right")
-        self.vd_prog = ttk.Progressbar(tab6, style="Gold.Horizontal.TProgressbar",
+        self.vd_prog = ttk.Progressbar(cC, style="Blue.Horizontal.TProgressbar",
                                        mode="determinate", maximum=100, value=0)
-        self.vd_prog.pack(fill="x", padx=14, pady=(0, 8))
-        tk.Label(tab6, text="Tài khoản admin (để lưu video vào web)", font=("Segoe UI", 9, "bold"),
-                 fg=MUTED, bg=BG).pack(anchor="w", padx=16, pady=(4, 2))
-        af = tk.Frame(tab6, bg=BG)
-        af.pack(fill="x", padx=16)
-        self.vd_email = tk.Entry(af, font=("Segoe UI", 10), bg=CARD, fg=TXT,
-                                 insertbackground=GOLD, relief="flat", width=28)
+        self.vd_prog.pack(fill="x", padx=14, pady=(0, 10))
+        tk.Label(cC, text="Tài khoản admin (để lưu video vào web)", font=("Segoe UI", 9, "bold"),
+                 fg=MUTED, bg=PANEL).pack(anchor="w", padx=14, pady=(2, 2))
+        af = tk.Frame(cC, bg=PANEL)
+        af.pack(fill="x", padx=14, pady=(0, 12))
+        self.vd_email = tk.Entry(af, font=("Segoe UI", 10), bg="#f8fafc", fg=TXT,
+                                 insertbackground=GOLD, relief="flat", width=26,
+                                 highlightthickness=1, highlightbackground=EDGE,
+                                 highlightcolor=GOLD)
         self.vd_email.insert(0, cfg.get("admin_email", ""))
-        self.vd_email.pack(side="left", ipady=7, ipadx=8)
-        self.vd_pass = tk.Entry(af, font=("Segoe UI", 10), bg=CARD, fg=TXT,
-                                insertbackground=GOLD, relief="flat", width=20, show="•")
+        self.vd_email.pack(side="left", ipady=6)
+        self.vd_pass = tk.Entry(af, font=("Segoe UI", 10), bg="#f8fafc", fg=TXT,
+                                insertbackground=GOLD, relief="flat", width=18, show="•",
+                                highlightthickness=1, highlightbackground=EDGE,
+                                highlightcolor=GOLD)
         self.vd_pass.insert(0, cfg.get("admin_pass", ""))
-        self.vd_pass.pack(side="left", padx=(8, 0), ipady=7, ipadx=8)
-        tk.Label(tab6, text="Mật khẩu chỉ lưu trên máy bạn.", font=("Segoe UI", 8),
-                 fg=MUTED, bg=BG).pack(anchor="w", padx=16)
-        self.vd_msg = tk.Label(tab6, text="", font=("Segoe UI", 9),
-                               fg=GOLD, bg=BG, wraplength=560, justify="left")
-        self.vd_msg.pack(padx=16, pady=8, anchor="w", fill="x")
+        self.vd_pass.pack(side="left", padx=(8, 0), ipady=6)
+        tk.Label(sp3, text="Mật khẩu chỉ lưu trên máy bạn.", font=("Segoe UI", 8),
+                 fg=MUTED, bg=BG).pack(anchor="w", pady=(6, 2))
+        self.vd_msg = tk.Label(sp3, text="", font=("Segoe UI", 9),
+                               fg=GOLD, bg=BG, wraplength=540, justify="left")
+        self.vd_msg.pack(padx=2, pady=4, anchor="w", fill="x")
 
-        # ---- Tab May chu ----
-        tab8 = ttk.Frame(nb)
-        nb.add(tab8, text="  🖥️  Máy chủ  ")
+        # ===== TRANG: MAY CHU =====
+        p_mc = make_page("maychu")
+        head(p_mc, "Máy chủ tải video",
+             "Bật khi muốn dùng nút “Gửi máy nhà tải” trong trang admin. Server tự mở tunnel cho web và điện thoại.")
 
-        tk.Label(tab8, text="Bật/tắt máy chủ tải video (thay cho file .bat). Server chạy thì admin mới bấm 'Tải bằng máy nhà' được.",
-                 font=("Segoe UI", 9), fg=MUTED, bg=BG,
-                 wraplength=560, justify="left").pack(anchor="w", padx=16, pady=(14, 6))
-        yc = ttk.Frame(tab8, style="Card.TFrame", padding=14)
-        yc.pack(fill="x", padx=14, pady=6)
-        srow = tk.Frame(yc, bg=PANEL)
-        srow.pack(fill="x")
+        cD = tk.Frame(p_mc, bg=PANEL, highlightthickness=1, highlightbackground=EDGE)
+        cD.pack(fill="x", padx=20, pady=(12, 8))
+        srow = tk.Frame(cD, bg=PANEL)
+        srow.pack(fill="x", padx=14, pady=(12, 0))
         self.yt_dot = tk.Label(srow, text="●", font=("Segoe UI", 14), fg=MUTED, bg=PANEL)
         self.yt_dot.pack(side="left")
         self.yt_lbl = tk.Label(srow, text="Đang kiểm tra...", font=("Segoe UI", 11, "bold"),
                               fg=TXT, bg=PANEL)
         self.yt_lbl.pack(side="left", padx=(8, 0))
-        self.yt_mode = tk.StringVar(value="local")
-        mf = tk.Frame(yc, bg=PANEL)
-        mf.pack(fill="x", pady=(10, 0))
-        tk.Radiobutton(mf, text="Máy mình dùng", variable=self.yt_mode, value="local",
-                       font=("Segoe UI", 10), bg=PANEL, fg=TXT, selectcolor=CARD,
-                       activebackground=PANEL, activeforeground=TXT, cursor="hand2").pack(side="left")
-        tk.Radiobutton(mf, text="Mọi admin dùng (mở tunnel)", variable=self.yt_mode, value="public",
-                       font=("Segoe UI", 10), bg=PANEL, fg=TXT, selectcolor=CARD,
-                       activebackground=PANEL, activeforeground=TXT, cursor="hand2").pack(side="left", padx=(16, 0))
-        tk.Radiobutton(mf, text="Tailscale riêng", variable=self.yt_mode, value="tailscale",
-                       font=("Segoe UI", 10), bg=PANEL, fg=TXT, selectcolor=CARD,
-                       activebackground=PANEL, activeforeground=TXT, cursor="hand2").pack(side="left", padx=(16, 0))
-        bf = tk.Frame(yc, bg=PANEL)
-        bf.pack(fill="x", pady=(10, 0))
-        tk.Button(bf, text="▶  BẬT SERVER", font=("Segoe UI", 11, "bold"),
-                  bg=GOLD, fg="#161005", activebackground=GOLD_LT,
-                  relief="flat", padx=14, pady=9, cursor="hand2",
-                  command=self.yt_start).pack(side="left", fill="x", expand=True, padx=(0, 4))
-        tk.Button(bf, text="⏹  TẮT SERVER", font=("Segoe UI", 11, "bold"),
-                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
-                  relief="flat", padx=14, pady=9, cursor="hand2",
-                  command=self.yt_stop).pack(side="left", fill="x", expand=True, padx=(4, 0))
-        urow = tk.Frame(yc, bg=PANEL)
-        urow.pack(fill="x", pady=(8, 0))
+        tk.Label(cD, text="BẬT SERVER sẽ tự mở tunnel, web Vercel và điện thoại gọi được ngay.\n"
+                          "Địa chỉ tunnel tự ghi vào Firebase, không cần cấu hình gì thêm.",
+                 font=("Segoe UI", 9), fg=MUTED, bg=PANEL, wraplength=520,
+                 justify="left").pack(anchor="w", padx=14, pady=(12, 0))
+        bfr = tk.Frame(cD, bg=PANEL)
+        bfr.pack(fill="x", padx=14, pady=(12, 0))
+        btn_primary(bfr, "▶  BẬT SERVER", self.yt_start, font_size=11,
+                    padx=14, pady=8).pack(side="left", fill="x", expand=True, padx=(0, 4))
+        btn_ghost(bfr, "⏹  TẮT SERVER", self.yt_stop).pack(side="left", fill="x", expand=True, padx=(4, 0))
+        urow = tk.Frame(cD, bg=PANEL)
+        urow.pack(fill="x", padx=14, pady=(10, 12))
         self.yt_url_lbl = tk.Label(urow, text="", font=("Segoe UI", 9), fg=GOLD, bg=PANEL,
                                   wraplength=430, justify="left")
         self.yt_url_lbl.pack(side="left", fill="x", expand=True)
-        tk.Button(urow, text="📋 Copy", font=("Segoe UI", 9, "bold"),
-                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
-                  relief="flat", padx=12, pady=6, cursor="hand2",
-                  command=self.yt_copy_url).pack(side="right")
-        self.yt_msg = tk.Label(tab8, text="", font=("Segoe UI", 9),
-                               fg=GOLD, bg=BG, wraplength=560, justify="left")
-        self.yt_msg.pack(padx=16, pady=8, anchor="w", fill="x")
+        btn_ghost(urow, "📋 Copy", self.yt_copy_url).pack(side="right")
+        self.yt_msg = tk.Label(p_mc, text="", font=("Segoe UI", 9), fg=GOLD, bg=BG,
+                               wraplength=540, justify="left")
+        self.yt_msg.pack(padx=22, pady=(4, 0), anchor="w", fill="x")
+
+        lc2 = tk.Frame(p_mc, bg=PANEL, highlightthickness=1, highlightbackground=EDGE)
+        lc2.pack(fill="both", expand=True, padx=20, pady=(8, 16))
+        hdr2 = tk.Frame(lc2, bg=PANEL)
+        hdr2.pack(fill="x", padx=14, pady=(10, 4))
+        tk.Label(hdr2, text="NHẬT KÝ MÁY CHỦ  (lưu vào yt-server\\server.log)",
+                 font=("Segoe UI", 8, "bold"), fg=MUTED, bg=PANEL).pack(side="left")
+        btn_ghost(hdr2, "Xóa log", self.yt_log_clear).pack(side="right")
+        self.slog_box = scrolledtext.ScrolledText(lc2, font=("Consolas", 9),
+                                                  bg="#0f172a", fg="#e2e8f0",
+                                                  insertbackground="#e2e8f0",
+                                                  relief="flat", height=9)
+        self.slog_box.pack(fill="both", expand=True, padx=14, pady=(0, 12))
+        self.slog_box.configure(state="disabled")
+        self.yt_slog_load()
         threading.Thread(target=self.yt_refresh, daemon=True).start()
 
-        # ---- Tab Mo nhanh ----
-        tab7 = ttk.Frame(nb)
-        nb.add(tab7, text="  🔗  Mở nhanh  ")
+        # ===== TRANG: LICH SU =====
+        p_ls = make_page("lichsu")
+        head(p_ls, "Lịch sử & Khôi phục",
+             "Chọn 1 bản trong danh sách rồi bấm “Khôi phục bản này” để đưa web về đúng bản đó.")
 
-        tk.Label(tab7, text="Bấm để mở các trang liên quan.", font=("Segoe UI", 9),
-                 fg=MUTED, bg=BG).pack(anchor="w", padx=16, pady=(14, 6))
-        lkf = tk.Frame(tab7, bg=BG)
-        lkf.pack(fill="x", padx=16)
+        cE = tk.Frame(p_ls, bg=PANEL, highlightthickness=1, highlightbackground=EDGE)
+        cE.pack(fill="both", expand=True, padx=20, pady=(12, 8))
+        self.hist = tk.Listbox(cE, font=("Consolas", 10), bg="#ffffff", fg=TXT,
+                               selectbackground="#dbeafe", selectforeground="#1e3a8a",
+                               relief="flat", activestyle="none", height=12,
+                               highlightthickness=0)
+        self.hist.pack(side="left", fill="both", expand=True, padx=(2, 0), pady=2)
+        sb = tk.Scrollbar(cE, command=self.hist.yview)
+        sb.pack(side="right", fill="y", pady=2)
+        self.hist.configure(yscrollcommand=sb.set)
+
+        r4 = tk.Frame(p_ls, bg=BG)
+        r4.pack(fill="x", padx=20, pady=(0, 16))
+        btn_ghost(r4, "↻  Làm mới",
+                  lambda: threading.Thread(target=self.load_hist, daemon=True).start()
+                  ).pack(side="left")
+        tk.Button(r4, text="⏪  KHÔI PHỤC BẢN NÀY", font=("Segoe UI", 10, "bold"),
+                  bg="#fee2e2", fg="#b91c1c", activebackground="#fecaca",
+                  activeforeground="#b91c1c", relief="flat", bd=0, padx=14, pady=8,
+                  cursor="hand2", command=self.ask_restore).pack(side="right")
+        threading.Thread(target=self.load_hist, daemon=True).start()
+
+        # ===== TRANG: MO NHANH =====
+        p_mo = make_page("mo")
+        head(p_mo, "Mở nhanh", "Bấm để mở các trang liên quan.")
         for i, (label, url) in enumerate(URLS):
-            tk.Button(lkf, text=label, font=("Segoe UI", 11, "bold"),
-                      bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=GOLD,
-                      relief="flat", pady=12, cursor="hand2", anchor="w",
+            tk.Button(p_mo, text=label, font=("Segoe UI", 11, "bold"),
+                      bg=PANEL, fg=TXT, activebackground="#dfe6ef",
+                      activeforeground=GOLD, relief="flat", bd=0, anchor="w",
+                      cursor="hand2", padx=16, pady=10,
+                      highlightthickness=1, highlightbackground=EDGE,
                       command=lambda u=url: webbrowser.open(u)
-                      ).pack(fill="x", pady=4)
+                      ).pack(fill="x", padx=20, pady=3)
 
-        # ---- Tab Suc khoe ----
-        tab3 = ttk.Frame(nb)
-        nb.add(tab3, text="  🩺  Sức khỏe  ")
-
-        tk.Label(tab3, text="Kiểm tra máy có đủ đồ nghề để deploy không. Thiếu gì app sẽ báo.",
-                 font=("Segoe UI", 9), fg=MUTED, bg=BG,
-                 wraplength=560, justify="left").pack(anchor="w", padx=16, pady=(14, 6))
-        fr5 = tk.Frame(tab3, bg=BG)
-        fr5.pack(fill="x", padx=14, pady=4)
-        tk.Button(fr5, text="🩺  KIỂM TRA", font=("Segoe UI", 10, "bold"),
-                  bg=CARD, fg=TXT, activebackground="#242a37", activeforeground=TXT,
-                  relief="flat", padx=14, pady=8, cursor="hand2",
-                  command=self.health_check).pack(side="left")
-        tk.Button(fr5, text="🔨  BUILD LẠI FILE EXE", font=("Segoe UI", 10, "bold"),
-                  bg="#3a5a3a", fg="#ffffff", activebackground="#4a704a",
-                  relief="flat", padx=14, pady=8, cursor="hand2",
-                  command=self.rebuild_exe).pack(side="right")
-        self.hlog_box = scrolledtext.ScrolledText(tab3, font=("Consolas", 10),
-                                                  bg=PANEL, fg="#d6d0c2",
+        # ===== TRANG: SUC KHOE =====
+        p_sk = make_page("suckhoe")
+        head(p_sk, "Sức khỏe",
+             "Kiểm tra máy có đủ đồ nghề để deploy không. Thiếu gì app sẽ báo.")
+        r5 = tk.Frame(p_sk, bg=BG)
+        r5.pack(fill="x", padx=20, pady=(12, 8))
+        btn_ghost(r5, "🩺  KIỂM TRA MÁY", self.health_check).pack(side="left")
+        tk.Button(r5, text="🔨  BUILD LẠI FILE EXE", font=("Segoe UI", 9, "bold"),
+                  bg="#dcfce7", fg="#166534", activebackground="#bbf7d0",
+                  activeforeground="#166534", relief="flat", bd=0, padx=14, pady=7,
+                  cursor="hand2", command=self.rebuild_exe).pack(side="right")
+        cF = tk.Frame(p_sk, bg=PANEL, highlightthickness=1, highlightbackground=EDGE)
+        cF.pack(fill="both", expand=True, padx=20, pady=(0, 16))
+        self.hlog_box = scrolledtext.ScrolledText(cF, font=("Consolas", 10),
+                                                  bg="#0f172a", fg="#e2e8f0",
+                                                  insertbackground="#e2e8f0",
                                                   relief="flat", height=14)
-        self.hlog_box.pack(fill="both", expand=True, padx=14, pady=(4, 14))
+        self.hlog_box.pack(fill="both", expand=True, padx=2, pady=2)
         self.hlog_box.configure(state="disabled")
+
+        pick_seg("chu")
+        show("web")
+
 
         # ===== STATUS BAR =====
         bar = tk.Frame(root, bg=PANEL)
         bar.pack(fill="x", side="bottom")
-        tk.Frame(root, bg=GOLD, height=1).pack(fill="x", side="bottom")
-        tk.Label(bar, text=SITE_URL, font=("Segoe UI", 9), fg=MUTED, bg=PANEL,
-                 cursor="hand2").pack(side="left", padx=14, pady=8)
+        tk.Frame(root, bg=EDGE, height=1).pack(fill="x", side="bottom")
+        tk.Label(bar, text=SITE_URL, font=("Segoe UI", 9, "bold"), fg=GOLD, bg=PANEL,
+                 cursor="hand2").pack(side="left", padx=14, pady=7)
         bar.children[list(bar.children.keys())[0]].bind("<Button-1>", lambda e: webbrowser.open(SITE_URL))
         tk.Label(bar, text="Nhấn Ctrl+F5 nếu chưa thấy đổi", font=("Segoe UI", 9),
                  fg=MUTED, bg=PANEL).pack(side="right", padx=14)
@@ -517,13 +614,21 @@ class App:
             self.done(False)
 
     def push_and_deploy(self, note, files=None):
+        ensure_git_identity()
         if files:
             code, out = run("git add " + " ".join(files), REPO_DIR)
         else:
             code, out = run("git add -A", REPO_DIR)
+        if code != 0:
+            self.write("LOI git add:\n" + out[-800:])
+            return False
         code, out = run('git commit -m "' + note.replace('"', '') + '"', REPO_DIR)
         line = out.strip().splitlines()
         self.write("  " + (line[0] if line else "khong co gi moi"))
+        nothing = "nothing to commit" in out.lower() or "khong co gi de commit" in out.lower()
+        if code != 0 and not nothing:
+            self.write("LOI commit GitHub:\n" + out[-800:])
+            return False
         self.set_prog(55)
         code, out = run("git push origin master", REPO_DIR)
         if code != 0:
@@ -532,8 +637,15 @@ class App:
         self.write("  Push GitHub xong.")
         self.set_prog(65)
         self.write("[3/4] Deploy Vercel (cho ~30s)...")
-        code, out = run("vercel deploy --prod --yes", REPO_DIR)
-        if code != 0 or "Aliased" not in out:
+        vx = vercel_exe()
+        code, out = run(vx + " deploy --prod --yes", REPO_DIR)
+        if code != 0 and "Not authorized" in out:
+            self.write("  Gap 'Not authorized' - thu lai sau 8 giay...")
+            time.sleep(8)
+            code, out = run(vx + " deploy --prod --yes", REPO_DIR)
+        ok = code == 0 and ("Aliased" in out or '"status": "ok"' in out
+                            or '"readyState": "READY"' in out or "ready." in out)
+        if not ok:
             self.write("LOI deploy:\n" + out[-1200:])
             return False
         self.set_prog(100)
@@ -630,7 +742,11 @@ class App:
 
     # ---------- history / restore ----------
     def load_hist(self):
-        self.hist.delete(0, "end")
+        try:
+            self.hist.delete(0, "end")
+        except RuntimeError:
+            self.root.after(300, self.load_hist)
+            return
         # 1. cac ban sao luu tren may (moi nhat truoc)
         bdir = os.path.join(REPO_DIR, "backups")
         bk = []
@@ -1011,7 +1127,65 @@ class App:
         except Exception:
             pass
 
-    def yt_need(self, mode):
+    def yt_log_path(self):
+        return os.path.join(self.yt_dir(), "server.log")
+
+    def yt_log_write(self, line):
+        try:
+            with open(self.yt_log_path(), "a", encoding="utf-8") as f:
+                f.write(datetime.now().strftime("[%d/%m %H:%M:%S] ") + line.rstrip() + "\n")
+        except Exception:
+            pass
+
+    def yt_slog(self, line):
+        try:
+            self.slog_box.configure(state="normal")
+            self.slog_box.insert("end", datetime.now().strftime("[%H:%M:%S] ")
+                                 + line.rstrip() + "\n")
+            if int(self.slog_box.index("end-1c").split(".")[0]) > 400:
+                self.slog_box.delete("1.0", "100.0")
+            self.slog_box.see("end")
+            self.slog_box.configure(state="disabled")
+        except Exception:
+            pass
+        self.yt_log_write(line)
+
+    def yt_slog_load(self):
+        try:
+            p = self.yt_log_path()
+            if not os.path.exists(p):
+                return
+            with open(p, encoding="utf-8", errors="replace") as f:
+                lines = f.readlines()[-80:]
+            self.slog_box.configure(state="normal")
+            for ln in lines:
+                self.slog_box.insert("end", ln if ln.endswith("\n") else ln + "\n")
+            self.slog_box.see("end")
+            self.slog_box.configure(state="disabled")
+        except Exception:
+            pass
+
+    def yt_log_clear(self):
+        try:
+            self.slog_box.configure(state="normal")
+            self.slog_box.delete("1.0", "end")
+            self.slog_box.configure(state="disabled")
+            with open(self.yt_log_path(), "w", encoding="utf-8"):
+                pass
+        except Exception:
+            pass
+
+    def yt_log_reader(self, proc):
+        try:
+            for line in iter(proc.stdout.readline, ""):
+                if line == "":
+                    break
+                self.yt_slog(line)
+        except Exception:
+            pass
+        self.yt_slog("(server đã dừng)")
+
+    def yt_need(self):
         missing = []
         if not shutil.which("node"):
             missing.append("Node.js")
@@ -1021,22 +1195,12 @@ class App:
             missing.append("tools/yt-dlp.exe")
         if not os.path.exists(os.path.join(REPO_DIR, "tools", "ffmpeg.exe")):
             missing.append("tools/ffmpeg.exe")
-        if mode == "public" and not os.path.exists(os.path.join(REPO_DIR, "tools", "cloudflared.exe")):
+        if not os.path.exists(os.path.join(REPO_DIR, "tools", "cloudflared.exe")):
             missing.append("tools/cloudflared.exe")
-        if mode == "tailscale" and not self.ts_bin():
-            missing.append("Tailscale (cài ở tailscale.com/download)")
         return missing
 
-    def ts_bin(self):
-        w = shutil.which("tailscale")
-        if w:
-            return w
-        p = r"C:\Program Files\Tailscale\tailscale.exe"
-        return p if os.path.exists(p) else ""
-
     def yt_start(self):
-        mode = self.yt_mode.get()
-        miss = self.yt_need(mode)
+        miss = self.yt_need()
         if miss:
             try:
                 self.yt_msg.configure(text="Thiếu: " + ", ".join(miss))
@@ -1052,12 +1216,21 @@ class App:
             return
         try:
             env = dict(os.environ)
-            if mode == "public":
-                env["YT_TUNNEL"] = "1"
+            env["YT_TUNNEL"] = "1"
+            if os.path.exists(self.yt_log_path()):
+                try:
+                    if os.path.getsize(self.yt_log_path()) > 1000000:
+                        os.remove(self.yt_log_path())
+                except Exception:
+                    pass
             self.yt_proc = subprocess.Popen(
                 [shutil.which("node"), "server.js"], cwd=self.yt_dir(), env=env,
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                text=True, encoding="utf-8", errors="replace", bufsize=1)
+            self.yt_slog("=== BẮT ĐẦU SERVER (kem tunnel) ===")
+            threading.Thread(target=self.yt_log_reader, args=(self.yt_proc,),
+                             daemon=True).start()
         except Exception as e:
             try:
                 self.yt_msg.configure(text="Không mở được server: " + str(e))
@@ -1069,52 +1242,8 @@ class App:
             self.yt_url_lbl.configure(text="")
         except Exception:
             pass
-        if mode == "public":
-            threading.Thread(target=self.yt_watch_base, daemon=True).start()
-        elif mode == "tailscale":
-            threading.Thread(target=self.yt_setup_tailscale, daemon=True).start()
+        threading.Thread(target=self.yt_watch_base, daemon=True).start()
         threading.Thread(target=self.yt_wait_up, daemon=True).start()
-
-    def yt_ts_ip(self):
-        try:
-            ts = self.ts_bin()
-            if not ts:
-                return ""
-            code, out = run('"' + ts + '" ip -4', REPO_DIR)
-            if code != 0:
-                return ""
-            for line in out.strip().splitlines():
-                ip = line.strip()
-                if re.match(r"^\d+\.\d+\.\d+\.\d+$", ip):
-                    return ip
-            return ""
-        except Exception:
-            return ""
-
-    def yt_setup_tailscale(self):
-        try:
-            self.yt_msg.configure(text="Đang lấy địa chỉ Tailscale...")
-        except Exception:
-            pass
-        ip = self.yt_ts_ip()
-        if not ip:
-            try:
-                self.yt_msg.configure(text="Server mở rồi, nhưng không lấy được IP Tailscale (app đã đăng nhập chưa?). Dùng chế độ 'Máy mình dùng' hoặc mở tunnel.")
-            except Exception:
-                pass
-            return
-        url = "http://%s:%d" % (ip, self.YT_PORT)
-        self.yt_url = url
-        self.yt_pushed = url
-        try:
-            self.yt_url_lbl.configure(text="Địa chỉ cố định: " + url)
-        except Exception:
-            pass
-        msg = self.yt_push_base(url)
-        try:
-            self.yt_msg.configure(text="Địa chỉ cố định: " + url + " — " + msg)
-        except Exception:
-            pass
 
     def yt_wait_up(self):
         for _ in range(20):
@@ -1159,7 +1288,7 @@ class App:
         url = getattr(self, "yt_url", "")
         if not url:
             try:
-                self.yt_msg.configure(text="Chưa có địa chỉ tunnel (bật chế độ 'Mọi admin dùng' trước).")
+                self.yt_msg.configure(text="Chưa có địa chỉ tunnel (đợi vài giây sau khi bật server).")
             except Exception:
                 pass
             return
@@ -1222,6 +1351,7 @@ class App:
             self.yt_msg.configure(text="Đang tắt + gỡ địa chỉ khỏi web...")
         except Exception:
             pass
+        self.yt_slog("=== ĐÃ TẮT SERVER ===")
         threading.Thread(target=self.yt_unpush, daemon=True).start()
         self.yt_refresh()
 
@@ -1265,14 +1395,14 @@ class App:
         ok_all = True
         for name, cmd in [("Git", "git --version"),
                           ("Node.js", "node --version"),
-                          ("Vercel CLI", "vercel --version"),
+                          ("Vercel CLI", vercel_exe() + " --version"),
                           ("Python", "python --version")]:
             code, out = run(cmd)
             ver = (out.strip().splitlines()[0] if out.strip() else "")
             good = (code == 0 and ver != "")
             ok_all = ok_all and good
             self.hlog(("✔ " if good else "✘ THIEU ") + name + ((" — " + ver) if good else " (can cai dat)"))
-        code, out = run("vercel whoami")
+        code, out = run(vercel_exe() + " whoami")
         logged = (code == 0 and out.strip() != "")
         ok_all = ok_all and logged
         self.hlog(("✔ Da dang nhap Vercel (" + out.strip().splitlines()[0] + ")" if logged else "✘ Chua dang nhap Vercel (chay: vercel login)"))
@@ -1292,8 +1422,6 @@ class App:
                         ("cloudflared", "tools/cloudflared.exe")]:
             ok = os.path.exists(os.path.join(REPO_DIR, p))
             self.hlog(("✔ " if ok else "○ ") + name + ("" if ok else " (thieu - tab May chu can)"))
-        ts = shutil.which("tailscale")
-        self.hlog(("✔ Tailscale (" + ts + ")" if ts else "○ Tailscale chua cai (can cho che do Tailscale rieng)"))
 
     def rebuild_exe(self):
         if self.busy:
@@ -1308,7 +1436,7 @@ class App:
         try:
             self.write("Dang build file EXE moi (3-5 phut, dung tat app)...")
             self.set_prog(20)
-            code, out = run("python -m PyInstaller --onefile --windowed --name DeployWeb --icon avatar.ico --distpath dist_app deploy_app.py", REPO_DIR)
+            code, out = run("python -m PyInstaller --onefile --windowed --name DeployWeb --icon avatar.ico --noconfirm --distpath dist_app deploy_app.py", REPO_DIR)
             new_exe = os.path.join(REPO_DIR, "dist_app", "DeployWeb.exe")
             if code != 0 or not os.path.exists(new_exe):
                 self.write("LOI build:\n" + out[-1500:])
@@ -1335,7 +1463,7 @@ class App:
     def done(self, ok):
         if ok:
             self.set_state(False, "Hoàn tất ✔", "#4caf6d")
-            self.btn.configure(text="🚀  DEPLOY NGAY")
+            self.btn.configure(text="🚀  ĐĂNG LÊN WEB NGAY")
         else:
             self.set_state(False, "Có lỗi!", "#e05a5a")
             self.set_prog(0)
