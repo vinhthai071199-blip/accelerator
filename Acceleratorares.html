@@ -332,6 +332,16 @@ section + section{border-top:1px solid var(--border)}
   color:var(--text-3);font-size:14px;
   border:1px dashed var(--border);border-radius:var(--r-card);
 }
+.skel-card{
+  border-radius:var(--r-card);overflow:hidden;
+  background:var(--surface);border:1px solid var(--border);
+}
+.skel-media{aspect-ratio:16/9;background:var(--surface-2)}
+.skel-body{padding:16px;display:flex;flex-direction:column;gap:10px}
+.skel-line{height:12px;border-radius:6px;background:rgba(255,255,255,.06)}
+.skel-line.w-sm{width:32%}
+.skel-line.w-md{width:68%}
+.skel-line.w-lg{width:90%}
 
 /* ===== LINKS & PHOTOS ===== */
 .link-grid{
@@ -490,7 +500,11 @@ footer{
         </div>
       </div>
       <div class="cat-bar" id="vidCats"></div>
-      <div class="vid-grid" id="vidGrid"><div class="empty-state">Đang tải danh sách video...</div></div>
+      <div class="vid-grid" id="vidGrid">
+        <div class="skel-card" aria-hidden="true"><div class="skel-media"></div><div class="skel-body"><div class="skel-line w-sm"></div><div class="skel-line w-lg"></div></div></div>
+        <div class="skel-card" aria-hidden="true"><div class="skel-media"></div><div class="skel-body"><div class="skel-line w-sm"></div><div class="skel-line w-md"></div></div></div>
+        <div class="skel-card" aria-hidden="true"><div class="skel-media"></div><div class="skel-body"><div class="skel-line w-sm"></div><div class="skel-line w-lg"></div></div></div>
+      </div>
     </div>
   </section>
 
@@ -505,7 +519,11 @@ footer{
         </div>
       </div>
       <div class="cat-bar" id="linkCats"></div>
-      <div class="link-grid" id="linkGrid"><div class="empty-state">Đang tải liên kết...</div></div>
+      <div class="link-grid" id="linkGrid">
+        <div class="skel-card" aria-hidden="true"><div class="skel-body"><div class="skel-line w-sm"></div><div class="skel-line w-lg"></div><div class="skel-line w-md"></div></div></div>
+        <div class="skel-card" aria-hidden="true"><div class="skel-body"><div class="skel-line w-sm"></div><div class="skel-line w-md"></div><div class="skel-line w-lg"></div></div></div>
+        <div class="skel-card" aria-hidden="true"><div class="skel-body"><div class="skel-line w-sm"></div><div class="skel-line w-lg"></div><div class="skel-line w-md"></div></div></div>
+      </div>
     </div>
   </section>
 
@@ -520,7 +538,9 @@ footer{
         </div>
       </div>
       <div class="cat-bar" id="photoCats"></div>
-      <div class="link-grid" id="photoGrid"><div class="empty-state">Đang tải hình ảnh...</div></div>
+      <div class="link-grid" id="photoGrid">
+        <div class="skel-card" aria-hidden="true"><div class="skel-media"></div><div class="skel-body"><div class="skel-line w-md"></div></div></div>
+      </div>
     </div>
   </section>
 </main>
@@ -716,8 +736,18 @@ const ICON_DL = '<svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1
 const ICON_EXT = '<svg class="ic" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
 const ICON_LINK = '<svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
 
+/* ============ CACHE + FAST REST HYDRATION ============ */
+const CACHE_KEY = 'ares_cache_v1';
+let cacheData = {};
+try{ cacheData = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}') || {}; }catch(e){ cacheData = {}; }
+function saveCache(k, v){
+  cacheData[k] = v;
+  try{ localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData)); }catch(e){}
+}
+const lastHash = {videos:'', links:'', photos:''};
+
 /* ============ VIDEOS ============ */
-let homeBase = '';
+let homeBase = cacheData.ytServerBase ? String(cacheData.ytServerBase).replace(/\/+$/,'') : '';
 let vidLastRaw = null;
 function homeSrc(r){
   r = r || {};
@@ -733,6 +763,9 @@ function paintVideos(){
   const box = document.getElementById('vidGrid');
   if(!box || vidLastRaw === null) return;
   const vis = vidLastRaw.filter(function(o){ const x = o[1]||{}; return !x.hidden && !(x.expiresAt && Date.now() > x.expiresAt); });
+  const hash = JSON.stringify([homeBase, vis]);
+  if(hash === lastHash.videos) return;
+  lastHash.videos = hash;
   setCount('vidCount', 'statVideos', vis.length);
   if(!vis.length){
     box.innerHTML = '<div class="empty-state">Chưa có video nào.</div>';
@@ -770,38 +803,24 @@ function paintVideos(){
   }).join('');
   renderCatBar('vidCats','videos',vis); applyCatFilter('videos');
 }
-async function initVideos(){
-  const box = document.getElementById('vidGrid');
-  if(!box) return;
-  try{
-    await ensureFb();
-    fbRef('settings/ytServerBase', function(val){
-      homeBase = val ? String(val).replace(/\/+$/,'') : '';
-      paintVideos();
-    });
-    fbRef('videos', function(v){
-      if(!v){ vidLastRaw = []; setCount('vidCount','statVideos',0); box.innerHTML = '<div class="empty-state">Chưa có video nào.</div>'; renderCatBar('vidCats','videos',[]); return; }
-      vidLastRaw = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
-      paintVideos();
-    }, function(){ box.innerHTML = '<div class="empty-state">Không tải được video.</div>'; });
-  }catch(e){ box.innerHTML = '<div class="empty-state">Không tải được video.</div>'; }
+function applyVideosData(v){
+  if(!v){
+    vidLastRaw = [];
+    lastHash.videos = 'empty';
+    setCount('vidCount','statVideos',0);
+    const box = document.getElementById('vidGrid');
+    if(box) box.innerHTML = '<div class="empty-state">Chưa có video nào.</div>';
+    renderCatBar('vidCats','videos',[]);
+    return;
+  }
+  vidLastRaw = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
+  paintVideos();
 }
-
 function applyVideoVisibility(show){
   const els = [document.getElementById('videos')]
     .concat(Array.from(document.querySelectorAll('a[href="#videos"]')));
   els.forEach(function(el){ if(el) el.style.display = show ? '' : 'none'; });
 }
-async function initVideoVisibility(){
-  try{
-    await ensureFb();
-    fbRef('settings/showVideos', function(v){
-      applyVideoVisibility(v !== false);
-    });
-  }catch(e){ applyVideoVisibility(true); }
-}
-initVideos();
-initVideoVisibility();
 
 /* ============ LINKS ============ */
 function applyLinksVisibility(show){
@@ -809,85 +828,116 @@ function applyLinksVisibility(show){
     .concat(Array.from(document.querySelectorAll('a[href="#links"]')));
   els.forEach(function(el){ if(el) el.style.display = show ? '' : 'none'; });
 }
-async function initLinks(){
+function applyLinksData(v){
   const box = document.getElementById('linkGrid');
   if(!box) return;
-  try{
-    await ensureFb();
-    fbRef('links', function(v){
-      if(!v){ setCount('linkCount','statLinks',0); box.innerHTML = '<div class="empty-state">Chưa có liên kết nào.</div>'; renderCatBar('linkCats','links',[]); return; }
-      const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
-      const visL = list.filter(function(o){ return !((o[1]||{}).hidden); });
-      setCount('linkCount','statLinks',visL.length);
-      if(!visL.length){ box.innerHTML = '<div class="empty-state">Chưa có liên kết nào.</div>'; renderCatBar('linkCats','links',[]); return; }
-      box.innerHTML = visL.map(function(x){
-        const r = x[1]||{};
-        const cat = ((r.cat||'').trim());
-        return '<article class="link-card" data-cat="'+esc(cat)+'">'
-          + '<div class="link-info">'
-          + '<div class="link-head"><div class="link-ic">'+ICON_LINK+'</div>'
-          + (cat?'<span class="cat-tag cat-main">'+esc(cat)+'</span>':'')
-          + '</div>'
-          + '<h3>'+esc(r.title)+'</h3>'
-          + '<div class="meta"><a class="btn-dl" href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer">'+ICON_EXT+'Mở link</a></div>'
-          + '</div></article>';
-      }).join('');
-      renderCatBar('linkCats','links',visL); applyCatFilter('links');
-    }, function(){ box.innerHTML = '<div class="empty-state">Không tải được liên kết.</div>'; });
-  }catch(e){ box.innerHTML = '<div class="empty-state">Không tải được liên kết.</div>'; }
+  if(!v){
+    lastHash.links = 'empty';
+    setCount('linkCount','statLinks',0);
+    box.innerHTML = '<div class="empty-state">Chưa có liên kết nào.</div>';
+    renderCatBar('linkCats','links',[]);
+    return;
+  }
+  const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
+  const visL = list.filter(function(o){ return !((o[1]||{}).hidden); });
+  const hash = JSON.stringify(visL);
+  if(hash === lastHash.links) return;
+  lastHash.links = hash;
+  setCount('linkCount','statLinks',visL.length);
+  if(!visL.length){ box.innerHTML = '<div class="empty-state">Chưa có liên kết nào.</div>'; renderCatBar('linkCats','links',[]); return; }
+  box.innerHTML = visL.map(function(x){
+    const r = x[1]||{};
+    const cat = ((r.cat||'').trim());
+    return '<article class="link-card" data-cat="'+esc(cat)+'">'
+      + '<div class="link-info">'
+      + '<div class="link-head"><div class="link-ic">'+ICON_LINK+'</div>'
+      + (cat?'<span class="cat-tag cat-main">'+esc(cat)+'</span>':'')
+      + '</div>'
+      + '<h3>'+esc(r.title)+'</h3>'
+      + '<div class="meta"><a class="btn-dl" href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer">'+ICON_EXT+'Mở link</a></div>'
+      + '</div></article>';
+  }).join('');
+  renderCatBar('linkCats','links',visL); applyCatFilter('links');
 }
-async function initLinksVisibility(){
-  try{
-    await ensureFb();
-    fbRef('settings/showLinks', function(v){
-      applyLinksVisibility(v !== false);
-    });
-  }catch(e){ applyLinksVisibility(true); }
-}
-initLinks();
-initLinksVisibility();
 
 /* ============ PHOTOS ============ */
-async function initPhotos(){
-  const box = document.getElementById('photoGrid');
-  if(!box) return;
-  try{
-    await ensureFb();
-    fbRef('photos', function(v){
-      if(!v){ setCount('photoCount','statPhotos',0); box.innerHTML = '<div class="empty-state">Chưa có ảnh nào.</div>'; renderCatBar('photoCats','photos',[]); return; }
-      const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
-      const visP = list.filter(function(o){ return !((o[1]||{}).hidden); });
-      setCount('photoCount','statPhotos',visP.length);
-      if(!visP.length){ box.innerHTML = '<div class="empty-state">Chưa có ảnh nào.</div>'; renderCatBar('photoCats','photos',[]); return; }
-      box.innerHTML = visP.map(function(x){
-        const r = x[1]||{};
-        const cat = ((r.cat||'').trim());
-        return '<article class="link-card" data-cat="'+esc(cat)+'">'
-          + '<a class="photo-wrap" href="'+esc(r.img)+'" target="_blank" rel="noopener noreferrer"><img loading="lazy" src="'+esc(r.img)+'" width="400" height="250" alt="'+esc(r.title)+'"></a>'
-          + '<div class="link-info">'
-          + (cat?'<div class="tag-row"><span class="cat-tag cat-main">'+esc(cat)+'</span></div>':'')
-          + '<h3>'+esc(r.title)+'</h3></div>'
-          + '</article>';
-      }).join('');
-      renderCatBar('photoCats','photos',visP); applyCatFilter('photos');
-    }, function(){ box.innerHTML = '<div class="empty-state">Không tải được hình ảnh.</div>'; });
-  }catch(e){ box.innerHTML = '<div class="empty-state">Không tải được hình ảnh.</div>'; }
-}
 function applyPhotosVisibility(show){
   const els = [document.getElementById('photos')]
     .concat(Array.from(document.querySelectorAll('a[href="#photos"]')));
   els.forEach(function(el){ if(el) el.style.display = show ? '' : 'none'; });
 }
-async function initPhotosVisibility(){
+function applyPhotosData(v){
+  const box = document.getElementById('photoGrid');
+  if(!box) return;
+  if(!v){
+    lastHash.photos = 'empty';
+    setCount('photoCount','statPhotos',0);
+    box.innerHTML = '<div class="empty-state">Chưa có ảnh nào.</div>';
+    renderCatBar('photoCats','photos',[]);
+    return;
+  }
+  const list = Object.entries(v).sort(function(a,b){ return (b[1].time||0)-(a[1].time||0); });
+  const visP = list.filter(function(o){ return !((o[1]||{}).hidden); });
+  const hash = JSON.stringify(visP);
+  if(hash === lastHash.photos) return;
+  lastHash.photos = hash;
+  setCount('photoCount','statPhotos',visP.length);
+  if(!visP.length){ box.innerHTML = '<div class="empty-state">Chưa có ảnh nào.</div>'; renderCatBar('photoCats','photos',[]); return; }
+  box.innerHTML = visP.map(function(x){
+    const r = x[1]||{};
+    const cat = ((r.cat||'').trim());
+    return '<article class="link-card" data-cat="'+esc(cat)+'">'
+      + '<a class="photo-wrap" href="'+esc(r.img)+'" target="_blank" rel="noopener noreferrer"><img loading="lazy" src="'+esc(r.img)+'" width="400" height="250" alt="'+esc(r.title)+'"></a>'
+      + '<div class="link-info">'
+      + (cat?'<div class="tag-row"><span class="cat-tag cat-main">'+esc(cat)+'</span></div>':'')
+      + '<h3>'+esc(r.title)+'</h3></div>'
+      + '</article>';
+  }).join('');
+  renderCatBar('photoCats','photos',visP); applyCatFilter('photos');
+}
+
+/* ============ HYDRATE CACHE -> FAST REST -> REALTIME ============ */
+if('videos' in cacheData) applyVideosData(cacheData.videos);
+if('links' in cacheData) applyLinksData(cacheData.links);
+if('photos' in cacheData) applyPhotosData(cacheData.photos);
+if('showVideos' in cacheData) applyVideoVisibility(cacheData.showVideos !== false);
+if('showLinks' in cacheData) applyLinksVisibility(cacheData.showLinks !== false);
+if('showPhotos' in cacheData) applyPhotosVisibility(cacheData.showPhotos !== false);
+
+function fastRest(path, onVal){
+  return fetch(FB_DB_URL + '/' + path + '.json', {cache:'no-store'})
+    .then(function(r){ if(!r.ok) throw new Error('http ' + r.status); return r.json(); })
+    .then(onVal)
+    .catch(function(){});
+}
+fastRest('videos', function(v){ saveCache('videos', v); applyVideosData(v); });
+fastRest('links', function(v){ saveCache('links', v); applyLinksData(v); });
+fastRest('photos', function(v){ saveCache('photos', v); applyPhotosData(v); });
+fastRest('settings/ytServerBase', function(val){
+  saveCache('ytServerBase', val);
+  homeBase = val ? String(val).replace(/\/+$/,'') : '';
+  paintVideos();
+});
+fastRest('settings/showVideos', function(v){ saveCache('showVideos', v); applyVideoVisibility(v !== false); });
+fastRest('settings/showLinks', function(v){ saveCache('showLinks', v); applyLinksVisibility(v !== false); });
+fastRest('settings/showPhotos', function(v){ saveCache('showPhotos', v); applyPhotosVisibility(v !== false); });
+
+(async function initRealtime(){
   try{
     await ensureFb();
-    fbRef('settings/showPhotos', function(v){
-      applyPhotosVisibility(v !== false);
+    fbRef('settings/ytServerBase', function(val){
+      saveCache('ytServerBase', val);
+      homeBase = val ? String(val).replace(/\/+$/,'') : '';
+      paintVideos();
     });
-  }catch(e){ applyPhotosVisibility(true); }
-}
-initPhotos();
-initPhotosVisibility();
+    fbRef('videos', function(v){ saveCache('videos', v); applyVideosData(v); });
+    fbRef('settings/showVideos', function(v){ saveCache('showVideos', v); applyVideoVisibility(v !== false); });
+    fbRef('links', function(v){ saveCache('links', v); applyLinksData(v); });
+    fbRef('settings/showLinks', function(v){ saveCache('showLinks', v); applyLinksVisibility(v !== false); });
+    fbRef('photos', function(v){ saveCache('photos', v); applyPhotosData(v); });
+    fbRef('settings/showPhotos', function(v){ saveCache('showPhotos', v); applyPhotosVisibility(v !== false); });
+  }catch(e){}
+})();
 
 /* ============ CATEGORY FILTER ============ */
 const catFilter = {videos:'', links:'', photos:''};
