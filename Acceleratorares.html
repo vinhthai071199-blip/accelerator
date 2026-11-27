@@ -744,7 +744,9 @@ function saveCache(k, v){
   cacheData[k] = v;
   try{ localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData)); }catch(e){}
 }
-const lastHash = {videos:'', links:'', photos:''};
+/* lastHash chỉ dùng để tránh re-render thừa khi RTDB push liên tục.
+   Cache hydrate KHÔNG set hash → REST/RTDB luôn render được. */
+const lastHash = {videos:'__init__', links:'__init__', photos:'__init__'};
 
 /* ============ VIDEOS ============ */
 let homeBase = cacheData.ytServerBase ? String(cacheData.ytServerBase).replace(/\/+$/,'') : '';
@@ -897,12 +899,13 @@ function applyPhotosData(v){
 }
 
 /* ============ HYDRATE CACHE -> FAST REST -> REALTIME ============ */
-if('videos' in cacheData) applyVideosData(cacheData.videos);
-if('links' in cacheData) applyLinksData(cacheData.links);
-if('photos' in cacheData) applyPhotosData(cacheData.photos);
+/* Cache hydrate: render ngay nhưng reset hash sau để REST/RTDB không bị block */
 if('showVideos' in cacheData) applyVideoVisibility(cacheData.showVideos !== false);
 if('showLinks' in cacheData) applyLinksVisibility(cacheData.showLinks !== false);
 if('showPhotos' in cacheData) applyPhotosVisibility(cacheData.showPhotos !== false);
+if('videos' in cacheData){ applyVideosData(cacheData.videos); lastHash.videos = '__init__'; }
+if('links' in cacheData){ applyLinksData(cacheData.links); lastHash.links = '__init__'; }
+if('photos' in cacheData){ applyPhotosData(cacheData.photos); lastHash.photos = '__init__'; }
 
 function fastRest(path, onVal){
   return fetch(FB_DB_URL + '/' + path + '.json', {cache:'no-store'})
