@@ -4,101 +4,331 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0b0c0f">
 <title>Quản trị — AcceleratorAres</title>
 <link rel="icon" type="image/jpeg" href="avatar.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#000;color:#fff;min-height:100vh;padding:24px 5% 60px}
+:root{
+  --bg:#0b0c0f;
+  --surface:#12141a;
+  --surface-2:#181b23;
+  --border:rgba(255,255,255,.08);
+  --border-strong:rgba(255,255,255,.16);
+  --text:#f3f4f6;
+  --text-2:#9ca3af;
+  --text-3:#6b7280;
+  --accent:#f59e0b;
+  --accent-dim:rgba(245,158,11,.12);
+  --cta-bg:#f3f4f6;
+  --cta-text:#0b0c0f;
+  --danger:#f87171;
+  --ok:#4ade80;
+  --r-card:12px;
+  --r-sm:8px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg)}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:14px;
+  line-height:1.55;
+  min-height:100vh;
+  padding:24px 24px 64px;
+  -webkit-font-smoothing:antialiased;
+}
 a{color:inherit}
-.login-wrap{max-width:380px;margin:12vh auto 0;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:34px 28px}
-.login-wrap h1{font-size:20px;margin-bottom:22px;text-align:center;letter-spacing:1px}
-.login-wrap h1 em{color:#ffffff;font-style:normal}
-label{display:block;font-size:12px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#c9c9d1;margin:14px 0 7px}
-input{width:100%;padding:13px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#fff;font-size:14px;outline:none}
-input:focus{border-color:rgba(255,255,255,.55)}
-select{width:100%;padding:13px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.14);background:#10131a;color:#fff;font-size:14px;outline:none}
-.up-row select{flex:1;min-width:180px;width:auto}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:6px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none}
-.btn:hover{background:rgba(255,255,255,.06)}
-.btn.solid{background:#e9e9f0;color:#0d0a14;border:none}
-.btn.solid:hover{box-shadow:0 6px 18px rgba(0,0,0,.5)}
-.ic{width:1.05em;height:1.05em;vertical-align:-0.16em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.btn.full{width:100%;justify-content:center;margin-top:20px}
-.err{color:#f87171;font-size:13px;margin-top:14px;text-align:center;min-height:18px}
-.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:26px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.08)}
-.topbar .brand{font-size:17px;font-weight:700;letter-spacing:.5px}
-.topbar .brand em{color:#ffffff;font-style:normal}
-.topbar .actions{display:flex;gap:10px}
-.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:26px}
-.stat{flex:1;min-width:140px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px 18px}
-.stat b{display:block;font-size:26px;color:#ffffff}
-.stat span{font-size:12.5px;color:#c9c9d1;letter-spacing:.5px}
-h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px}
-.item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:15px 18px;margin-bottom:11px}
-.item .head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
-.item .who{font-weight:600;font-size:14.5px}
-.item p{margin-top:8px;font-size:13.5px;line-height:1.65;color:#e6e6ea;word-break:break-word}
-.item .tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:3px;background:rgba(255,255,255,.14);color:#ffffff;margin-left:8px;vertical-align:middle}
-.del{padding:6px 13px;border-radius:5px;border:1px solid rgba(248,113,113,.35);background:transparent;color:#f87171;font-size:12.5px;cursor:pointer}
-.del:hover{background:rgba(248,113,113,.12)}
-.empty{color:#8a8a93;font-size:13.5px;padding:22px 0;text-align:center}
-.up-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:20px;margin-bottom:16px}
-.up-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#272a34;border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#383d4b}
+
+.ic{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .hid{display:none!important}
-.up-row input[type=text]{flex:1;min-width:180px}
-.up-row input[type=file]{padding:10px;font-size:12.5px}
-.prog{height:8px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:12px;overflow:hidden;display:none}
-.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffffff,#8e8e96)}
-.live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8fd694}
-.live i{width:8px;height:8px;border-radius:50%;background:#4caf6d;display:inline-block}
-/* ===== KHOI YOUTUBE + HANG DOI (gon) ===== */
-.qbox{max-height:270px;overflow-y:auto;padding-right:4px}
-.qitem{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:9px 12px;margin-bottom:8px}
-.qline{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.qline .qname{font-weight:600;font-size:13px;flex:1 1 180px;word-break:break-word}
-.qline .tag{font-size:10.5px;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,.14);color:#ffffff;white-space:nowrap}
-.qline .qstat{font-size:12px;color:#c9c9d1;flex:1 1 150px}
-.yt-prev{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:12px}
-.yt-thumb{width:180px;max-width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#000;display:block}
+
+/* ===== LOGIN ===== */
+.login-wrap{
+  max-width:400px;margin:10vh auto 0;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-card);
+  padding:28px 24px;
+}
+.login-head{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);
+}
+.login-head img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--border-strong)}
+.login-wrap h1{font-size:18px;font-weight:600;letter-spacing:-.015em;color:var(--text)}
+.login-wrap h1 em{color:var(--text-2);font-style:normal;font-weight:400;display:block;font-size:12.5px;margin-top:2px}
+
+label{
+  display:block;font-size:13px;font-weight:500;color:var(--text-2);
+  margin:14px 0 6px;
+}
+input,select{
+  width:100%;height:40px;padding:0 12px;
+  border-radius:var(--r-sm);
+  border:1px solid var(--border);
+  background:var(--bg);
+  color:var(--text);
+  font-family:inherit;font-size:14px;
+  outline:none;
+  transition:border-color .15s var(--ease),background-color .15s var(--ease);
+}
+input:focus,select:focus{border-color:var(--accent)}
+input::placeholder{color:var(--text-3)}
+select{cursor:pointer}
+.up-row select{flex:1;min-width:180px;width:auto}
+
+/* ===== BUTTONS ===== */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:40px;padding:0 16px;
+  border-radius:var(--r-sm);
+  border:1px solid var(--border-strong);
+  background:var(--surface-2);
+  color:var(--text);
+  font-family:inherit;font-size:13.5px;font-weight:500;
+  cursor:pointer;text-decoration:none;white-space:nowrap;
+  transition:background-color .15s var(--ease),border-color .15s var(--ease),transform .15s var(--ease);
+}
+.btn:hover{background:#20242e;border-color:rgba(255,255,255,.26)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.solid{
+  background:var(--cta-bg);color:var(--cta-text);border-color:var(--cta-bg);font-weight:600;
+}
+.btn.solid:hover{opacity:.92;background:var(--cta-bg)}
+.btn.full{width:100%;margin-top:20px}
+
+.err{color:var(--danger);font-size:13px;margin-top:10px;text-align:center}
+.err:empty{display:none}
+
+/* ===== ADMIN SHELL ===== */
+#adminView{max-width:1200px;margin:0 auto}
+
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+  margin-bottom:24px;padding-bottom:18px;
+  border-bottom:1px solid var(--border);
+}
+.topbar .brand{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  font-size:17px;font-weight:600;letter-spacing:-.015em;
+}
+.topbar .brand img{width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--border-strong)}
+.topbar .brand em{color:var(--text);font-style:normal}
+.topbar .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.live{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-size:12px;color:var(--ok);
+  padding:3px 9px;border-radius:6px;
+  background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);
+}
+.live i{width:6px;height:6px;border-radius:50%;background:var(--ok);display:inline-block}
+
+/* ===== STATS ===== */
+.stats{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  margin-bottom:32px;
+}
+.stat{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+  padding:16px 18px;
+  display:flex;flex-direction:column;gap:4px;
+}
+.stat b{
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;
+  font-size:26px;font-weight:500;color:var(--text);line-height:1.15;
+}
+.stat span{font-size:12.5px;color:var(--text-2)}
+
+/* ===== SECTIONS & PANELS ===== */
+h2.sec{
+  font-size:17px;font-weight:600;letter-spacing:-.01em;
+  margin:36px 0 14px;
+  display:flex;align-items:center;gap:10px;color:var(--text);
+}
+h2.sec .ic{color:var(--accent);width:18px;height:18px}
+
+.up-wrap{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+  padding:16px;margin-bottom:12px;
+}
+.up-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.up-row + .up-row{margin-top:10px}
+.up-row input[type=text]{flex:1;min-width:200px}
+.up-row input[type=file]{padding:8px 10px;font-size:12.5px}
+
+.toggle-label{
+  display:flex;align-items:center;gap:10px;
+  font-size:14px;font-weight:500;color:var(--text);
+  margin:0;cursor:pointer;
+}
+.toggle-label input[type=checkbox]{
+  width:18px;height:18px;accent-color:var(--accent);cursor:pointer;
+}
+
+.prog{
+  height:6px;border-radius:4px;background:rgba(255,255,255,.08);
+  margin-top:12px;overflow:hidden;display:none;
+}
+.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s linear}
+
+/* ===== ITEMS & ACTIONS ===== */
+.item{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+  padding:14px 16px;margin-bottom:10px;
+  transition:border-color .15s var(--ease);
+}
+.item:hover{border-color:var(--border-strong)}
+.item .head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.item .who{font-weight:500;font-size:14.5px;color:var(--text)}
+.item p{margin-top:8px;font-size:13.5px;line-height:1.6;color:var(--text-2);word-break:break-word}
+
+.tag{
+  display:inline-flex;align-items:center;
+  font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;
+  background:rgba(255,255,255,.06);color:var(--text-2);border:1px solid var(--border);
+  margin-left:8px;vertical-align:middle;
+}
+.del{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:30px;padding:0 10px;border-radius:6px;
+  border:1px solid var(--border-strong);background:transparent;
+  color:var(--text-2);font-family:inherit;font-size:12px;font-weight:500;
+  cursor:pointer;text-decoration:none;
+  transition:color .15s var(--ease),border-color .15s var(--ease),background-color .15s var(--ease);
+}
+.del:hover{color:var(--text);background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.26)}
+.del:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.empty{
+  color:var(--text-3);font-size:13.5px;padding:24px 16px;text-align:center;
+  border:1px dashed var(--border);border-radius:var(--r-card);
+}
+
+/* ===== YOUTUBE QUEUE & PREVIEW ===== */
+.qbox{max-height:280px;overflow-y:auto;padding-right:4px}
+.qitem{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:10px 12px;margin-bottom:8px;
+}
+.qitem:last-child{margin-bottom:0}
+.qline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.qline .qname{font-weight:500;font-size:13px;flex:1 1 180px;word-break:break-word;color:var(--text)}
+.qline .tag{margin-left:0;white-space:nowrap}
+.qline .qstat{font-size:12px;color:var(--text-2);flex:1 1 150px}
+
+.yt-prev{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.yt-thumb{width:180px;max-width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--r-sm);background:#08090c;display:block;border:1px solid var(--border)}
 .yt-meta{flex:1 1 220px;min-width:0}
-.yt-name{font-weight:600;font-size:14.5px;line-height:1.4;word-break:break-word}
-.yt-meta .tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:3px;background:rgba(255,255,255,.14);color:#ffffff;margin-right:8px}
-/* ===== THE VIDEO GIONG TRANG CHINH ===== */
-.vid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
-.vid-card{border-radius:12px;overflow:hidden;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.09)}
-.vid-facade{aspect-ratio:16/9;background:#000;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
-.vid-facade::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.yt-name{font-weight:500;font-size:14.5px;line-height:1.4;word-break:break-word;color:var(--text)}
+.yt-meta .tag{margin:0 6px 0 0}
+
+/* ===== VIDEO & PHOTO CARDS ===== */
+.vid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.vid-card{
+  border-radius:var(--r-card);overflow:hidden;
+  background:var(--surface);border:1px solid var(--border);
+  display:flex;flex-direction:column;
+  transition:border-color .15s var(--ease);
+}
+.vid-card:hover{border-color:var(--border-strong)}
+.vid-facade{
+  aspect-ratio:16/9;background:#0e1015;
+  display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;overflow:hidden;
+}
+.vid-facade::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(11,12,15,.1) 0%,rgba(11,12,15,.55) 100%);
+}
 .vid-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.vid-play{width:56px;height:56px;border-radius:50%;background:rgba(10,12,16,.45);border:none;color:#ffffff;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
-.vid-play svg{width:22px;height:22px;fill:currentColor;margin-left:3px}
-.vid-note{color:#c9c9d1;font-size:12px;position:relative;z-index:1}
-.vid-card video{width:100%;display:block;aspect-ratio:16/9;background:#000}
-.vid-info{padding:14px 16px 18px}
-.vid-info .tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:3px;background:rgba(255,255,255,.14);color:#ffffff;margin:0 6px 4px 0}
-.vid-info h3{font-size:14.5px;font-weight:600;margin-bottom:10px;line-height:1.4;word-break:break-word}
-.vid-info .meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.vid-info .meta small{color:#a9a9b2;font-size:12px}
-.vid-dl{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:999px;background:#e9e9f0;color:#0d0a14;font-size:12px;font-weight:700;text-decoration:none}
-/* ===== BANG CHON KHO ===== */
-.yt-modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:100;padding:18px}
+.vid-play{
+  width:46px;height:46px;border-radius:50%;
+  background:rgba(11,12,15,.78);border:1px solid rgba(255,255,255,.24);
+  color:var(--text);display:flex;align-items:center;justify-content:center;
+  position:relative;z-index:1;
+}
+.vid-play svg{width:18px;height:18px;fill:currentColor;margin-left:2px}
+.vid-note{
+  color:var(--text-2);font-size:12px;
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+  position:relative;z-index:1;
+}
+.vid-card video{width:100%;display:block;aspect-ratio:16/9;background:#08090c}
+.vid-info{padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+.vid-info .tag{margin:0 6px 0 0}
+.vid-info h3{font-size:14.5px;font-weight:500;line-height:1.4;word-break:break-word;color:var(--text);flex:1}
+.vid-info .meta{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;
+  padding-top:10px;border-top:1px solid var(--border);
+}
+.vid-info .meta small{
+  color:var(--text-3);font-size:12px;
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;
+  width:100%;margin-bottom:4px;
+}
+.vid-dl{
+  display:inline-flex;align-items:center;gap:6px;
+  height:30px;padding:0 12px;border-radius:6px;
+  background:var(--cta-bg);color:var(--cta-text);
+  font-size:12px;font-weight:600;text-decoration:none;
+}
+.vid-dl:hover{opacity:.9}
+
+/* ===== MODAL ===== */
+.yt-modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.72);
+  display:none;align-items:center;justify-content:center;z-index:100;padding:16px;
+}
 .yt-modal.on{display:flex}
-.yt-modal .box{width:100%;max-width:430px;background:#10131a;border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
-.yt-modal h3{font-size:16px;margin-bottom:6px}
-.yt-modal p{font-size:12.5px;color:#a9a9b2;line-height:1.5;margin-bottom:14px}
-.yt-modal .opt{display:flex;flex-direction:column;gap:9px}
+.yt-modal .box{
+  width:100%;max-width:420px;
+  background:var(--surface);border:1px solid var(--border-strong);
+  border-radius:var(--r-card);padding:20px;
+}
+.yt-modal h3{font-size:16px;font-weight:600;margin-bottom:6px;color:var(--text)}
+.yt-modal p{font-size:13px;color:var(--text-2);line-height:1.5;margin-bottom:14px}
+.yt-modal .opt{display:flex;flex-direction:column;gap:8px}
 .yt-modal .opt .btn{width:100%;justify-content:flex-start;text-align:left}
-@media(max-width:600px){.login-wrap{margin-top:8vh}.topbar{flex-direction:column;align-items:flex-start}}
+
+@media(max-width:680px){
+  body{padding:16px 16px 48px}
+  .login-wrap{margin-top:6vh}
+  .topbar{flex-direction:column;align-items:flex-start}
+  .stats{grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat{padding:12px}
+  .stat b{font-size:20px}
+  .vid-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 
 <!-- ===== ĐĂNG NHẬP ===== -->
 <div class="login-wrap" id="loginView" style="display:none">
-  <h1><em>Quản trị</em> — AcceleratorAres</h1>
+  <div class="login-head">
+    <img src="avatar.jpg" width="40" height="40" alt="Avatar AcceleratorAres">
+    <h1>Quản trị <em>AcceleratorAres</em></h1>
+  </div>
   <form onsubmit="doLogin(event)">
-    <label>Email</label>
+    <label for="lgEmail">Email</label>
     <input type="email" id="lgEmail" placeholder="admin@gmail.com" required>
-    <label>Mật khẩu</label>
+    <label for="lgPass">Mật khẩu</label>
     <input type="password" id="lgPass" placeholder="••••••••" required>
     <button class="btn solid full" type="submit"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Đăng nhập</button>
     <div class="err" id="lgErr"></div>
@@ -108,7 +338,11 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 <!-- ===== NỘI DUNG QUẢN TRỊ ===== -->
 <div id="adminView" style="display:none">
   <div class="topbar">
-    <div class="brand"><svg class="ic" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Quản trị <em>AcceleratorAres</em> <span class="live"><i></i>Real-time</span></div>
+    <div class="brand">
+      <img src="avatar.jpg" width="32" height="32" alt="Avatar AcceleratorAres">
+      <span>Quản trị <em>AcceleratorAres</em></span>
+      <span class="live"><i></i>Real-time</span>
+    </div>
     <div class="actions">
       <button class="btn" onclick="changePass()">Đổi mật khẩu</button>
       <button class="btn" onclick="doLogout()">Đăng xuất</button>
@@ -122,10 +356,10 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="stat"><b id="cntPh">0</b><span>Ảnh</span></div>
   </div>
 
-  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15 10 9" fill="currentColor" stroke="none"/></svg> Video của tôi</h2>
+  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10 9 15 12 10 15 10 9"/></svg> Video của tôi</h2>
   <div class="up-wrap">
-    <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
-      <input type="checkbox" id="showVideos" style="width:18px;height:18px;accent-color:#ffffff" onchange="toggleShowVideos(this.checked)">
+    <label class="toggle-label">
+      <input type="checkbox" id="showVideos" onchange="toggleShowVideos(this.checked)">
       Hiện mục Video trên trang chính
     </label>
     <div class="err" id="showErr" style="text-align:left"></div>
@@ -148,7 +382,8 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="prog" id="upProg"><i id="upBar"></i></div>
     <div class="err" id="upErr" style="text-align:left"></div>
   </div>
-  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor" stroke="none"/></svg> Tải video YouTube</h2>
+
+  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg> Tải video YouTube</h2>
   <div class="up-wrap">
     <div class="up-row" style="justify-content:space-between">
       <span class="live" id="ytStBadge"><i id="ytDot"></i><span id="ytStTxt">Máy chủ: đang kiểm tra...</span></span>
@@ -164,15 +399,15 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
     <div class="err" id="ytErr" style="text-align:left"></div>
     <div id="ytPrev"></div>
     <div class="up-row" style="margin-top:12px">
-      <input type="text" id="ytBase" placeholder="Dán địa chỉ máy chủ ( auto save )" oninput="ytBaseAuto()">
+      <input type="text" id="ytBase" placeholder="Dán địa chỉ máy chủ (auto save)" oninput="ytBaseAuto()">
       <button class="btn" onclick="ytBaseDel()">Xóa địa chỉ</button>
     </div>
-    <div class="err" id="ytBaseSt" style="text-align:left;color:#8fd694"></div>
+    <div class="err" id="ytBaseSt" style="text-align:left;color:#4ade80"></div>
   </div>
   <div class="up-wrap">
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px">
       <span style="font-size:13.5px;font-weight:600">Hàng đợi tải</span>
-      <span id="ytQCount" style="font-size:12px;color:#a9a9b2"></span>
+      <span id="ytQCount" style="font-size:12px;color:var(--text-2);font-family:'JetBrains Mono',ui-monospace,monospace"></span>
     </div>
     <div class="qbox" id="ytQList"><div class="empty">Không có việc nào đang chờ.</div></div>
   </div>
@@ -183,8 +418,8 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
 
   <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Links</h2>
   <div class="up-wrap">
-    <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
-      <input type="checkbox" id="showLinks" style="width:18px;height:18px;accent-color:#ffffff" onchange="toggleShowLinks(this.checked)">
+    <label class="toggle-label">
+      <input type="checkbox" id="showLinks" onchange="toggleShowLinks(this.checked)">
       Hiện mục Links trên trang chính
     </label>
     <div class="err" id="showLkErr" style="text-align:left"></div>
@@ -209,10 +444,10 @@ h2.sec{font-size:17px;margin:30px 0 14px;display:flex;align-items:center;gap:9px
   </div>
   <div id="lkList"></div>
 
-  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg> Ảnh</h2>
+  <h2 class="sec"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg> Ảnh</h2>
   <div class="up-wrap">
-    <label style="display:flex;align-items:center;gap:10px;font-size:14px;text-transform:none;letter-spacing:0;color:#fff;margin:0;cursor:pointer">
-      <input type="checkbox" id="showPhotos" style="width:18px;height:18px;accent-color:#ffffff" onchange="toggleShowPhotos(this.checked)">
+    <label class="toggle-label">
+      <input type="checkbox" id="showPhotos" onchange="toggleShowPhotos(this.checked)">
       Hiện mục Ảnh trên trang chính
     </label>
     <div class="err" id="showPhErr" style="text-align:left"></div>

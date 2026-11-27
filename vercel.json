@@ -13,7 +13,7 @@
       ]
     },
     {
-      "source": "/(avatar|shop-logo)\\.(jpg|jpeg|png|webp|ico)",
+      "source": "/(avatar)\\.(jpg|jpeg|png|webp|ico)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]

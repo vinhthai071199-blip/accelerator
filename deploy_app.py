@@ -18,7 +18,7 @@ import webbrowser
 DEFAULT_HTML = r"D:\Opencode Project\Acceleratorares.html"
 REPO_DIR = r"D:\Opencode Project"
 SITE_URL = "https://acceleratorares.vercel.app/"
-EXTRA_FILES = ["admin.html", "avatar.jpg", "avatar.ico", "shop-logo.jpg", "robots.txt"]
+EXTRA_FILES = ["admin.html", "avatar.jpg", "avatar.ico", "robots.txt"]
 SRC_DIR = os.path.dirname(DEFAULT_HTML)
 VERSION = "v3.7"
 CONFIG = os.path.join(REPO_DIR, "deploy_config.json")
@@ -316,11 +316,7 @@ class App:
         cf = tk.Frame(cA, bg=PANEL)
         cf.pack(fill="both", expand=True, padx=14)
         for key, label in [("title", "Tiêu đề (cạnh avatar)"),
-                           ("welcome", "Dòng chào mừng"),
-                           ("shopname", "Tên shop"),
-                           ("shopdesc", "Mô tả shop"),
-                           ("shoplink", "Link shop"),
-                           ("cskhlink", "Link CSKH")]:
+                           ("welcome", "Dòng chào mừng")]:
             tk.Label(cf, text=label, font=("Segoe UI", 9, "bold"),
                      fg=MUTED, bg=PANEL).pack(anchor="w", pady=(5, 2))
             var = tk.StringVar()
@@ -340,11 +336,10 @@ class App:
 
         cB = tk.Frame(sp2, bg=PANEL, highlightthickness=1, highlightbackground=EDGE)
         cB.pack(fill="x")
-        tk.Label(cB, text="AVATAR & LOGO", font=("Segoe UI", 8, "bold"),
+        tk.Label(cB, text="AVATAR", font=("Segoe UI", 8, "bold"),
                  fg=MUTED, bg=PANEL).pack(anchor="w", padx=14, pady=(10, 4))
         self.img_rows = {}
-        for key, label, fname in [("avatar", "Avatar (cạnh tiêu đề + icon tab)", "avatar.jpg"),
-                                  ("logo", "Logo Teyvat Store", "shop-logo.jpg")]:
+        for key, label, fname in [("avatar", "Avatar (cạnh tiêu đề + icon tab)", "avatar.jpg")]:
             row = tk.Frame(cB, bg=PANEL)
             row.pack(fill="x", padx=14, pady=(2, 10))
             tk.Label(row, text=label, font=("Segoe UI", 10, "bold"),
@@ -700,7 +695,7 @@ class App:
             dest = os.path.join(REPO_DIR, "backups", stamp)
             os.makedirs(dest, exist_ok=True)
             n = 0
-            for f in ["Acceleratorares.html", "admin.html", "avatar.jpg", "avatar.ico", "shop-logo.jpg", "robots.txt"]:
+            for f in ["Acceleratorares.html", "admin.html", "avatar.jpg", "avatar.ico", "robots.txt"]:
                 p = os.path.join(REPO_DIR, f)
                 if os.path.exists(p):
                     shutil.copy2(p, os.path.join(dest, f))
@@ -865,14 +860,6 @@ class App:
          r"(<h1><img class=\"head-avatar\" src=\"avatar\.jpg\" alt=\"\"><em>)(.*?)(</em></h1>)"),
         ("welcome", "Dòng chào mừng",
          r"(<p class=\"welcome\">)(.*?)(</p>)"),
-        ("shopname", "Tên shop",
-         r"(<section id=\"shop\">[\s\S]*?<h3>)(.*?)(</h3>)"),
-        ("shopdesc", "Mô tả shop",
-         r"(<section id=\"shop\">[\s\S]*?<h3>.*?</h3>\s*<p>)(.*?)(</p>)"),
-        ("shoplink", "Link shop",
-         r"(<a class=\"btn solid\" href=\")(.*?)(\" target=\"_blank\">[\s\S]*?Vào shop)"),
-        ("cskhlink", "Link CSKH",
-         r"(<a class=\"btn\" href=\")(.*?)(\" target=\"_blank\">[\s\S]*?Liên hệ CSKH)"),
     ]
 
     def content_load(self):
@@ -888,7 +875,7 @@ class App:
             if m:
                 self.content_vars[key].set(m.group(2))
                 n += 1
-        self.content_msg.configure(text="Đã tải %d/6 mục từ %s" % (n, os.path.basename(self.html_file)))
+        self.content_msg.configure(text="Đã tải %d/2 mục từ %s" % (n, os.path.basename(self.html_file)))
 
     def content_save(self):
         try:
